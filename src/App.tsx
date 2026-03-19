@@ -1,12 +1,12 @@
-import Login from "./pages/auth/Login";
+import { BrowserRouter } from "react-router-dom"
+import AppRouter from "@/app/routes/AppRouter"
 
 function App() {
 
   return (
-    <>
-      <h1 className="text-3xl font-bold underline">Medi Care</h1>
-      <Login />
-    </>
+    <BrowserRouter>
+      <AppRouter />
+    </BrowserRouter>
   )
 }
 
