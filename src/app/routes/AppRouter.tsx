@@ -8,6 +8,8 @@ import Login from "@/pages/auth/Login"
 import AdminLayout from "@/components/layout/main-layout/AdminLayout"
 import AdminDashboard from "@/pages/admin/AdminDashboard"
 import AdminPatients from "@/pages/admin/AdminPatients"
+import AdminAppointments from "@/pages/admin/AdminAppointments"
+import AdminOpd from "@/pages/admin/AdminOpd"
 
 // Doctor all page import
 import DoctorLayout from "@/components/layout/main-layout/DoctorLayout"
@@ -80,6 +82,8 @@ const AppRoutes = () => {
       >
         <Route index element={<AdminDashboard />} />
         <Route path="patients" element={<AdminPatients />} />
+        <Route path="appointments" element={<AdminAppointments />} />
+        <Route path="opd" element={<AdminOpd />} />
       </Route>
 
       {/* Nurse */}

@@ -1,11 +1,101 @@
-export default function StepReview({ data }) {
-  return (
-    <div className="space-y-2">
+import { useFormContext } from "react-hook-form";
 
-      <p><b>Name:</b> {data.name}</p>
-      <p><b>Phone:</b> {data.phone}</p>
-      <p><b>Gender:</b> {data.gender}</p>
-      <p><b>Allergies:</b> {data.allergies}</p>
+export default function StepReview() {
+  const { getValues } = useFormContext();
+  const data = getValues();
+
+  return (
+    <div className="space-y-6">
+
+      {/* Review Header */}
+      <div className="text-center">
+        <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+          <span className="text-green-600 text-2xl">✓</span>
+        </div>
+        <h3 className="text-lg font-semibold text-gray-800">Review Patient Information</h3>
+        <p className="text-sm text-gray-600 mt-1">Please review all details before saving</p>
+      </div>
+
+      {/* Information Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+        {/* Personal Information */}
+        <div className="bg-gradient-to-br from-blue-50 to-purple-50 rounded-xl p-4 border border-blue-100">
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-blue-600">👤</span>
+            <h4 className="font-semibold text-gray-800">Personal Information</h4>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div className="flex justify-between">
+              <span className="text-gray-600">Name:</span>
+              <span className="font-medium text-gray-800">{data.name || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Date of Birth:</span>
+              <span className="font-medium text-gray-800">{data.dob || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Gender:</span>
+              <span className="font-medium text-gray-800">{data.gender || 'N/A'}</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-600">Phone:</span>
+              <span className="font-medium text-gray-800">{data.phone || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Medical Information */}
+        <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl p-4 border border-orange-100">
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-orange-600">🏥</span>
+            <h4 className="font-semibold text-gray-800">Medical Information</h4>
+          </div>
+          <div className="space-y-2 text-sm">
+            <div>
+              <span className="text-gray-600">Allergies:</span>
+              <p className="font-medium text-gray-800 mt-1">{data.allergies || 'N/A'}</p>
+            </div>
+            <div>
+              <span className="text-gray-600">Conditions:</span>
+              <p className="font-medium text-gray-800 mt-1">{data.conditions || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Emergency Contact */}
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl p-4 border border-green-100 md:col-span-2">
+          <div className="flex items-center space-x-2 mb-3">
+            <span className="text-green-600">📞</span>
+            <h4 className="font-semibold text-gray-800">Emergency Contact</h4>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+            <div>
+              <span className="text-gray-600">Contact Name:</span>
+              <p className="font-medium text-gray-800 mt-1">{data.contactName || 'N/A'}</p>
+            </div>
+            <div>
+              <span className="text-gray-600">Phone:</span>
+              <p className="font-medium text-gray-800 mt-1">{data.emergencyPhone || 'N/A'}</p>
+            </div>
+            <div>
+              <span className="text-gray-600">Relationship:</span>
+              <p className="font-medium text-gray-800 mt-1">{data.relationship || 'N/A'}</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      {/* Confirmation Note */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+        <div className="flex items-center space-x-2">
+          <span className="text-blue-500">ℹ️</span>
+          <p className="text-sm text-blue-800">
+            Click "Save Patient" to complete the registration. You can edit this information later if needed.
+          </p>
+        </div>
+      </div>
 
     </div>
   );
