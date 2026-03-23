@@ -13,10 +13,10 @@ const QueueAnalytics = () => {
 
   // Calculate wait times
   const waitTimes = waitingTokens.map(token => token.waitTime || 0)
-  const averageWaitTime = waitTimes.length > 0 
+  const averageWaitTime = waitTimes.length > 0
     ? Math.round(waitTimes.reduce((a, b) => a + b, 0) / waitTimes.length)
     : 0
-  
+
   const longestWait = waitTimes.length > 0 ? Math.max(...waitTimes) : 0
 
   // Department breakdown
@@ -46,7 +46,7 @@ const QueueAnalytics = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
+      <h2 className="text-xl text-black font-bold mb-6 flex items-center gap-2">
         <BarChart3 className="w-5 h-5" />
         Queue Analytics
       </h2>
@@ -136,7 +136,7 @@ const QueueAnalytics = () => {
           {Object.entries(departmentStats).map(([department, stats]) => {
             const total = stats.waiting + stats.inProgress + stats.skipped + stats.done
             const completionRate = total > 0 ? Math.round((stats.done / total) * 100) : 0
-            
+
             return (
               <div key={department} className="border border-gray-200 rounded-lg p-3">
                 <div className="flex items-center justify-between mb-2">

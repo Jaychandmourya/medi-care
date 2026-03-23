@@ -1,0 +1,67 @@
+import React from 'react'
+import type { Bed } from '@/features/bed/bedSlice'
+import { BedDouble, User, Clock, AlertTriangle, Wrench } from 'lucide-react'
+
+interface BedGridProps {
+  beds: Bed[]
+  onBedClick: (bed: Bed) => void
+}
+
+const statusColors = {
+  available: 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200',
+  occupied: 'bg-red-100 border-red-300 text-red-800 hover:bg-red-200',
+  reserved: 'bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200',
+  maintenance: 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200'
+}
+
+const statusIcons = {
+  available: BedDouble,
+  occupied: User,
+  reserved: Clock,
+  maintenance: Wrench
+}
+
+const BedGrid: React.FC<BedGridProps> = ({ beds, onBedClick }) => {
+  return (
+    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3 p-4">
+      {beds.map((bed) => {
+        const StatusIcon = statusIcons[bed.status]
+
+        return (
+          <button
+            key={bed.bedId}
+            onClick={() => onBedClick(bed)}
+            className={`
+              relative p-4 rounded-lg border-2 transition-all duration-200 transform hover:scale-105
+              flex flex-col items-center justify-center min-h-25 cursor-pointer
+              ${statusColors[bed.status]}
+            `}
+          >
+            <StatusIcon className="w-6 h-6 mb-2" />
+            <span className="font-semibold text-sm">{bed.bedId}</span>
+
+            {bed.patientId && (
+              <span className="text-xs mt-1 opacity-75">{bed.patientId}</span>
+            )}
+
+            {bed.status === 'maintenance' && (
+              <AlertTriangle className="absolute top-2 right-2 w-4 h-4" />
+            )}
+
+            <div className="absolute bottom-2 right-2">
+              <div className={`
+                w-3 h-3 rounded-full
+                ${bed.status === 'available' ? 'bg-green-500' : ''}
+                ${bed.status === 'occupied' ? 'bg-red-500' : ''}
+                ${bed.status === 'reserved' ? 'bg-yellow-500' : ''}
+                ${bed.status === 'maintenance' ? 'bg-gray-500' : ''}
+              `} />
+            </div>
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+export default BedGrid

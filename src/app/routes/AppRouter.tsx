@@ -10,6 +10,9 @@ import AdminDashboard from "@/pages/admin/AdminDashboard"
 import AdminPatients from "@/pages/admin/AdminPatients"
 import AdminAppointments from "@/pages/admin/AdminAppointments"
 import AdminOpd from "@/pages/admin/AdminOpd"
+import AdminBeds from "@/pages/admin/AdminBeds"
+import AdminPrescriptions from "@/pages/admin/AdminPrescriptions"
+import AdminDoctors from "@/pages/admin/AdminDoctors"
 
 // Doctor all page import
 import DoctorLayout from "@/components/layout/main-layout/DoctorLayout"
@@ -84,6 +87,9 @@ const AppRoutes = () => {
         <Route path="patients" element={<AdminPatients />} />
         <Route path="appointments" element={<AdminAppointments />} />
         <Route path="opd" element={<AdminOpd />} />
+        <Route path="beds" element={<AdminBeds />} />
+        <Route path="prescriptions" element={<AdminPrescriptions />} />
+        <Route path="doctors" element={<AdminDoctors />} />
       </Route>
 
       {/* Nurse */}

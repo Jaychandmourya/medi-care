@@ -3,6 +3,8 @@ import { useDispatch, useSelector } from 'react-redux'
 import { issueToken } from '@/features/opd/opdSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import { Plus, User, Stethoscope, Building } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/Label'
 
 const TokenIssueForm = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -35,16 +37,16 @@ const TokenIssueForm = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-bold mb-4 text-black flex items-center gap-2">
         <Plus className="w-5 h-5" />
         Issue New Token
       </h2>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label className="block text-sm font-medium text-gray-700 mb-1">
             Patient Name
-          </label>
+          </Label>
           <div className="relative">
             <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <input
@@ -59,9 +61,9 @@ const TokenIssueForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label className="block text-sm font-medium text-gray-700 mb-1">
             Department
-          </label>
+          </Label>
           <div className="relative">
             <Building className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <select
@@ -79,9 +81,9 @@ const TokenIssueForm = () => {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <Label className="block text-sm font-medium text-gray-700 mb-1">
             Doctor
-          </label>
+          </Label>
           <div className="relative">
             <Stethoscope className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <select
@@ -98,13 +100,13 @@ const TokenIssueForm = () => {
           </div>
         </div>
 
-        <button
+        <Button
           type="submit"
-          className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors flex items-center justify-center gap-2"
+          className="w-full flex items-center justify-center gap-2"
         >
           <Plus className="w-4 h-4" />
           Issue Token
-        </button>
+        </Button>
       </form>
     </div>
   )

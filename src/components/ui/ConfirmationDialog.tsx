@@ -1,5 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
+import { Button } from './Button';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -52,7 +53,7 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const Icon = currentStyle.icon;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
         {/* Header */}
         <div className={`${currentStyle.bgColor} ${currentStyle.borderColor} border-b p-4`}>
@@ -61,12 +62,13 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               <Icon className={`w-6 h-6 ${currentStyle.iconColor}`} />
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={onCancel}
-              className="p-1 hover:bg-gray-200 rounded-md transition-colors"
             >
-              <X className="w-5 h-5 text-gray-500" />
-            </button>
+              <X className="w-5 h-5" />
+            </Button>
           </div>
         </div>
 
@@ -77,18 +79,18 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
         {/* Actions */}
         <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-          <button
+          <Button
+            variant="outline"
             onClick={onCancel}
-            className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
           >
             {cancelText}
-          </button>
-          <button
+          </Button>
+          <Button
+            variant={type === 'danger' ? 'destructive' : type === 'info' ? 'default' : 'default'}
             onClick={onConfirm}
-            className={`px-4 py-2 text-white rounded-md transition-colors ${currentStyle.buttonColor}`}
           >
             {confirmText}
-          </button>
+          </Button>
         </div>
       </div>
     </div>

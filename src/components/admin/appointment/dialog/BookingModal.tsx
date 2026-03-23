@@ -3,6 +3,8 @@ import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
+import { Label } from '@/components/ui/Label';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { createAppointment, generateTimeSlots, setShowBookingModal } from '@/features/appointment/appointmentSlice';
 import { fetchPatients } from '@/features/appointment/appointmentSlice';
@@ -94,7 +96,7 @@ const BookingModal: React.FC = () => {
   if (!showBookingModal) return null;
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
@@ -103,12 +105,14 @@ const BookingModal: React.FC = () => {
               <Calendar className="w-6 h-6" />
               <h2 className="text-xl font-semibold">Book New Appointment</h2>
             </div>
-            <button
+            <Button
+              variant="ghost"
+              size="icon"
               onClick={handleClose}
-              className="p-2 hover:bg-blue-500 rounded-md transition-colors"
+              className="text-white hover:bg-blue-500"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -116,10 +120,10 @@ const BookingModal: React.FC = () => {
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           {/* Patient Selection */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label required>
               <User className="w-4 h-4 inline mr-2" />
-              Patient *
-            </label>
+              Patient
+            </Label>
             <Controller
               name="patientId"
               control={control}
@@ -148,9 +152,9 @@ const BookingModal: React.FC = () => {
           {/* Department and Doctor */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Department *
-              </label>
+              <Label required>
+                Department
+              </Label>
               <Controller
                 name="department"
                 control={control}
@@ -178,10 +182,10 @@ const BookingModal: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Label required>
                 <Stethoscope className="w-4 h-4 inline mr-2" />
-                Doctor *
-              </label>
+                Doctor
+              </Label>
               <Controller
                 name="doctorId"
                 control={control}
@@ -209,10 +213,10 @@ const BookingModal: React.FC = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Label required>
                 <Calendar className="w-4 h-4 inline mr-2" />
-                Date *
-              </label>
+                Date
+              </Label>
               <Controller
                 name="date"
                 control={control}
@@ -235,10 +239,10 @@ const BookingModal: React.FC = () => {
 
             {/* Time Slot */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <Label required>
                 <Clock className="w-4 h-4 inline mr-2" />
-                Time Slot *
-              </label>
+                Time Slot
+              </Label>
               <Controller
                 name="slot"
                 control={control}
@@ -305,9 +309,9 @@ const BookingModal: React.FC = () => {
 
           {/* Duration */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Duration (minutes) *
-            </label>
+            <Label required>
+              Duration (minutes)
+            </Label>
             <Controller
               name="duration"
               control={control}
@@ -328,9 +332,9 @@ const BookingModal: React.FC = () => {
 
           {/* Reason */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              Reason for Visit *
-            </label>
+            <Label required>
+              Reason for Visit
+            </Label>
             <Controller
               name="reason"
               control={control}
@@ -350,9 +354,9 @@ const BookingModal: React.FC = () => {
 
           {/* Notes */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <Label>
               Additional Notes
-            </label>
+            </Label>
             <Controller
               name="notes"
               control={control}
@@ -369,20 +373,20 @@ const BookingModal: React.FC = () => {
 
           {/* Actions */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <button
+            <Button
               type="button"
+              variant="outline"
               onClick={handleClose}
-              className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50 transition-colors"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              loading={loading}
               disabled={loading}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? 'Booking...' : 'Book Appointment'}
-            </button>
+              Book Appointment
+            </Button>
           </div>
         </form>
       </div>

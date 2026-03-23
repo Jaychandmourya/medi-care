@@ -1,43 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Plus, Filter, Calendar, Printer, Search } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
+import { Button } from '@/components/ui/Button';
 import {
   fetchDoctors,
   fetchDoctorSchedules,
   setSelectedDoctor,
   setShowBookingModal,
-  setShowRescheduleModal
+  fetchAppointments,
+  updateAppointment,
+  setSelectedWeek,
+  setSelectedDate,
+  setSelectedAppointment,
+  setShowDetailModal
 } from '@/features/appointment/appointmentSlice';
 import WeeklyCalendar from '@/components/admin/appointment/WeeklyCalendar';
-import BookingModal from '@/components/admin/appointment/BookingModal';
-import AppointmentDetailModal from '@/components/admin/appointment/AppointmentDetailModal';
-import RescheduleModal from '@/components/admin/appointment/RescheduleModal';
-import DailyPrintView from '@/components/admin/appointment/DailyPrintView';
+import BookingModal from '@/components/admin/appointment/dialog/BookingModal';
+import AppointmentDetailModal from '@/components/admin/appointment/dialog/AppointmentDetailModal';
+import RescheduleModal from '@/components/admin/appointment/dialog/RescheduleModal';
 
 const AdminAppointments = () => {
   const dispatch = useAppDispatch();
-  const { doctors, selectedDoctor, showBookingModal, showDetailModal, showRescheduleModal } = useAppSelector(
+  const {
+    doctors,
+    selectedDoctor,
+    appointments,
+    loading,
+    doctorSchedules
+  } = useAppSelector(
     (state) => state.appointments
   );
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    dispatch(fetchDoctors());
-    dispatch(fetchDoctorSchedules());
+    console.log('AdminAppointments useEffect - fetching initial data');
+
+    // Wait a bit longer to ensure database is fully initialized
+    const initializeData = async () => {
+      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
+
+      console.log('Starting data fetch...');
+      dispatch(fetchDoctors());
+      dispatch(fetchDoctorSchedules());
+
+      // Add another small delay before fetching appointments
+      setTimeout(() => {
+        dispatch(fetchAppointments({
+          doctorId: selectedDoctor || undefined,
+          startDate: new Date(),
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+        }));
+      }, 200);
+    };
+
+    initializeData();
   }, [dispatch]);
 
-  const handleDoctorFilter = (doctorId: string) => {
+  const handleDoctorFilter = useCallback((doctorId: string) => {
     dispatch(setSelectedDoctor(doctorId === 'all' ? null : doctorId));
-  };
+  }, [dispatch]);
 
-  const handlePrintSchedule = () => {
+  const handlePrintSchedule = useCallback(() => {
     window.print();
-  };
+  }, []);
 
-  const filteredDoctors = doctors.filter(doctor =>
-    doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    doctor.department.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const handleBookAppointment = useCallback(() => {
+    dispatch(setShowBookingModal(true));
+  }, [dispatch]);
+
+  // Memoize filtered doctors to prevent recalculation on every render
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter(doctor =>
+      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      doctor.department.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [doctors, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -52,20 +89,21 @@ const AdminAppointments = () => {
             <p className="text-gray-600 mt-2">Manage and schedule patient appointments</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <button
-              onClick={() => dispatch(setShowBookingModal(true))}
-              className="flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            <Button
+              onClick={handleBookAppointment}
+              className="flex items-center"
             >
               <Plus className="w-5 h-5 mr-2" />
               Book Appointment
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handlePrintSchedule}
-              className="flex items-center justify-center px-4 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors"
+              variant="secondary"
+              className="flex items-center"
             >
               <Printer className="w-5 h-5 mr-2" />
               Print Schedule
-            </button>
+            </Button>
           </div>
         </div>
       </div>
@@ -85,7 +123,7 @@ const AdminAppointments = () => {
               className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Doctors</option>
-              {doctors.map((doctor) => (
+              {filteredDoctors.map((doctor) => (
                 <option key={doctor.id} value={doctor.id}>
                   Dr. {doctor.name} - {doctor.department}
                 </option>
@@ -117,25 +155,37 @@ const AdminAppointments = () => {
                 {doctors.find(d => d.id === selectedDoctor)?.name || 'Selected Doctor'}
               </strong>
             </span>
-            <button
+            <Button
               onClick={() => handleDoctorFilter('all')}
-              className="text-sm text-blue-600 hover:text-blue-800 underline"
+              variant="link"
+              size="sm"
             >
               Clear Filter
-            </button>
+            </Button>
           </div>
         )}
       </div>
 
       {/* Calendar */}
       <div className="bg-white rounded-lg shadow-md p-6">
-        <WeeklyCalendar doctorId={selectedDoctor || undefined} />
+        <WeeklyCalendar
+          doctorId={selectedDoctor || undefined}
+          appointments={appointments}
+          loading={loading}
+          doctorSchedules={doctorSchedules}
+          onUpdateAppointment={(params) => dispatch(updateAppointment(params))}
+          onSetSelectedWeek={(week) => dispatch(setSelectedWeek(week))}
+          onSetSelectedDate={(date) => dispatch(setSelectedDate(date))}
+          onSetSelectedAppointment={(appointment) => dispatch(setSelectedAppointment(appointment))}
+          onShowDetailModal={(show) => dispatch(setShowDetailModal(show))}
+        />
       </div>
 
       {/* Modals */}
       <BookingModal />
       <AppointmentDetailModal />
       <RescheduleModal />
+
 
       {/* Print Styles */}
       <style dangerouslySetInnerHTML={{

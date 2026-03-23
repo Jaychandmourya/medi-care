@@ -5,6 +5,7 @@ import { store } from './app/store'
 import App from './App.tsx'
 import './index.css'
 import { seedAllData } from './data/seedData.ts'
+import './utils/resetData.ts'
 
 // Initialize seed data
 seedAllData();

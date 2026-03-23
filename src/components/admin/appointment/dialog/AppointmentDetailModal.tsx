@@ -5,6 +5,8 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { setShowDetailModal, updateAppointment, setShowRescheduleModal } from '@/features/appointment/appointmentSlice';
 import type { Appointment, Patient, Doctor } from '@/features/patient/db/dexie';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import { Button } from '@/components/ui/Button';
+import { Label } from '@/components/ui/Label';
 
 const AppointmentDetailModal = () => {
   const dispatch = useAppDispatch();
@@ -73,7 +75,7 @@ const AppointmentDetailModal = () => {
   const doctor = getDoctor(selectedAppointment.doctorId);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
@@ -82,12 +84,14 @@ const AppointmentDetailModal = () => {
               <Calendar className="w-6 h-6" />
               <h2 className="text-xl font-semibold">Appointment Details</h2>
             </div>
-            <button
+            <Button
               onClick={handleClose}
-              className="p-2 hover:bg-blue-500 rounded-md transition-colors"
+              variant="ghost"
+              size="icon"
+              className="p-2 hover:bg-blue-500 rounded-md transition-colors text-white"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
         </div>
 
@@ -111,25 +115,25 @@ const AppointmentDetailModal = () => {
             {patient ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Name</p>
+                  <Label className="text-sm text-gray-600">Name</Label>
                   <p className="font-medium">{patient.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Phone</p>
+                  <Label className="text-sm text-gray-600">Phone</Label>
                   <p className="font-medium flex items-center">
                     <Phone className="w-4 h-4 mr-1" />
                     {patient.phone}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Email</p>
+                  <Label className="text-sm text-gray-600">Email</Label>
                   <p className="font-medium flex items-center">
                     <Mail className="w-4 h-4 mr-1" />
                     {patient.email || 'N/A'}
                   </p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Blood Group</p>
+                  <Label className="text-sm text-gray-600">Blood Group</Label>
                   <p className="font-medium">{patient.bloodGroup}</p>
                 </div>
               </div>
@@ -147,19 +151,19 @@ const AppointmentDetailModal = () => {
             {doctor ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-600">Name</p>
+                  <Label className="text-sm text-gray-600">Name</Label>
                   <p className="font-medium">Dr. {doctor.name}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Department</p>
+                  <Label className="text-sm text-gray-600">Department</Label>
                   <p className="font-medium">{doctor.department}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Specialization</p>
+                  <Label className="text-sm text-gray-600">Specialization</Label>
                   <p className="font-medium">{doctor.specialization}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-600">Phone</p>
+                  <Label className="text-sm text-gray-600">Phone</Label>
                   <p className="font-medium flex items-center">
                     <Phone className="w-4 h-4 mr-1" />
                     {doctor.phone}
@@ -179,20 +183,20 @@ const AppointmentDetailModal = () => {
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <p className="text-sm text-gray-600">Date</p>
+                <Label className="text-sm text-gray-600">Date</Label>
                 <p className="font-medium">
                   {format(new Date(selectedAppointment.date), 'MMMM d, yyyy')}
                 </p>
               </div>
               <div>
-                <p className="text-sm text-gray-600 flex items-center">
+                <Label className="text-sm text-gray-600 flex items-center">
                   <Clock className="w-4 h-4 mr-1" />
                   Time
-                </p>
+                </Label>
                 <p className="font-medium">{selectedAppointment.slot}</p>
               </div>
               <div>
-                <p className="text-sm text-gray-600">Duration</p>
+                <Label className="text-sm text-gray-600">Duration</Label>
                 <p className="font-medium">{selectedAppointment.duration} minutes</p>
               </div>
             </div>
@@ -206,14 +210,14 @@ const AppointmentDetailModal = () => {
             </h3>
             <div className="space-y-4">
               <div>
-                <p className="text-sm text-gray-600 mb-1">Reason for Visit</p>
+                <Label className="text-sm text-gray-600 mb-1">Reason for Visit</Label>
                 <p className="bg-white p-3 rounded border border-gray-200">
                   {selectedAppointment.reason}
                 </p>
               </div>
               {selectedAppointment.notes && (
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Additional Notes</p>
+                  <Label className="text-sm text-gray-600 mb-1">Additional Notes</Label>
                   <p className="bg-white p-3 rounded border border-gray-200">
                     {selectedAppointment.notes}
                   </p>
@@ -231,7 +235,7 @@ const AppointmentDetailModal = () => {
 
             {/* Current Status Badge */}
             <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm text-gray-600">Current Status:</span>
+              <Label className="text-sm text-gray-600">Current Status:</Label>
               <div className={`px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(selectedAppointment.status)}`}>
                 {selectedAppointment.status.replace('_', ' ').toUpperCase()}
               </div>
@@ -240,7 +244,7 @@ const AppointmentDetailModal = () => {
             {/* All Status Options */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {/* Scheduled */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('scheduled')}
                 disabled={selectedAppointment.status === 'scheduled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -253,10 +257,10 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'scheduled' ? 'bg-blue-600' : 'bg-white'
                 }`}></div>
                 Scheduled
-              </button>
+              </Button>
 
               {/* Confirmed */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('confirmed')}
                 disabled={selectedAppointment.status === 'confirmed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -269,10 +273,10 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'confirmed' ? 'bg-green-600' : 'bg-white'
                 }`}></div>
                 Confirmed
-              </button>
+              </Button>
 
               {/* In Progress */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('in_progress')}
                 disabled={selectedAppointment.status === 'in_progress'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -285,10 +289,10 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'in_progress' ? 'bg-yellow-600 animate-pulse' : 'bg-white'
                 }`}></div>
                 In Progress
-              </button>
+              </Button>
 
               {/* Completed */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('completed')}
                 disabled={selectedAppointment.status === 'completed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -301,10 +305,10 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'completed' ? 'bg-gray-600' : 'bg-white'
                 }`}></div>
                 Completed
-              </button>
+              </Button>
 
               {/* Cancelled */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('cancelled')}
                 disabled={selectedAppointment.status === 'cancelled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -317,10 +321,10 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'cancelled' ? 'bg-red-600' : 'bg-white'
                 }`}></div>
                 Cancelled
-              </button>
+              </Button>
 
               {/* No Show */}
-              <button
+              <Button
                 onClick={() => handleStatusChange('no_show')}
                 disabled={selectedAppointment.status === 'no_show'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -333,12 +337,12 @@ const AppointmentDetailModal = () => {
                   selectedAppointment.status === 'no_show' ? 'bg-orange-600' : 'bg-white'
                 }`}></div>
                 No Show
-              </button>
+              </Button>
             </div>
 
             {/* Reschedule Button */}
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <button
+              <Button
                 onClick={() => {
                   dispatch(setShowDetailModal(false));
                   dispatch(setShowRescheduleModal(true));
@@ -347,18 +351,18 @@ const AppointmentDetailModal = () => {
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 Reschedule Appointment
-              </button>
+              </Button>
             </div>
           </div>
 
           {/* Close Button */}
           <div className="flex justify-end pt-4 border-t border-gray-200">
-            <button
+            <Button
               onClick={handleClose}
               className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
             >
               Close
-            </button>
+            </Button>
           </div>
         </div>
       </div>

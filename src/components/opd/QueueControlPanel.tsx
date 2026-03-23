@@ -3,6 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { advanceQueue, skipToken, requeueToken, toggleSimulation, decrementTimer, resetTimer, updateWaitTimes } from '@/features/opd/opdSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import { Play, Pause, SkipForward, RotateCcw, Clock } from 'lucide-react'
+import { Button } from '@/components/ui/Button'
 
 const QueueControlPanel = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -86,7 +87,7 @@ const QueueControlPanel = () => {
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
+      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-black">
         <Clock className="w-5 h-5" />
         Queue Control
       </h2>
@@ -95,26 +96,23 @@ const QueueControlPanel = () => {
       <div className="mb-6">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-lg font-semibold text-gray-700">Auto Simulation</h3>
-          <button
+          <Button
             onClick={toggleSimulationHandler}
-            className={`px-4 py-2 rounded-md font-medium transition-colors flex items-center gap-2 ${
-              simulationRunning
-                ? 'bg-red-600 text-white hover:bg-red-700'
-                : 'bg-green-600 text-white hover:bg-green-700'
-            }`}
+            variant={simulationRunning ? 'destructive' : 'default'}
+            className="flex items-center gap-2"
           >
             {simulationRunning ? (
               <>
-                <Pause className="w-4 h-4" />
+                <Pause className="w-5 h-5" />
                 Stop Simulation
               </>
             ) : (
               <>
-                <Play className="w-4 h-4" />
+                <Play className="w-5 h-5" />
                 Start Simulation
               </>
             )}
-          </button>
+          </Button>
         </div>
 
         {simulationRunning && (
@@ -143,22 +141,24 @@ const QueueControlPanel = () => {
       <div className="mb-6">
         <h3 className="text-lg font-semibold text-gray-700 mb-3">Manual Controls</h3>
         <div className="flex gap-3">
-          <button
+          <Button
             onClick={handleAdvance}
             disabled={!currentToken}
-            className="flex-1 bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            variant="default"
+            className="flex-1 flex items-center justify-center gap-2"
           >
-            <SkipForward className="w-4 h-4" />
+            <SkipForward className="w-5 h-5" />
             Call Next
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleSkip}
             disabled={!currentToken}
-            className="flex-1 bg-orange-600 text-white py-2 px-4 rounded-md hover:bg-orange-700 transition-colors disabled:bg-gray-300 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+            variant="destructive"
+            className="flex-1 flex items-center justify-center gap-2"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-5 h-5" />
             Skip Current
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -190,12 +190,13 @@ const QueueControlPanel = () => {
                     {token.department}
                   </div>
                 </div>
-                <button
+                <Button
                   onClick={() => handleRequeue(token.tokenId)}
-                  className="px-3 py-1 bg-orange-600 text-white text-sm rounded-md hover:bg-orange-700 transition-colors"
+                  variant="destructive"
+                  size="sm"
                 >
                   Re-queue
-                </button>
+                </Button>
               </div>
             ))}
           </div>
