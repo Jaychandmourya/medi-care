@@ -13,6 +13,7 @@ import AdminOpd from "@/pages/admin/AdminOpd"
 import AdminBeds from "@/pages/admin/AdminBeds"
 import AdminPrescriptions from "@/pages/admin/AdminPrescriptions"
 import AdminDoctors from "@/pages/admin/AdminDoctors"
+import AdminReports from "@/pages/admin/AdminReports"
 
 // Doctor all page import
 import DoctorLayout from "@/components/layout/main-layout/DoctorLayout"
@@ -90,6 +91,7 @@ const AppRoutes = () => {
         <Route path="beds" element={<AdminBeds />} />
         <Route path="prescriptions" element={<AdminPrescriptions />} />
         <Route path="doctors" element={<AdminDoctors />} />
+        <Route path="reports" element={<AdminReports />} />
       </Route>
 
       {/* Nurse */}

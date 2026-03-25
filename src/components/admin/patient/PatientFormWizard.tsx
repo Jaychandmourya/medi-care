@@ -1,17 +1,26 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { patientSchema, type PatientFormData, stepSchemas } from "@/lib/patientValidation";
 import { useAppDispatch } from "../../../app/hooks"
 import { addPatient, updatePatient } from "@/features/patient/patientThunk"
+import toast from "react-hot-toast"
+import { Button } from "@/components/ui/Button";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
 import StepPersonal from "./step-components/StepPersonal";
 import StepMedical from "./step-components/StepMedical";
 import StepEmergency from "./step-components/StepEmergency";
 import StepReview from "./step-components/StepReview";
 
-export default function PatientFormWizard({ defaultData, onClose }: { defaultData?: Partial<PatientFormData>; onClose: () => void }) {
+export default function PatientFormWizard({ defaultData, onClose, onSafeCloseReady }: {
+  defaultData?: Partial<PatientFormData>;
+  onClose: () => void;
+  onSafeCloseReady: (handleSafeClose: () => void) => void;
+}) {
 
   const [step, setStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const dispatch = useAppDispatch();
 
   const methods = useForm<PatientFormData>({
@@ -34,12 +43,13 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
       contactName: "",
       emergencyPhone: "",
       relationship: "",
+      photo: "",
       isActive: true,
     },
     mode: "onChange",
   });
 
-  const { formState: { errors, isValid }, trigger } = methods;
+  const { formState: { errors, isValid, dirtyFields }, trigger } = methods;
 
   // Check if current step has any errors
   const hasStepErrors = () => {
@@ -48,6 +58,38 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
     return currentStepFields.some(field => errors[field as keyof PatientFormData]);
   };
 
+  // Check if there are any unsaved changes
+  const checkUnsavedChanges = useCallback(() => {
+    const hasChanges = Object.keys(dirtyFields).length > 0;
+    return hasChanges;
+  }, [dirtyFields]);
+
+  // Handle safe close with confirmation
+  const handleSafeClose = useCallback(() => {
+    if (step > 1 && checkUnsavedChanges()) {
+      setShowCloseConfirmation(true);
+    } else {
+      onClose();
+    }
+  }, [step, checkUnsavedChanges, onClose]);
+
+  //  Handle Confirm Close dialog
+  const handleConfirmClose = useCallback(() => {
+    setShowCloseConfirmation(false);
+    onClose();
+  }, [onClose]);
+
+  // Handle close confirm close dialog
+  const handleCancelClose = useCallback(() => {
+    setShowCloseConfirmation(false);
+  }, []);
+
+  // Pass the safe close handler to parent
+  useEffect(() => {
+    onSafeCloseReady(handleSafeClose);
+  }, [handleSafeClose, onSafeCloseReady]);
+
+  //  Manage step
   const steps = useMemo(() => [
     "Personal Info",
     "Medical",
@@ -55,6 +97,7 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
     "Review",
   ], []);
 
+  //  Handle next step and check validation
   const handleNext = useCallback(async () => {
     const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
     const fieldsToValidate = Object.keys(currentStepSchema?.shape || {});
@@ -72,20 +115,53 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
 
   const handleBack = useCallback(() => setStep(prev => prev - 1), []);
 
+  //  Submit all data in database
   const onSubmit = useCallback(async (data: PatientFormData) => {
-    console.log('data',data)
+    setIsSubmitting(true);
+    // Show loading toast
+    const loadingToast = toast.loading(data.id ? 'Updating patient...' : 'Adding patient...');
     try {
+      // Ensure all required fields are present
+      const submissionData = {
+        ...data,
+        allergies: data.allergies || "",
+        conditions: data.conditions || "",
+        contactName: data.contactName || "",
+        emergencyPhone: data.emergencyPhone || "",
+      };
+
       if (data.id) {
-        dispatch(updatePatient(data as any));
+
+        // Update existing patient
+        const result = await dispatch(updatePatient(submissionData));
+        if (updatePatient.rejected.match(result)) {
+          throw new Error((result.payload as string) || 'Failed to update patient');
+        }
+        toast.success('Patient updated successfully!', { id: loadingToast });
       } else {
-        dispatch(addPatient(data));
+
+        // Add new patient
+        const result = await dispatch(addPatient(submissionData));
+        if (addPatient.rejected.match(result)) {
+          throw new Error((result.payload as string) || 'Failed to add patient');
+        }
+        toast.success('Patient added successfully!', { id: loadingToast });
       }
-      onClose();
+
+      // Small delay to ensure Redux state is updated
+      setTimeout(() => {
+        onClose();
+      }, 100);
     } catch (error) {
       console.error('Error saving patient:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Failed to save patient';
+      toast.error(errorMessage, { id: loadingToast });
+    } finally {
+      setIsSubmitting(false);
     }
   }, [dispatch, onClose]);
 
+  // Call handleSubmit method
   const handleSubmit = useCallback(() => {
     if (step === 4) {
       methods.handleSubmit(onSubmit)();
@@ -94,7 +170,7 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
 
   return (
     <FormProvider {...methods}>
-      <form className="space-y-6">
+      <form className="space-y-6" onSubmit={methods.handleSubmit(onSubmit)}>
 
       {/* Progress */}
       <div className="relative">
@@ -121,90 +197,61 @@ export default function PatientFormWizard({ defaultData, onClose }: { defaultDat
       {/* Step Title */}
       <h3 className="text-xl font-bold text-gray-800">{steps[step - 1]}</h3>
 
-      {/* Error Display */}
-      {(() => {
-        const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
-        const currentStepFields = Object.keys(currentStepSchema?.shape || {});
-        const currentStepErrors = currentStepFields.filter(field => errors[field as keyof PatientFormData]);
-
-        return currentStepErrors.length > 0 ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-3">
-            <div className="flex items-center space-x-2">
-              <span className="text-red-500">⚠️</span>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-red-800">Please fix the following errors:</p>
-                <ul className="mt-1 text-sm text-red-700 space-y-1">
-                  {currentStepErrors.map((field, index) => (
-                    <li key={index} className="flex items-center space-x-1">
-                      <span className="text-red-400">•</span>
-                      <span>{(errors as any)[field]?.message?.toString() || 'This field has an error'}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          </div>
-        ) : null;
-      })()}
-
       {/* Step Content */}
-      {step === 1 && (
-        <StepPersonal />
-      )}
-      {step === 2 && (
-        <StepMedical />
-      )}
-      {step === 3 && (
-        <StepEmergency />
-      )}
+      {step === 1 && (<StepPersonal />)}
+      {step === 2 && (<StepMedical />)}
+      {step === 3 && (<StepEmergency />)}
       {step === 4 && <StepReview />}
 
-      {/* COMMON BUTTONS */}
+      {/*  Next, Back and Save Patient */}
       <div className="flex justify-between pt-6 border-t border-gray-200">
-
-        {/* Back */}
-        <button
+        <Button
+          type="button"
           onClick={handleBack}
           disabled={step === 1}
-          className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-            step === 1
-              ? "bg-gray-100 text-gray-400 cursor-not-allowed"
-              : "bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95"
-          }`}
+          variant="secondary"
+          size="default"
         >
           ← Back
-        </button>
+        </Button>
 
         {/* Next / Submit */}
         {step < 4 ? (
-          <button
+          <Button
             type="button"
             onClick={handleNext}
             disabled={hasStepErrors()}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-              hasStepErrors()
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:from-blue-600 hover:to-purple-700 active:scale-95 shadow-md hover:shadow-lg"
-            }`}
+            variant="default"
+            size="default"
           >
             Next →
-          </button>
+          </Button>
         ) : (
-          <button
+          <Button
             type="button"
             onClick={handleSubmit}
-            disabled={!isValid}
-            className={`px-6 py-2.5 rounded-lg font-medium transition-all duration-200 ${
-              !isValid
-                ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                : "bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:from-green-600 hover:to-emerald-700 active:scale-95 shadow-md hover:shadow-lg"
-            }`}
+            disabled={!isValid || isSubmitting}
+            variant="default"
+            size="default"
+            loading={isSubmitting}
           >
-            Save Patient
-          </button>
+            {isSubmitting ? "Saving..." : "Save Patient"}
+          </Button>
         )}
       </div>
       </form>
+
+      {/* Close Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCloseConfirmation}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to close? All entered data will be lost."
+        confirmText="Close"
+        cancelText="Cancel"
+        type="warning"
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+      />
     </FormProvider>
   );
 }

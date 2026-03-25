@@ -25,7 +25,17 @@ export default function StepReview() {
             <span className="text-blue-600">👤</span>
             <h4 className="font-semibold text-gray-800">Personal Information</h4>
           </div>
-          <div className="space-y-2 text-sm">
+          <div className="space-y-3 text-sm">
+            {/* Photo Display */}
+            {data.photo && (
+              <div className="flex justify-center">
+                <img
+                  src={data.photo}
+                  alt="Patient photo"
+                  className="w-16 h-16 rounded-full object-cover border-2 border-blue-200"
+                />
+              </div>
+            )}
             <div className="flex justify-between">
               <span className="text-gray-600">Name:</span>
               <span className="font-medium text-gray-800">{data.name || 'N/A'}</span>

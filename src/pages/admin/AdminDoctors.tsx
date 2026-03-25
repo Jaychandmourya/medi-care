@@ -6,7 +6,8 @@ import {
   searchDoctors,
   setCurrentPage,
   setActiveTab,
-  clearError
+  clearError,
+  setLocalDoctors
 } from '@/features/doctor/doctorSlice'
 import DoctorSearch from '@/components/doctor/DoctorSearch'
 import DoctorCard from '@/components/doctor/DoctorCard'
@@ -15,6 +16,7 @@ import DoctorAutocomplete from '@/components/doctor/DoctorAutocomplete'
 import Pagination from '@/components/doctor/Pagination'
 import InternalDoctorList from '@/components/doctor/InternalDoctorList'
 import { type NPIResult } from '@/features/doctor/doctorSlice'
+import { doctorDBOperations } from '@/features/doctor/db/doctorDB'
 
 const AdminDoctors = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -31,9 +33,32 @@ const AdminDoctors = () => {
 
   const [selectedDoctor, setSelectedDoctor] = useState<NPIResult | null>(null)
   const [lastSearchParams, setLastSearchParams] = useState<Record<string, string>>({})
+  const [formValues, setFormValues] = useState({
+    firstName: '',
+    lastName: '',
+    city: '',
+    state: '',
+    country: '',
+    contact: '',
+    specialty: '',
+    postalCode: '',
+    address: ''
+  })
 
   useEffect(() => {
     dispatch(clearError())
+  }, [dispatch])
+
+  useEffect(() => {
+    const loadLocalDoctors = async () => {
+      try {
+        const doctors = await doctorDBOperations.getAll()
+        dispatch(setLocalDoctors(doctors))
+      } catch (error) {
+        console.error('Failed to load local doctors:', error)
+      }
+    }
+    loadLocalDoctors()
   }, [dispatch])
 
   const handleSearch = async (params: Record<string, string>) => {
@@ -56,23 +81,35 @@ const AdminDoctors = () => {
     setSelectedDoctor(null)
   }
 
-  const handleAutocompleteSelect = (doctor: NPIResult) => {
+  const handleFormPopulate = (fields: { firstName: string; lastName: string; city?: string; state?: string; country?: string; contact?: string, specialty?: string, postalCode?: string, address?: string }) => {
+    // Populate the DoctorSearch form fields
+    setFormValues({
+      firstName: fields.firstName || '',
+      lastName: fields.lastName || '',
+      city: fields.city || '',
+      state: fields.state || '',
+      country: fields.country || '',
+      contact: fields.contact || '',
+      specialty: fields.specialty || '',
+      postalCode: fields.postalCode || '',
+      address: fields.address || ''
+    })
+  }
+
+  const handleFieldPopulate = (fields: { firstName: string; lastName: string; city?: string; state?: string }) => {
     // Auto-fill the search form with selected doctor's data
     const params: Record<string, string> = {}
-    if (doctor.basic?.first_name) {
-      params.firstName = doctor.basic.first_name
+    if (fields.firstName) {
+      params.firstName = fields.firstName
     }
-    if (doctor.basic?.last_name) {
-      params.lastName = doctor.basic.last_name
+    if (fields.lastName) {
+      params.lastName = fields.lastName
     }
-    if (doctor.addresses?.[0]?.city) {
-      params.city = doctor.addresses[0].city
+    if (fields.city) {
+      params.city = fields.city
     }
-    if (doctor.addresses?.[0]?.state) {
-      params.state = doctor.addresses[0].state
-    }
-    if (doctor.taxonomies?.[0]?.desc) {
-      params.taxonomy = doctor.taxonomies[0].desc
+    if (fields.state) {
+      params.state = fields.state
     }
 
     setLastSearchParams(params)
@@ -132,7 +169,7 @@ const AdminDoctors = () => {
             <p className="text-blue-700 text-sm mb-4">
               Type a doctor's name to instantly search and add them to your system
             </p>
-            <DoctorAutocomplete onDoctorSelect={handleAutocompleteSelect} />
+            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} />
           </div>
         </div>
 
@@ -140,7 +177,7 @@ const AdminDoctors = () => {
         {activeTab === 'search' ? (
           <div>
             {/* Search Component */}
-            <DoctorSearch onSearch={handleSearch} />
+            <DoctorSearch onSearch={handleSearch} initialValues={formValues} />
 
             {/* Results Summary */}
             {searchResults.length > 0 && (

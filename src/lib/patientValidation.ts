@@ -44,6 +44,7 @@ export const stepSchemas = {
     city: true,
     state: true,
     pin: true,
+    photo: true,
   }),
   2: patientSchema.pick({
     allergies: true,

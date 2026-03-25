@@ -1,9 +1,13 @@
 import { useFormContext } from "react-hook-form";
+import { Label } from "@/components/ui/Label";
+import DatePicker from "@/components/ui/DatePicker";
+import {Phone, Mail} from 'lucide-react'
 
 export default function StepPersonal() {
-  const { register, formState: { errors }, setValue, watch } = useFormContext();
+  const { register, formState: { errors }, setValue, watch, setError, clearErrors } = useFormContext();
   const photoPreview = watch("photo");
 
+  // Upload photo
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
@@ -20,9 +24,9 @@ export default function StepPersonal() {
 
       {/* Photo Upload */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <Label>
           Patient Photo
-        </label>
+        </Label>
         <div className="flex items-center space-x-4">
           <div className="w-20 h-20 bg-gray-100 rounded-full flex items-center justify-center overflow-hidden">
             {photoPreview ? (
@@ -45,16 +49,16 @@ export default function StepPersonal() {
             >
               Upload Photo
             </label>
-            <p className="text-xs text-gray-500 mt-1">JPG, PNG or GIF (Max 5MB)</p>
+            <p className="text-xs text-gray-500 mt-2">JPG, PNG or GIF</p>
           </div>
         </div>
       </div>
 
       {/* Full Name */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Full Name <span className="text-red-500">*</span>
-        </label>
+        <Label required>
+          Full Name
+        </Label>
         <input
           {...register("name", { required: "Full name is required" })}
           placeholder="Enter patient's full name"
@@ -71,12 +75,20 @@ export default function StepPersonal() {
 
       {/* Date of Birth */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
-          Date of Birth <span className="text-red-500">*</span>
-        </label>
-        <input
-          type="date"
-          {...register("dob", { required: "Date of birth is required" })}
+        <Label required>
+          Date of Birth
+        </Label>
+        <DatePicker
+          value={watch("dob") || ''}
+          onChange={(value) => {
+            setValue("dob", value);
+            if (!value) {
+              setError("dob", { message: "Date of birth is required" });
+            } else {
+              clearErrors("dob");
+            }
+          }}
+          placeholder="Select date of birth"
           className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
             errors.dob ? "border-red-500" : "border-gray-300"
           }`}
@@ -91,9 +103,9 @@ export default function StepPersonal() {
       {/* Gender and Blood Group */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Gender <span className="text-red-500">*</span>
-          </label>
+          <Label required>
+            Gender
+          </Label>
           <select
             {...register("gender", { required: "Gender is required" })}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
@@ -113,9 +125,9 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Blood Group <span className="text-red-500">*</span>
-          </label>
+          <Label required>
+            Blood Group
+          </Label>
           <select
             {...register("bloodGroup", { required: "Blood group is required" })}
             className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
@@ -143,11 +155,11 @@ export default function StepPersonal() {
       {/* Phone and Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
-            Phone Number <span className="text-red-500">*</span>
-          </label>
+          <Label required>
+            Phone Number
+          </Label>
           <div className="relative">
-            <span className="absolute left-4 top-3.5 text-gray-500">📱</span>
+            <Phone className="absolute left-4 top-3.5"/>
             <input
               {...register("phone", {
                 required: "Phone number is required",
@@ -170,11 +182,11 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <Label>
             Email Address
-          </label>
+          </Label>
           <div className="relative">
-            <span className="absolute left-4 top-3.5 text-gray-500">✉️</span>
+            <Mail className="absolute left-4 top-3.5"/>
             <input
               type="email"
               {...register("email")}
@@ -194,9 +206,9 @@ export default function StepPersonal() {
 
       {/* Address */}
       <div className="space-y-2">
-        <label className="block text-sm font-medium text-gray-700">
+        <Label>
           Address
-        </label>
+        </Label>
         <textarea
           {...register("address")}
           placeholder="Enter street address"
@@ -215,9 +227,9 @@ export default function StepPersonal() {
       {/* City, State, PIN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <Label>
             City
-          </label>
+          </Label>
           <input
             {...register("city")}
             placeholder="Enter city"
@@ -233,9 +245,9 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <Label>
             State
-          </label>
+          </Label>
           <input
             {...register("state")}
             placeholder="Enter state"
@@ -251,9 +263,9 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <label className="block text-sm font-medium text-gray-700">
+          <Label>
             PIN Code
-          </label>
+          </Label>
           <input
             {...register("pin")}
             placeholder="Enter PIN code"

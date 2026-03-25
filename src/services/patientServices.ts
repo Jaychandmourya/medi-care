@@ -1,25 +1,24 @@
-import Dexie from 'dexie';
-import type { Table } from 'dexie';
+import { db, type Patient } from '../features/patient/db/dexie';
 import type { PatientFormData } from '../lib/patientValidation';
 
-export class PatientDatabase extends Dexie {
-  patients!: Table<PatientFormData>;
-
-  constructor() {
-    super('MediCarePatientDB');
-    this.version(1).stores({
-      patients: '++id, patientId, name, phone, dob, gender, bloodGroup, isActive, createdAt, updatedAt'
-    });
+// Ensure database is ready
+export const initializeDatabase = async (): Promise<void> => {
+  try {
+    await db.open();
+    console.log('✅ Database opened successfully');
+  } catch (error) {
+    console.error('❌ Failed to open database:', error);
+    throw error;
   }
-}
+};
 
-export const patientDB = new PatientDatabase();
 
+//  Generate Patient ID
 const generatePatientId = async (): Promise<string> => {
   const currentYear = new Date().getFullYear();
   const prefix = `MED-${currentYear}-`;
 
-  const existingPatients = await patientDB.patients
+  const existingPatients = await db.patients
     .where('patientId')
     .startsWith(prefix)
     .toArray();
@@ -37,63 +36,101 @@ const generatePatientId = async (): Promise<string> => {
   return `${prefix}${nextNumber}`;
 };
 
+// In This Call All Services for Patient
 export const patientService = {
+
+  //  Get AllPatients
   async getAllPatients(): Promise<PatientFormData[]> {
-    return await patientDB.patients.toArray();
+    try {
+      await initializeDatabase();
+      return await db.patients.toArray();
+    } catch (error) {
+      console.error('Error getting all patients:', error);
+      throw error;
+    }
   },
 
+  // Get Data With Patient Id
   async getPatientById(id: string): Promise<PatientFormData | undefined> {
-    return await patientDB.patients.get(id);
+    return await db.patients.get(id);
   },
 
+  // Get Data With Patient patientId
   async getPatientByPatientId(patientId: string): Promise<PatientFormData | undefined> {
-    return await patientDB.patients.where('patientId').equals(patientId).first();
+    return await db.patients.where('patientId').equals(patientId).first();
   },
 
+  //  Add Data Patient
   async addPatient(patient: Omit<PatientFormData, 'id' | 'createdAt' | 'updatedAt' | 'patientId'>): Promise<PatientFormData> {
-    console.log('Adding patient:', patient);
-    const patientId = await generatePatientId();
-    const newPatient = {
-      ...patient,
-      id: crypto.randomUUID(),
-      patientId,
-      isActive: true,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    await patientDB.patients.add(newPatient);
-    return newPatient;
+    try {
+      await initializeDatabase();
+      const patientId = await generatePatientId();
+      const newPatient: Patient = {
+        ...patient,
+        id: crypto.randomUUID(),
+        patientId,
+        isActive: true,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      await db.patients.add(newPatient);
+      return newPatient;
+    } catch (error) {
+      console.error('Error adding patient:', error);
+      throw error;
+    }
   },
 
+   //  Update Data Patient
   async updatePatient(id: string, updates: Partial<PatientFormData>): Promise<void> {
-    await patientDB.patients.update(id, {
+    await db.patients.update(id, {
       ...updates,
       updatedAt: new Date().toISOString(),
     });
   },
 
+  //  Soft Delete Patient Only Change isActive
   async softDeletePatient(id: string): Promise<void> {
-    await patientDB.patients.update(id, {
+    await db.patients.update(id, {
       isActive: false,
       updatedAt: new Date().toISOString(),
     });
   },
 
+  // Parament Delete with Database
   async deletePatient(id: string): Promise<void> {
-    await patientDB.patients.delete(id);
+    await db.patients.delete(id);
   },
 
+  //  Searching Patients with query
   async searchPatients(query: string): Promise<PatientFormData[]> {
-    const lowerQuery = query.toLowerCase();
-    return await patientDB.patients
-      .where('name')
-      .startsWithIgnoreCase(lowerQuery)
-      .or('phone')
-      .startsWithIgnoreCase(lowerQuery)
-      .or('patientId')
-      .startsWithIgnoreCase(lowerQuery)
-      .or('bloodGroup')
-      .startsWithIgnoreCase(lowerQuery)
-      .toArray();
+    try {
+      const lowerQuery = query.toLowerCase();
+      return await db.patients
+        .where('name')
+        .startsWithIgnoreCase(lowerQuery)
+        .or('phone')
+        .startsWithIgnoreCase(lowerQuery)
+        .or('patientId')
+        .startsWithIgnoreCase(lowerQuery)
+        .or('bloodGroup')
+        .startsWithIgnoreCase(lowerQuery)
+        .toArray();
+    } catch (error) {
+      console.error('Error searching patients:', error);
+      throw error;
+    }
+  },
+
+  // Clear Database
+  async clearDatabase(): Promise<void> {
+    try {
+      await db.delete();
+      await db.open();
+      console.log('Database cleared and reset with proper schema');
+    } catch (error) {
+      console.error('Error clearing database:', error);
+      throw error;
+    }
   }
 };

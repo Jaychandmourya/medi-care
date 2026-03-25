@@ -13,6 +13,9 @@ const patientSlice = createSlice({
     builder.addCase(addPatientThunk.fulfilled, (state, action) => {
       state.list.push(action.payload);
     });
+    builder.addCase(addPatientThunk.rejected, (state, action) => {
+      console.error('Add patient rejected:', action.payload);
+    });
     builder.addCase(getAllPatients.fulfilled, (state, action) => {
       state.list = action.payload;
     });
@@ -22,11 +25,17 @@ const patientSlice = createSlice({
         state.list[index] = action.payload;
       }
     });
+    builder.addCase(updatePatientThunk.rejected, (state, action) => {
+      console.error('Update patient rejected:', action.payload);
+    });
     builder.addCase(deletePatientThunk.fulfilled, (state, action) => {
       const index = state.list.findIndex(p => p.id === action.payload);
       if (index !== -1) {
         state.list[index].isActive = false;
       }
+    });
+    builder.addCase(deletePatientThunk.rejected, (state, action) => {
+      console.error('Delete patient rejected:', action.payload);
     });
   },
 });

@@ -4,18 +4,26 @@ import { getAllPatients, deletePatient } from "@/features/patient/patientThunk";
 import type { RootState } from "@/app/store";
 import AddPatientDialog from "./AddEditPatientDialog";
 import DeleteDialog from "@/components/ui/dialog/DeleteDialog";
+import PatientDetailsDialog from "./PatientDetailsDialog";
 import { Button } from "@/components/ui/Button";
-import { Plus, Search, Filter, Phone, Edit, Trash2, ChevronLeft, ChevronRight } from "lucide-react";
+import { Label } from "@/components/ui/Label";
+import { Plus, Search, Filter, Phone, Edit, Trash2, ChevronLeft, ChevronRight, MoreVertical, Eye } from "lucide-react";
+import DatePicker from "@/components/ui/DatePicker";
+import toast from "react-hot-toast";
 
 export default function PatientList() {
+  // Redux dispatch and selector
   const dispatch = useAppDispatch();
   const patients = useAppSelector((state: RootState) => state.patients.list);
 
+  // Dialog states
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [isOpenDelete, setIsOpenDelete] = useState<boolean>(false);
-  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [isOpenViewDialog, setIsOpenViewDialog] = useState<boolean>(false);
+  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string; phone: string; gender: string; bloodGroup: string; dob: string } | null>(null);
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
+  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Filter states
   const [genderFilter, setGenderFilter] = useState<string>("");
@@ -24,6 +32,7 @@ export default function PatientList() {
   const [registrationDateRange, setRegistrationDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
   const [showFilters, setShowFilters] = useState<boolean>(false);
 
+  // Get all patients on component mount
   useEffect(() => {
     dispatch(getAllPatients());
   }, [dispatch]);
@@ -80,28 +89,57 @@ export default function PatientList() {
 
   const perPage = 5;
 
+  // Pagination Filter
   const paginated = useMemo(() => {
     return filtered.slice((page - 1) * perPage, page * perPage);
   }, [filtered, page]);
 
+  //  Edit and open edit patients dialog
   const handleEdit = useCallback((patient: any) => {
     setSelectedPatient(patient);
     setIsOpenDialog(true);
+    setActiveDropdown(null);
   }, []);
 
+  // Open delete confirmation dialog
   const handleDelete = useCallback((patient: any) => {
     setSelectedPatient(patient);
     setIsOpenDelete(true);
+    setActiveDropdown(null);
   }, []);
 
+  // Open View detail Dialog
+  const handleView = useCallback((patient: any) => {
+    setSelectedPatient(patient);
+    setIsOpenViewDialog(true);
+    setActiveDropdown(null);
+  }, []);
+
+  //  Toggle open filter section
+  const toggleDropdown = useCallback((patientId: string) => {
+    setActiveDropdown(activeDropdown === patientId ? null : patientId);
+  }, [activeDropdown]);
+
+  // Confirmation delete patient data
   const confirmDelete = useCallback(() => {
     if (selectedPatient) {
-      dispatch(deletePatient(selectedPatient.id) as any);
+      const loadingToast = toast.loading('Deleting patient...');
+
+      dispatch(deletePatient(selectedPatient.id) as any)
+        .then(() => {
+          toast.success('Patient deleted successfully!', { id: loadingToast });
+        })
+        .catch((error: any) => {
+          toast.error('Failed to delete patient', { id: loadingToast });
+          console.error('Delete error:', error);
+        });
+
       setIsOpenDelete(false);
       setSelectedPatient(null);
     }
   }, [selectedPatient, dispatch]);
 
+  //  Clear filter
   const clearFilters = useCallback(() => {
     setGenderFilter("");
     setBloodGroupFilter("");
@@ -175,10 +213,10 @@ export default function PatientList() {
 
           {/* Filters */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
               {/* Gender Filter */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Gender</label>
+                <Label>Gender</Label>
                 <select
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
@@ -193,7 +231,7 @@ export default function PatientList() {
 
               {/* Blood Group Filter */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Blood Group</label>
+                <Label>Blood Group</Label>
                 <select
                   value={bloodGroupFilter}
                   onChange={(e) => setBloodGroupFilter(e.target.value)}
@@ -213,8 +251,8 @@ export default function PatientList() {
 
               {/* Age Range Filter */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Age Range</label>
-                <div className="flex gap-2">
+                <Label>Age Range</Label>
+                <div className="flex flex-wrap gap-2">
                   <input
                     type="number"
                     placeholder="Min"
@@ -234,19 +272,19 @@ export default function PatientList() {
 
               {/* Registration Date Range Filter */}
               <div className="space-y-2">
-                <label className="block text-sm font-medium text-gray-700">Registration Date</label>
-                <div className="flex gap-2">
-                  <input
-                    type="date"
+                <Label>Registration Date</Label>
+                <div className="flex flex-wrap gap-2">
+                  <DatePicker
                     value={registrationDateRange.start}
-                    onChange={(e) => setRegistrationDateRange(prev => ({ ...prev, start: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, start: value }))}
+                    placeholder="Start date"
+                    className="flex-1"
                   />
-                  <input
-                    type="date"
+                  <DatePicker
                     value={registrationDateRange.end}
-                    onChange={(e) => setRegistrationDateRange(prev => ({ ...prev, end: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, end: value }))}
+                    placeholder="End date"
+                    className="flex-1"
                   />
                 </div>
               </div>
@@ -255,7 +293,7 @@ export default function PatientList() {
         </div>
 
         {/* Responsive Table */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden backdrop-blur-sm bg-opacity-95">
+        <div className="bg-white rounded-2xl shadow-lg overflow-hidden bg-opacity-95">
           <div className="overflow-x-auto">
             <table className="w-full min-w-[1000px]">
               <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
@@ -277,8 +315,12 @@ export default function PatientList() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold">
-                          {p.name.charAt(0).toUpperCase()}
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+                          {p.photo ? (
+                            <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                          ) : (
+                            <span>{p.name.charAt(0).toUpperCase()}</span>
+                          )}
                         </div>
                         <div className="ml-3">
                           <div className="text-sm font-semibold text-gray-900">{p.name}</div>
@@ -305,24 +347,50 @@ export default function PatientList() {
                       <span className="text-sm text-gray-700">{calculateAge(p.dob)} years</span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(p)}
-                        className="text-blue-600 hover:text-blue-800"
-                      >
-                        <Edit className="w-4 h-4 mr-1" />
-                        Edit
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(p)}
-                        className="text-red-600 hover:text-red-800 ml-2"
-                      >
-                        <Trash2 className="w-4 h-4 mr-1" />
-                        Delete
-                      </Button>
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => toggleDropdown(p.id)}
+                          className="text-gray-600 hover:text-gray-800 p-2"
+                        >
+                          <MoreVertical className="w-4 h-4" />
+                        </Button>
+
+                        {activeDropdown === p.id && (
+                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                            <div className="py-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleView(p)}
+                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <Eye className="w-4 h-4 mr-2 text-gray-400" />
+                                View
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEdit(p)}
+                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                <Edit className="w-4 h-4 mr-2 text-blue-400" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleDelete(p)}
+                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2 text-red-400" />
+                                Delete
+                              </Button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))}
@@ -363,7 +431,7 @@ export default function PatientList() {
           </div>
         </div>
 
-        {/* Dialogs */}
+        {/* Add Patient Dialog */}
         <AddPatientDialog
           isOpen={isOpenDialog}
           onClose={() => {
@@ -373,6 +441,7 @@ export default function PatientList() {
           editData={selectedPatient}
         />
 
+        {/* Delete Confirmation Dialog */}
         <DeleteDialog
           isOpenDelete={isOpenDelete}
           onClose={() => {
@@ -381,8 +450,14 @@ export default function PatientList() {
           }}
           deleteTitle="Delete Patient"
           onConfirm={confirmDelete}
-          description={`Are you sure you want to delete ${selectedPatient?.name}? This action will mark the patient as inactive and can be restored later.`}
-          itemName={selectedPatient?.name}
+        />
+
+        {/* Patients View Dialog */}
+        <PatientDetailsDialog
+          isOpen={isOpenViewDialog}
+          onClose={() => setIsOpenViewDialog(false)}
+          selectedPatient={selectedPatient}
+          calculateAge={calculateAge}
         />
       </div>
     </div>

@@ -2,16 +2,28 @@ import Dexie, { type Table } from "dexie";
 
 export interface Patient {
   id: string;
+  patientId: string;
   name: string;
   dob: string;
-  gender: string;
-  bloodGroup: string;
+  gender: "Male" | "Female" | "Other";
+  bloodGroup: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-";
   phone: string;
   email?: string;
   address?: string;
+  city?: string;
+  state?: string;
+  pin?: string;
+  allergies: string;
+  conditions: string;
+  surgeries?: string;
+  medications?: string;
+  contactName: string;
+  emergencyPhone: string;
+  relationship?: string;
   photo?: string;
   isActive: boolean;
   createdAt: string;
+  updatedAt: string;
 }
 
 export interface Doctor {
@@ -21,6 +33,10 @@ export interface Doctor {
   specialization: string;
   phone: string;
   email: string;
+  contact?: string;
+  city?: string;
+  state?: string;
+  country?: string;
   isActive: boolean;
   createdAt: string;
 }
@@ -63,8 +79,8 @@ class AppDB extends Dexie {
   constructor() {
     super("MediCareDB");
     this.version(2).stores({
-      patients: "id, name, phone, bloodGroup, createdAt",
-      doctors: "id, name, department, specialization, createdAt",
+      patients: "id, patientId, name, phone, bloodGroup, email, city, state, pin, contactName, emergencyPhone, isActive, createdAt",
+      doctors: "id, name, department, specialization, contact, city, state, country, createdAt",
       appointments: "id, patientId, doctorId, department, date, slot, status, createdAt",
       doctorSchedules: "id, doctorId, workingDays, startTime, endTime, slotDuration, isActive",
     });

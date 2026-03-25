@@ -10,12 +10,12 @@ export interface LabelProps extends React.LabelHTMLAttributes<HTMLLabelElement> 
 
 const Label = React.forwardRef<HTMLLabelElement, LabelProps>(
   ({ className, variant = 'default', size = 'default', required = false, children, ...props }, ref) => {
-    const baseClasses = 'inline-flex items-center rounded-lg font-medium transition-all duration-200';
+    const baseClasses = 'inline-flex items-center font-medium';
 
     const variants = {
-      default: 'text-gray-900 focus:ring-blue-500',
-      secondary: 'text-gray-600 bg-gray-100 hover:bg-gray-200 focus:ring-gray-500',
-      destructive: 'text-red-900 bg-red-50 hover:bg-red-100 focus:ring-red-500',
+      default: 'text-gray-700',
+      secondary: 'text-gray-600',
+      destructive: 'text-red-700',
     };
 
     const sizes = {

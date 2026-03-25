@@ -49,7 +49,7 @@ export interface NPISearchResponse {
 
 // Local Doctor Type (stored in Dexie)
 export interface LocalDoctor {
-  id?: number
+  id?: string
   npi: string
   firstName: string
   lastName: string
@@ -60,8 +60,10 @@ export interface LocalDoctor {
   address?: string
   city?: string
   state?: string
+  county?: string
   postalCode?: string
   phone?: string
+  contact?: string
   addedAt: string
 }
 
@@ -147,7 +149,8 @@ export const searchDoctors = createAsyncThunk(
       params.append('state', state.trim())
     }
 
-    const url = `https://npiregistry.cms.hhs.gov/api?${params.toString()}`
+    // const url = `http://localhost:3001/api/npi?${params.toString()}`
+    const url = `http://localhost:3001/api/npi?${params.toString()}`
     console.log('NPI API URL:', url) // Debug log
 
     const response = await fetch(url)
@@ -208,6 +211,13 @@ const doctorSlice = createSlice({
     removeLocalDoctor: (state, action: PayloadAction<number>) => {
       state.localDoctors = state.localDoctors.filter(doc => doc.id !== action.payload)
     },
+    updateLocalDoctor: (state, action: PayloadAction<{ id: string; updates: Partial<LocalDoctor> }>) => {
+      const { id, updates } = action.payload
+      const index = state.localDoctors.findIndex(doc => doc.id === id)
+      if (index !== -1) {
+        state.localDoctors[index] = { ...state.localDoctors[index], ...updates }
+      }
+    },
     setLocalDoctors: (state, action: PayloadAction<LocalDoctor[]>) => {
       state.localDoctors = action.payload
     }
@@ -240,6 +250,7 @@ export const {
   clearError,
   addLocalDoctor,
   removeLocalDoctor,
+  updateLocalDoctor,
   setLocalDoctors
 } = doctorSlice.actions
 
