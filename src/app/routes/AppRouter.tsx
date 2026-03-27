@@ -32,9 +32,7 @@ import RoleBasedRoute from "./RoleBasedRoute"
 
 const AppRoutes = () => {
   const user = useAppSelector((state) => state.auth.user)
-
   const getDefaultRoute = () => {
-    console.log(user)
     if (!user) return "/login"
 
     switch (user.role) {

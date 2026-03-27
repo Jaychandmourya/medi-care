@@ -1,4 +1,5 @@
 import { AlertTriangle, X } from 'lucide-react';
+import { Button } from '@/components/ui/Button';
 
 interface DeleteDialogProps {
   isOpenDelete: boolean;
@@ -43,13 +44,15 @@ export default function DeleteDialog({
               )}
             </div>
           </div>
-          <button
+          <Button
             onClick={onClose}
-            className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center transition-colors duration-200 group"
+            variant="ghost"
+            size="icon"
+            className="w-8 h-8 rounded-full hover:bg-gray-100 transition-colors duration-200 group"
             aria-label="Close dialog"
           >
             <X className="w-4 h-4 text-gray-400 group-hover:text-gray-600" />
-          </button>
+          </Button>
         </div>
 
         {/* Description */}
@@ -61,18 +64,20 @@ export default function DeleteDialog({
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 px-6 pb-6">
-          <button
+          <Button
             onClick={onClose}
-            className="flex-1 px-4 py-2.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg font-medium transition-colors duration-200 order-2 sm:order-1"
+            variant="secondary"
+            className="flex-1 order-2 sm:order-1"
           >
             Cancel
-          </button>
-          <button
+          </Button>
+          <Button
             onClick={handleConfirm}
-            className="flex-1 px-4 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors duration-200 order-1 sm:order-2"
+            variant="destructive"
+            className="flex-1 order-1 sm:order-2"
           >
             Delete
-          </button>
+          </Button>
         </div>
       </div>
     </div>

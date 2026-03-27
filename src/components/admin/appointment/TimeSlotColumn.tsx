@@ -1,13 +1,14 @@
 import React from 'react';
 import { format } from 'date-fns';
 import AppointmentItem from './AppointmentItem';
-import type { Appointment } from '@/features/patient/db/dexie';
+import type { Appointment, Patient } from '@/features/db/dexie';
 
 interface TimeSlotColumnProps {
   time: string;
   day: Date;
   dayIndex: number;
   appointments: Appointment[];
+  patients: Patient[];
   isDragOver: boolean;
   draggedAppointment: Appointment | null;
   hoveredSlot: { date: string; time: string; appointmentId: string } | null;
@@ -25,6 +26,7 @@ const TimeSlotColumn: React.FC<TimeSlotColumnProps> = React.memo(({
   day,
   dayIndex,
   appointments,
+  patients,
   isDragOver,
   draggedAppointment,
   hoveredSlot,
@@ -52,10 +54,12 @@ const TimeSlotColumn: React.FC<TimeSlotColumnProps> = React.memo(({
       onDrop={(e) => onSlotDrop(e, dayDateStr, time)}
     >
       <div className="space-y-1">
+        {/* Show appointments in this time slot and card */}
         {appointments.map((appointment) => (
           <AppointmentItem
             key={appointment.id}
             appointment={appointment}
+            patients={patients}
             isDragged={draggedAppointment?.id === appointment.id}
             onDragStart={onAppointmentDragStart}
             onClick={onAppointmentClick}

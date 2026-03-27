@@ -1,14 +1,21 @@
 import { useSelector } from 'react-redux'
 import { Download, Calendar, User, FileText } from 'lucide-react'
 import type { RootState } from '@/app/store'
+import type { Prescription } from '@/features/prescription/prescriptionSlice'
+import toast from 'react-hot-toast'
 
-const PrescriptionPDFView = () => {
+const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?: Prescription }) => {
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
+  const prescription = propPrescription || currentPrescription
 
-  if (!currentPrescription) return null
+  if (!prescription) return null
 
   const handlePrint = () => {
-    window.print()
+    toast.success('Preparing prescription for printing...')
+    setTimeout(() => {
+      window.print()
+      toast.success('Print dialog opened successfully!')
+    }, 500)
   }
 
   const currentDate = new Date().toLocaleDateString('en-US', {

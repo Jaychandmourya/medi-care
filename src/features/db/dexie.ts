@@ -1,4 +1,5 @@
 import Dexie, { type Table } from "dexie";
+import type { Bed, Ward } from '@/features/bed/bedSlice'
 
 export interface Patient {
   id: string;
@@ -75,6 +76,8 @@ class AppDB extends Dexie {
   doctors!: Table<Doctor>;
   appointments!: Table<Appointment>;
   doctorSchedules!: Table<DoctorSchedule>;
+  beds!: Table<Bed>;
+  wards!: Table<Ward>;
 
   constructor() {
     super("MediCareDB");
@@ -83,6 +86,8 @@ class AppDB extends Dexie {
       doctors: "id, name, department, specialization, contact, city, state, country, createdAt",
       appointments: "id, patientId, doctorId, department, date, slot, status, createdAt",
       doctorSchedules: "id, doctorId, workingDays, startTime, endTime, slotDuration, isActive",
+      beds: 'bedId, ward, status, patientId, admittedAt',
+      wards: 'wardId, name, totalBeds, floor'
     });
   }
 }

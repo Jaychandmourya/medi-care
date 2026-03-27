@@ -4,23 +4,13 @@ import { Clock } from 'lucide-react';
 import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
-import type { Appointment } from '@/features/patient/db/dexie';
-
-interface WeeklyCalendarProps {
-  doctorId?: string;
-  appointments: Appointment[];
-  loading: boolean;
-  doctorSchedules: Array<{ doctorId: string; startTime: string; endTime: string; lunchBreakStart?: string; lunchBreakEnd?: string; slotDuration: number }>;
-  onUpdateAppointment: (params: { id: string; updates: Partial<Appointment> }) => void;
-  onSetSelectedWeek: (week: string) => void;
-  onSetSelectedDate: (date: string) => void;
-  onSetSelectedAppointment: (appointment: Appointment) => void;
-  onShowDetailModal: (show: boolean) => void;
-}
+import type { Appointment } from '@/features/db/dexie';
+import type{ WeeklyCalendarProps } from '@/types/appointment/appointmentType';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
   appointments,
+  patients,
   loading,
   doctorSchedules,
   onUpdateAppointment,
@@ -30,33 +20,37 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   onShowDetailModal
 }) => {
 
-  console.log('WeeklyCalendar props:', { doctorId, appointments: appointments?.length, loading, doctorSchedules: doctorSchedules?.length });
-
+  // State management
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
   const [hoveredSlot, setHoveredSlot] = useState<{ date: string; time: string; appointmentId: string } | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ date: string; time: string } | null>(null);
 
+  // Computed values
   const weekDays = useMemo(() =>
     Array.from({ length: 7 }, (_, i) => addDays(currentWeek, i)),
     [currentWeek]
   );
 
+  // Event handlers
   const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
     setDraggedAppointment(appointment);
     e.dataTransfer.effectAllowed = 'move';
   }, []);
 
+  // Handle slot drag over
   const handleSlotDragOver = useCallback((e: React.DragEvent, date: string, time: string) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     setDragOverSlot({ date, time });
   }, []);
 
+  // Handle slot drag leave
   const handleSlotDragLeave = useCallback(() => {
     setDragOverSlot(null);
   }, []);
 
+  // Handle slot drop
   const handleSlotDrop = useCallback((e: React.DragEvent, newDate: string, newTime: string) => {
     e.preventDefault();
     if (draggedAppointment) {
@@ -80,6 +74,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
     setDragOverSlot(null);
   }, [draggedAppointment, appointments, onUpdateAppointment]);
 
+  // Helper functions
   const generateTimeSlotsForDoctor = useCallback((doctorId: string) => {
     const schedule = doctorSchedules.find(s => s.doctorId === doctorId);
     if (!schedule) {
@@ -120,11 +115,13 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
     return slots;
   }, [doctorSchedules]);
 
+  // Time slots for the current doctor
   const timeSlots = useMemo(() =>
     doctorId ? generateTimeSlotsForDoctor(doctorId) : generateTimeSlotsForDoctor(''),
     [doctorId, generateTimeSlotsForDoctor]
   );
 
+  // Get appointments for a specific slot
   const getAppointmentsForSlot = useCallback((date: Date, time: string) => {
     const dateStr = format(date, 'yyyy-MM-dd');
     return appointments.filter(
@@ -132,21 +129,25 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
     );
   }, [appointments]);
 
+  // Handle appointment click
   const handleAppointmentClick = useCallback((appointment: Appointment) => {
     onSetSelectedAppointment(appointment);
-    onShowDetailModal(true);
+    onShowDetailModal();
   }, [onSetSelectedAppointment, onShowDetailModal]);
 
+  // Handle date click
   const handleDateClick = useCallback((date: Date) => {
     onSetSelectedDate(date.toISOString());
   }, [onSetSelectedDate]);
 
+  // Navigate week
   const navigateWeek = useCallback((direction: 'prev' | 'next') => {
     const newWeek = addDays(currentWeek, direction === 'next' ? 7 : -7);
     setCurrentWeek(newWeek);
     onSetSelectedWeek(newWeek.toISOString());
   }, [currentWeek, onSetSelectedWeek]);
 
+  // Go to today
   const goToToday = useCallback(() => {
     const today = startOfWeek(new Date());
     setCurrentWeek(today);
@@ -155,6 +156,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
 
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      {/* Calendar Header */}
       <CalendarHeader
         currentWeek={currentWeek}
         onNavigateWeek={navigateWeek}
@@ -164,6 +166,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
       {/* Calendar Grid */}
       <div className="overflow-x-auto">
         <div className="min-w-200">
+          {/* Show Days Header */}
           <DayHeaders
             weekDays={weekDays}
             onDateClick={handleDateClick}
@@ -183,11 +186,10 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
                   </div>
                 </div>
 
-                {/* Day Columns */}
+                {/* Day columns and time slots */}
                 {weekDays.map((day, dayIndex) => {
                   const dayAppointments = getAppointmentsForSlot(day, time);
                   const isDragOver = dragOverSlot?.date === format(day, 'yyyy-MM-dd') && dragOverSlot?.time === time;
-
                   return (
                     <TimeSlotColumn
                       key={dayIndex}
@@ -195,6 +197,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
                       day={day}
                       dayIndex={dayIndex}
                       appointments={dayAppointments}
+                      patients={patients}
                       isDragOver={isDragOver}
                       draggedAppointment={draggedAppointment}
                       hoveredSlot={hoveredSlot}

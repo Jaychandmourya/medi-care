@@ -1,18 +1,14 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import type { RootState } from '@/app/store'
+import { fetchBeds,fetchWards,updateBedStatus, admitPatient, dischargePatient} from '@/features/bed/bedThunk'
 import {
-  fetchBeds,
-  fetchWards,
   setSelectedWard,
-  updateBedStatus,
-  admitPatient,
-  dischargePatient,
   toggleSimulation,
   simulateBedStatusChange,
   initializeBeds
 } from '@/features/bed/bedSlice'
-import { initializeDatabase } from '@/utils/bedDatabase'
+import { initializeDatabase } from '@/services/bedAndWardServices'
 import BedGrid from '@/components/admin/bed/BedGrid'
 import BedDetailModal from '@/components/admin/bed/BedDetailModal'
 import WardSwitcher from '@/components/admin/bed/WardSwitcher'
@@ -57,7 +53,6 @@ const AdminBeds = () => {
   // Auto Simulation - Randomly changes 1-2 bed statuses every 45 seconds when simulation is ON
   useEffect(() => {
     let interval: number
-
     if (simulationEnabled && isInitialized) {
       interval = setInterval(() => {
         dispatch(simulateBedStatusChange())
@@ -71,36 +66,44 @@ const AdminBeds = () => {
     }
   }, [simulationEnabled, dispatch, isInitialized])
 
-  const handleBedClick = (bed: Bed) => {
+  const handleBedClick = useCallback((bed: Bed) => {
     setSelectedBed(bed)
-  }
+  }, [])
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setSelectedBed(null)
-  }
+  }, [])
 
-  const handleUpdateStatus = (bedId: string, status: BedStatus, notes?: string) => {
-    dispatch(updateBedStatus({ bedId, status, notes }) as any)
-  }
+  const handleUpdateStatus = useCallback((bedId: string, status: BedStatus, notes?: string) => {
+     dispatch(updateBedStatus({ bedId, status, notes }) as any)
+  }, [dispatch])
 
-  const handleAdmitPatient = (bedId: string, patientId: string) => {
+  const handleAdmitPatient = useCallback((bedId: string, patientId: string) => {
     dispatch(admitPatient({ bedId, patientId }) as any)
-  }
+  }, [dispatch])
 
   // Discharge Patient: Free a bed and record discharge time in IndexedDB
-  const handleDischargePatient = (bedId: string) => {
+  const handleDischargePatient = useCallback((bedId: string) => {
     dispatch(dischargePatient(bedId) as any)
-  }
+  }, [dispatch])
 
-  const handleWardChange = (wardId: string) => {
+  const handleWardChange = useCallback((wardId: string) => {
     dispatch(setSelectedWard(wardId))
-  }
+  }, [dispatch])
 
-  const handleToggleSimulation = () => {
+  const handleToggleSimulation = useCallback(() => {
     dispatch(toggleSimulation())
-  }
+  }, [dispatch])
 
-  const currentWardBeds = beds.filter(bed => bed.ward === selectedWard)
+  const handleRetry = useCallback(() => {
+    dispatch(fetchBeds() as any)
+    dispatch(fetchWards() as any)
+  }, [dispatch])
+
+  const currentWardBeds = useMemo(() =>
+    beds.filter(bed => bed.ward === selectedWard),
+    [beds, selectedWard]
+  )
 
   if (!isInitialized) {
     return (
@@ -122,10 +125,7 @@ const AdminBeds = () => {
             <p className="text-sm">{error}</p>
           </div>
           <Button
-            onClick={() => {
-              dispatch(fetchBeds() as any)
-              dispatch(fetchWards() as any)
-            }}
+            onClick={handleRetry}
             variant="default"
           >
             Retry

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Info, AlertTriangle, CheckCircle, X } from 'lucide-react'
 import {
@@ -14,17 +14,76 @@ const DrugInfoPanel = () => {
 
   useEffect(() => {
     if (selectedDrug && selectedDrug.brandName !== lastFetchedDrugRef.current) {
-      // Only call recall check if we haven't already fetched data for this drug
-      // Adverse events will use the same data from recall check
       lastFetchedDrugRef.current = selectedDrug.brandName
       dispatch(checkDrugRecall(selectedDrug.brandName))
     }
   }, [selectedDrug, dispatch])
 
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     dispatch(setSelectedDrug(null))
     lastFetchedDrugRef.current = null // Reset to allow re-fetching same drug later
-  }
+  }, [dispatch])
+
+  // Memoize recall info display to avoid unnecessary re-computation
+  const recallInfoDisplay = useMemo(() => {
+    if (!selectedDrug?.recallInfo) return null
+
+    const recallInfo = selectedDrug.recallInfo as Record<string, unknown>
+    return (
+      <div className="mt-2 text-xs text-red-600">
+        <p>Reason: {String(recallInfo.reason_for_recall || 'N/A')}</p>
+        <p>Date: {String(recallInfo.recall_initiation_date || 'N/A')}</p>
+      </div>
+    )
+  }, [selectedDrug])
+
+  // Memoize adverse reactions display to avoid re-computation on every render
+  const adverseReactionsDisplay = useMemo(() => {
+    if (!selectedDrug?.adverseReactions || selectedDrug.adverseReactions.length === 0) return null
+
+    const reactionsToShow = selectedDrug.adverseReactions.slice(0, 10)
+    const remainingCount = selectedDrug.adverseReactions.length - 10
+
+    return (
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Known Adverse Reactions</h4>
+        <div className="flex flex-wrap gap-1">
+          {reactionsToShow.map((reaction, index) => (
+            <span
+              key={index}
+              className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-full border border-orange-200"
+            >
+              {reaction}
+            </span>
+          ))}
+          {remainingCount > 0 && (
+            <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-full">
+              +{remainingCount} more
+            </span>
+          )}
+        </div>
+      </div>
+    )
+  }, [selectedDrug])
+
+  // Memoize warnings display to avoid re-computation
+  const warningsDisplay = useMemo(() => {
+    if (!selectedDrug?.warnings || selectedDrug.warnings.length === 0) return null
+
+    return (
+      <div>
+        <h4 className="font-medium text-gray-900 mb-1">Warnings</h4>
+        <ul className="text-gray-700 text-sm space-y-1">
+          {selectedDrug.warnings.map((warning, index) => (
+            <li key={index} className="flex items-start gap-2">
+              <span className="text-yellow-500 mt-1">•</span>
+              <span>{warning}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    )
+  }, [selectedDrug])
 
   if (!selectedDrug) return null
 
@@ -53,12 +112,7 @@ const DrugInfoPanel = () => {
               <p className="text-red-700 text-sm mt-1">
                 This drug has active recalls. Consider alternative medications.
               </p>
-              {selectedDrug.recallInfo && (
-                <div className="mt-2 text-xs text-red-600">
-                  <p>Reason: {String((selectedDrug.recallInfo as Record<string, unknown>).reason_for_recall || 'N/A')}</p>
-                  <p>Date: {String((selectedDrug.recallInfo as Record<string, unknown>).recall_initiation_date || 'N/A')}</p>
-                </div>
-              )}
+              {selectedDrug.recallInfo && recallInfoDisplay}
             </div>
           </div>
         </div>
@@ -110,40 +164,9 @@ const DrugInfoPanel = () => {
           </div>
         )}
 
-        {selectedDrug.warnings && selectedDrug.warnings.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-1">Warnings</h4>
-            <ul className="text-gray-700 text-sm space-y-1">
-              {selectedDrug.warnings.map((warning, index) => (
-                <li key={index} className="flex items-start gap-2">
-                  <span className="text-yellow-500 mt-1">•</span>
-                  <span>{warning}</span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
+        {warningsDisplay}
 
-        {selectedDrug.adverseReactions && selectedDrug.adverseReactions.length > 0 && (
-          <div>
-            <h4 className="font-medium text-gray-900 mb-1">Known Adverse Reactions</h4>
-            <div className="flex flex-wrap gap-1">
-              {selectedDrug.adverseReactions.slice(0, 10).map((reaction, index) => (
-                <span
-                  key={index}
-                  className="px-2 py-1 bg-orange-50 text-orange-700 text-xs rounded-full border border-orange-200"
-                >
-                  {reaction}
-                </span>
-              ))}
-              {selectedDrug.adverseReactions.length > 10 && (
-                <span className="px-2 py-1 bg-gray-50 text-gray-600 text-xs rounded-full">
-                  +{selectedDrug.adverseReactions.length - 10} more
-                </span>
-              )}
-            </div>
-          </div>
-        )}
+        {adverseReactionsDisplay}
       </div>
     </div>
   )

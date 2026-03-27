@@ -3,7 +3,7 @@ import { useDispatch } from 'react-redux'
 import { Search, User, MapPin, Plus, X } from 'lucide-react'
 import { type AppDispatch } from '@/app/store'
 import { addLocalDoctor } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/doctor/db/doctorDB'
+import { doctorDBOperations } from '@/features/db/doctorDB'
 import { type NPIResult } from '@/features/doctor/doctorSlice'
 import { Button } from '../ui/Button'
 

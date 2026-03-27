@@ -1,19 +1,23 @@
-import React, { useState } from 'react';
+import { useState, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 import { X, User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { setShowDetailModal, updateAppointment, setShowRescheduleModal } from '@/features/appointment/appointmentSlice';
-import type { Appointment, Patient, Doctor } from '@/features/patient/db/dexie';
+import { updateAppointment } from '@/features/appointment/appointmentThunk';
+import type { Appointment, Patient, Doctor } from '@/features/db/dexie';
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
 
-const AppointmentDetailModal = () => {
+const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleRescheduleModal }: { showDetailModal: boolean, closeShowDetailModal: () => void, handleRescheduleModal: () => void }) => {
+  // Redux dispatch
   const dispatch = useAppDispatch();
-  const { showDetailModal, selectedAppointment, patients, doctors } = useAppSelector(
+
+  // Redux selectors
+  const { selectedAppointment, patients, doctors } = useAppSelector(
     (state) => state.appointments
   );
 
+  // Confirmation dialog state
   const [confirmationDialog, setConfirmationDialog] = useState({
     isOpen: false,
     title: '',
@@ -21,16 +25,21 @@ const AppointmentDetailModal = () => {
     onConfirm: () => {},
   });
 
-  const handleClose = () => {
-    dispatch(setShowDetailModal(false));
-  };
+  // Handle close modal
+  const handleClose = useCallback(() => {
+    closeShowDetailModal()
+  }, [closeShowDetailModal]);
 
-  const handleStatusChange = (newStatus: Appointment['status']) => {
+  // Handle status change with confirmation
+  const handleStatusChange = useCallback((newStatus: Appointment['status']) => {
     if (selectedAppointment && selectedAppointment.status !== newStatus) {
+      const currentStatusText = selectedAppointment.status.replace('_', ' ').toUpperCase();
+      const newStatusText = newStatus.replace('_', ' ').toUpperCase();
+
       setConfirmationDialog({
         isOpen: true,
         title: 'Confirm Status Change',
-        message: `Are you sure you want to change the appointment status from "${selectedAppointment.status.replace('_', ' ').toUpperCase()}" to "${newStatus.replace('_', ' ').toUpperCase()}"?`,
+        message: `Are you sure you want to change the appointment status from "${currentStatusText}" to "${newStatusText}"?`,
         onConfirm: () => {
           dispatch(updateAppointment({
             id: selectedAppointment.id,
@@ -40,17 +49,20 @@ const AppointmentDetailModal = () => {
         },
       });
     }
-  };
+  }, [selectedAppointment, dispatch]);
 
-  const getPatient = (patientId: string): Patient | undefined => {
+  // Helper functions to get patient and doctor data
+  const getPatient = useCallback((patientId: string): Patient | undefined => {
     return patients.find(p => p.id === patientId);
-  };
+  }, [patients]);
 
-  const getDoctor = (doctorId: string): Doctor | undefined => {
+  // Helper function to get doctor data
+  const getDoctor = useCallback((doctorId: string): Doctor | undefined => {
     return doctors.find(d => d.id === doctorId);
-  };
+  }, [doctors]);
 
-  const getStatusColor = (status: Appointment['status']) => {
+  // Helper function to get status color
+  const getStatusColor = useCallback((status: Appointment['status']) => {
     switch (status) {
       case 'scheduled':
         return 'bg-blue-100 text-blue-800 border-blue-200';
@@ -67,12 +79,43 @@ const AppointmentDetailModal = () => {
       default:
         return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-  };
+  }, []);
 
+  // Get patient and doctor data
+  const patient = useMemo(() => getPatient(selectedAppointment?.patientId), [getPatient, selectedAppointment?.patientId]);
+  const doctor = useMemo(() => getDoctor(selectedAppointment?.doctorId), [getDoctor, selectedAppointment?.doctorId]);
+
+  // Handle reschedule click
+  const handleRescheduleClick = useCallback(() => {
+    handleRescheduleModal()
+  }, [handleRescheduleModal]);
+
+  // Handle confirmation cancel
+  const handleConfirmationCancel = useCallback(() => {
+    setConfirmationDialog(prev => ({ ...prev, isOpen: false }));
+  }, []);
+
+  // Get appointment ID
+  const appointmentId = useMemo(() =>
+    selectedAppointment?.id.slice(-8) || '', [selectedAppointment?.id]);
+
+  // Format date
+  const formattedDate = useMemo(() =>
+    selectedAppointment ? format(new Date(selectedAppointment.date), 'MMMM d, yyyy') : '',
+    [selectedAppointment]);
+
+  // Get status text
+  const statusText = useMemo(() =>
+    selectedAppointment?.status.replace('_', ' ').toUpperCase() || '',
+    [selectedAppointment?.status]);
+
+  // Get status color class
+  const statusColorClass = useMemo(() =>
+    selectedAppointment ? getStatusColor(selectedAppointment.status) : '',
+    [selectedAppointment, getStatusColor]);
+
+  // Check if modal should be shown
   if (!showDetailModal || !selectedAppointment) return null;
-
-  const patient = getPatient(selectedAppointment.patientId);
-  const doctor = getDoctor(selectedAppointment.doctorId);
 
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -98,11 +141,11 @@ const AppointmentDetailModal = () => {
         <div className="p-6 space-y-6">
           {/* Status Badge */}
           <div className="flex items-center justify-between">
-            <div className={`px-4 py-2 rounded-full border text-sm font-medium ${getStatusColor(selectedAppointment.status)}`}>
-              {selectedAppointment.status.replace('_', ' ').toUpperCase()}
+            <div className={`px-4 py-2 rounded-full border text-sm font-medium ${statusColorClass}`}>
+              {statusText}
             </div>
             <div className="text-sm text-gray-500">
-              ID: {selectedAppointment.id.slice(-8)}
+              ID: {appointmentId}
             </div>
           </div>
 
@@ -185,7 +228,7 @@ const AppointmentDetailModal = () => {
               <div>
                 <Label className="text-sm text-gray-600">Date</Label>
                 <p className="font-medium">
-                  {format(new Date(selectedAppointment.date), 'MMMM d, yyyy')}
+                  {formattedDate}
                 </p>
               </div>
               <div>
@@ -236,8 +279,8 @@ const AppointmentDetailModal = () => {
             {/* Current Status Badge */}
             <div className="mb-4 flex items-center justify-between">
               <Label className="text-sm text-gray-600">Current Status:</Label>
-              <div className={`px-3 py-1 rounded-full border text-sm font-medium ${getStatusColor(selectedAppointment.status)}`}>
-                {selectedAppointment.status.replace('_', ' ').toUpperCase()}
+              <div className={`px-3 py-1 rounded-full border text-sm font-medium ${statusColorClass}`}>
+                {statusText}
               </div>
             </div>
 
@@ -343,10 +386,7 @@ const AppointmentDetailModal = () => {
             {/* Reschedule Button */}
             <div className="mt-4 pt-4 border-t border-gray-200">
               <Button
-                onClick={() => {
-                  dispatch(setShowDetailModal(false));
-                  dispatch(setShowRescheduleModal(true));
-                }}
+                onClick={handleRescheduleClick}
                 className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-md"
               >
                 <Calendar className="w-4 h-4 mr-2" />
@@ -374,7 +414,7 @@ const AppointmentDetailModal = () => {
         message={confirmationDialog.message}
         type="warning"
         onConfirm={confirmationDialog.onConfirm}
-        onCancel={() => setConfirmationDialog(prev => ({ ...prev, isOpen: false }))}
+        onCancel={handleConfirmationCancel}
       />
     </div>
   );

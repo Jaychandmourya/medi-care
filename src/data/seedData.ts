@@ -1,4 +1,4 @@
-import { db, type Doctor, type DoctorSchedule, type Patient, type Appointment } from '@/features/patient/db/dexie';
+import { db, type Doctor, type DoctorSchedule, type Patient, type Appointment } from '@/features/db/dexie';
 import { format, addDays } from 'date-fns';
 
 export const seedDoctors = async () => {

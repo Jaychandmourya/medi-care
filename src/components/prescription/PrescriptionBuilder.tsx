@@ -1,27 +1,29 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { Plus, Trash2, Calendar, FileText, Save } from 'lucide-react'
+import { Plus, Trash2, Save } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import toast from 'react-hot-toast'
 import {
   setCurrentPrescription,
-  addMedicine,
   removeMedicine,
-  updateMedicine,
-  setSelectedDrug,
   savePrescriptionToHistory,
   type Medicine
 } from '@/features/prescription/prescriptionSlice'
+import { getAllPatients } from '@/features/patient/patientThunk'
 import type { AppDispatch, RootState } from '@/app/store'
-import DrugSearch from './DrugSearch'
-import DrugInfoPanel from './DrugInfoPanel'
+import AddMedicineDialog from './dialog/AddMedicineDialog'
+import Input from '@/components/ui/Input'
+import DatePicker from '@/components/ui/DatePicker'
+import { Button } from '@/components/ui/Button'
+import { Label } from '../ui/Label'
 
 const prescriptionSchema = z.object({
   patientId: z.string().min(1, 'Patient is required'),
   diagnosis: z.string().min(10, 'Diagnosis must be at least 10 characters').max(500, 'Diagnosis must be less than 500 characters'),
   generalNotes: z.string().max(1000, 'General notes must be less than 1000 characters').optional(),
-  followUpDate: z.string().optional(),
+  followUpDate: z.string().min(1, 'Follow-up date is required'),
 }).refine((data) => {
   if (data.followUpDate) {
     const followUp = new Date(data.followUpDate)
@@ -35,135 +37,160 @@ const prescriptionSchema = z.object({
   path: ['followUpDate']
 })
 
-const medicineSchema = z.object({
-  name: z.string().min(2, 'Medicine name must be at least 2 characters').max(100, 'Medicine name must be less than 100 characters'),
-  dosage: z.string().min(1, 'Dosage is required').max(50, 'Dosage must be less than 50 characters'),
-  frequency: z.string().min(2, 'Frequency must be at least 2 characters').max(50, 'Frequency must be less than 50 characters'),
-  duration: z.string().min(1, 'Duration is required').max(50, 'Duration must be less than 50 characters'),
-  instructions: z.string().max(200, 'Instructions must be less than 200 characters').optional(),
-})
-
 type PrescriptionFormData = z.infer<typeof prescriptionSchema>
-type MedicineFormData = z.infer<typeof medicineSchema>
 
 const PrescriptionBuilder = () => {
   const dispatch = useDispatch<AppDispatch>()
-  const { currentPrescription, selectedDrug } = useSelector((state: RootState) => state.prescriptions)
+  const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
+  const patients = useSelector((state: RootState) => state.patients.list)
 
   const [showMedicineForm, setShowMedicineForm] = useState(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
-  const [saveSuccess, setSaveSuccess] = useState(false)
-  const generateId = () => crypto.randomUUID()
+  const generateId = useCallback(() => {
+    // Generate a unique ID with prefix for better identification
+    const timestamp = Date.now().toString(36); // Base36 timestamp
+    const randomStr = crypto.randomUUID().replace(/-/g, '').substring(0, 8); // First 8 chars of UUID
+    return `RX_${timestamp}_${randomStr}`; // Format: RX_timestamp_randomString
+  }, [])
+
+  useEffect(() => {
+    dispatch(getAllPatients())
+  }, [dispatch])
 
   const {
     register: registerPrescription,
     handleSubmit: handlePrescriptionSubmit,
     formState: { errors: prescriptionErrors },
+    trigger: triggerValidation,
+    watch,
+    setValue,
+    reset: resetPrescriptionForm
   } = useForm<PrescriptionFormData>({
     resolver: zodResolver(prescriptionSchema),
+    defaultValues: {
+      patientId: '',
+      followUpDate: '',
+      diagnosis: '',
+      generalNotes: ''
+    }
   })
 
-  const {
-    register: registerMedicine,
-    handleSubmit: handleMedicineSubmit,
-    formState: { errors: medicineErrors },
-    reset: resetMedicine,
-    setValue: setMedicineValue,
-  } = useForm<MedicineFormData>({
-    resolver: zodResolver(medicineSchema),
-  })
+  const activePatients = useMemo(() => {
+    return patients.filter(p => p.isActive)
+  }, [patients])
 
-  const onPrescriptionSubmit = (data: PrescriptionFormData) => {
-    // Keep existing medicines if they exist
-    const existingMedicines = currentPrescription?.medicines || [];
-
-    // Get patient name from the selected option
-    const patientSelect = document.querySelector('select[name="patientId"]') as HTMLSelectElement;
-    const selectedPatient = patientSelect?.options[patientSelect?.selectedIndex]?.text || 'Unknown Patient';
-
-    const prescription = {
-      id: currentPrescription?.id || generateId(), // Keep existing ID if updating
-      ...data,
-      patientName: selectedPatient, // Dynamic patient name from selection
-      doctorId: 'doc1',
-      doctorName: 'Dr. Smith',
-      medicines: existingMedicines, // Preserve existing medicines
-      createdAt: currentPrescription?.createdAt || new Date().toISOString(), // Keep original creation date
-      updatedAt: new Date().toISOString(), // Add update timestamp
-      status: 'active' as const,
-      followUpDate: data.followUpDate || '',
-      generalNotes: data.generalNotes || '',
-    }
-
-    dispatch(setCurrentPrescription(prescription))
-
-    // Save to history
-    dispatch(savePrescriptionToHistory(prescription))
-
-    // Show success feedback
-    setSaveSuccess(true)
-    setTimeout(() => setSaveSuccess(false), 3000)
-  }
-
-  const onMedicineSubmit = (data: MedicineFormData) => {
-    const medicine: Medicine = {
-      id: editingMedicine?.id || generateId(),
-      ...data,
-      drug: selectedDrug || undefined,
-      instructions: data.instructions || '',
-    }
-
-    // Ensure we have a current prescription before adding medicine
-    if (!currentPrescription) {
-      const newPrescription = {
-        id: generateId(),
-        patientId: '',
-        patientName: 'Unknown Patient',
+  const watchedFollowUpDate = watch('followUpDate')
+  const watchedPatientId = watch('patientId')
+  const watchedDiagnosis = watch('diagnosis')
+  // Create temporary prescription when form has data to enable medicine management
+  const tempPrescription = useMemo(() => {
+    if (!currentPrescription && (watchedPatientId || watchedDiagnosis)) {
+      return {
+        id: 'temp',
+        patientId: watchedPatientId || '',
+        patientName: patients.find(p => p.patientId === watchedPatientId)?.name || 'Temp Patient',
         doctorId: 'doc1',
         doctorName: 'Dr. Smith',
-        diagnosis: '',
-        medicines: [medicine],
+        diagnosis: watchedDiagnosis || '',
+        medicines: [],
         generalNotes: '',
-        followUpDate: '',
+        followUpDate: watchedFollowUpDate || '',
         createdAt: new Date().toISOString(),
         status: 'active' as const,
       }
-      dispatch(setCurrentPrescription(newPrescription))
-    } else {
-      if (editingMedicine) {
-        dispatch(updateMedicine(medicine))
-        setEditingMedicine(null)
-      } else {
-        dispatch(addMedicine(medicine))
-      }
+    }
+    return null
+  }, [watchedPatientId, watchedDiagnosis, watchedFollowUpDate, currentPrescription, patients])
+
+  useEffect(() => {
+    if (tempPrescription) {
+      dispatch(setCurrentPrescription(tempPrescription))
+    }
+  }, [tempPrescription, dispatch])
+
+
+  const onPrescriptionSubmit = useCallback((data: PrescriptionFormData) => {
+    // Keep existing medicines if they exist
+    const existingMedicines = currentPrescription?.medicines || [];
+
+    // Get patient from selected patient ID
+    const selectedPatient = patients.find(p => p.patientId === data.patientId);
+    const patientName = selectedPatient?.name || 'Unknown Patient';
+
+    // Always generate a new unique ID for saved prescriptions
+    // This ensures each saved prescription has a unique identifier
+    const newPrescriptionId = generateId();
+
+    const prescription = {
+      id: newPrescriptionId, // Always generate new ID for saved prescriptions
+      ...data,
+      patientName: patientName, // Dynamic patient name from selection
+      doctorId: 'doc1',
+      doctorName: 'Dr. Smith',
+      medicines: existingMedicines, // Preserve existing medicines
+      createdAt: currentPrescription?.createdAt || new Date().toISOString(), // Keep original creation date or use now
+      updatedAt: new Date().toISOString(), // Add update timestamp
+      status: 'active' as const,
+      generalNotes: data.generalNotes || '',
     }
 
-    resetMedicine()
-    setShowMedicineForm(false)
-    dispatch(setSelectedDrug(null))
-  }
+    // Set the current prescription with the new ID
+    dispatch(setCurrentPrescription(prescription))
 
-  const handleEditMedicine = (medicine: Medicine) => {
+    // Save to history with the unique ID
+    dispatch(savePrescriptionToHistory(prescription))
+
+    // Show success toast with the new prescription ID
+    toast.success(`Prescription saved successfully! ID: ${newPrescriptionId} (${existingMedicines.length} medicine(s) included)`)
+
+    // Clear current prescription to start fresh for next prescription
+    dispatch(setCurrentPrescription(prescription))
+
+    // Reset the form
+    resetPrescriptionForm()
+  }, [currentPrescription, patients, generateId, dispatch, resetPrescriptionForm])
+
+
+  const handleEditMedicine = useCallback((medicine: Medicine) => {
     setEditingMedicine(medicine)
-    setMedicineValue('name', medicine.name)
-    setMedicineValue('dosage', medicine.dosage)
-    setMedicineValue('frequency', medicine.frequency)
-    setMedicineValue('duration', medicine.duration)
-    setMedicineValue('instructions', medicine.instructions || '')
     setShowMedicineForm(true)
-  }
+  }, [])
 
-  const handleRemoveMedicine = (medicineId: string) => {
+  const handleRemoveMedicine = useCallback((medicineId: string) => {
     dispatch(removeMedicine(medicineId))
-  }
+  }, [dispatch])
 
-  const handleAddMedicine = () => {
+  const handleAddMedicine = useCallback(() => {
     setEditingMedicine(null)
-    resetMedicine()
     setShowMedicineForm(true)
-  }
 
-  const medicines = currentPrescription?.medicines || []
+    // Create temporary prescription if it doesn't exist
+    if (!currentPrescription && (watchedPatientId || watchedDiagnosis)) {
+      const tempPrescription = {
+        id: 'temp',
+        patientId: watchedPatientId || '',
+        patientName: patients.find(p => p.patientId === watchedPatientId)?.name || 'Temp Patient',
+        doctorId: 'doc1',
+        doctorName: 'Dr. Smith',
+        diagnosis: watchedDiagnosis || '',
+        medicines: [],
+        generalNotes: '',
+        followUpDate: watchedFollowUpDate || '',
+        createdAt: new Date().toISOString(),
+        status: 'active' as const,
+      };
+      dispatch(setCurrentPrescription(tempPrescription))
+    }
+  }, [currentPrescription, watchedPatientId, watchedDiagnosis, watchedFollowUpDate, patients, dispatch])
+
+  const handleCloseMedicineForm = useCallback(() => {
+    setShowMedicineForm(false)
+    setEditingMedicine(null)
+  }, [])
+
+  const medicines = useMemo(() => {
+    return currentPrescription?.medicines || []
+  }, [currentPrescription?.medicines])
 
   return (
     <div className="space-y-6">
@@ -173,280 +200,171 @@ const PrescriptionBuilder = () => {
         <p className="text-gray-600">Create and manage medical prescriptions</p>
       </div>
 
-      {/* Success Notification */}
-      {saveSuccess && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-center gap-3">
-          <div className="bg-green-100 rounded-full p-2">
-            <Save className="h-4 w-4 text-green-600" />
-          </div>
-          <div>
-            <h4 className="text-green-800 font-medium">Prescription Saved Successfully!</h4>
-            <p className="text-green-600 text-sm">
-              {currentPrescription?.medicines?.length || 0} medicine(s) included
-            </p>
-          </div>
-        </div>
-      )}
-
       {/* Prescription Form */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-        <h2 className="text-xl font-semibold text-gray-900 mb-6 flex items-center gap-2">
-          <FileText className="h-6 w-6 text-blue-500" />
+        <h2 className="text-xl font-semibold text-gray-900 mb-6">
           Prescription Details
         </h2>
 
-        <form onSubmit={handlePrescriptionSubmit(onPrescriptionSubmit)} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Patient *
-              </label>
-              <select
-                {...registerPrescription('patientId')}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              >
-                <option value="">Select Patient</option>
-                <option value="patient1">John Doe</option>
-                <option value="patient2">Jane Smith</option>
-                <option value="patient3">Robert Johnson</option>
-              </select>
-              {prescriptionErrors.patientId && (
-                <p className="text-red-500 text-sm mt-1">{prescriptionErrors.patientId.message}</p>
-              )}
-            </div>
+            <form onSubmit={handlePrescriptionSubmit(onPrescriptionSubmit)} className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Input
+                  id="patientId"
+                  required
+                  as="select"
+                  label="Patient"
+                  registration={registerPrescription('patientId')}
+                  error={prescriptionErrors.patientId}
+                >
+                  <option value="">Select Patient</option>
+                  {activePatients.map((patient) => (
+                    <option key={patient.patientId} value={patient.patientId}>
+                      {patient.name} - {patient.patientId}
+                    </option>
+                  ))}
+                </Input>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-                Follow-up Date
-              </label>
-              <div className="relative">
-                <input
-                  type="date"
-                  {...registerPrescription('followUpDate')}
-                  className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                />
-                <Calendar className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                <div>
+                  <Label required className="block text-sm font-medium text-gray-700 mb-1">
+                    Follow-up Date
+                  </Label>
+                  <input
+                    type="hidden"
+                    {...registerPrescription('followUpDate')}
+                  />
+                  <DatePicker
+                    value={watchedFollowUpDate}
+                    onChange={(value: string) => {
+                      setValue('followUpDate', value)
+                      triggerValidation('followUpDate') // Revalidate this field
+                    }}
+                    onBlur={() => {
+                      triggerValidation('followUpDate') // Revalidate this field
+                    }}
+                    placeholder="Select follow-up date"
+                    disablePastDates={true}
+                  />
+                  {prescriptionErrors.followUpDate && (
+                    <p className="text-red-500 text-sm mt-1">{prescriptionErrors.followUpDate.message}</p>
+                  )}
+                </div>
               </div>
-            </div>
-          </div>
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Diagnosis *
-            </label>
-            <textarea
-              {...registerPrescription('diagnosis')}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-              placeholder="Enter diagnosis..."
-            />
-            {prescriptionErrors.diagnosis && (
-              <p className="text-red-500 text-sm mt-1">{prescriptionErrors.diagnosis.message}</p>
-            )}
-          </div>
+              <Input
+                id="diagnosis"
+                as="textarea"
+                label="Diagnosis"
+                required
+                placeholder="Enter diagnosis..."
+                rows={3}
+                registration={registerPrescription('diagnosis')}
+                error={prescriptionErrors.diagnosis}
+              />
 
-          <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              General Notes
-            </label>
-            <textarea
-              {...registerPrescription('generalNotes')}
-              rows={2}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none"
-              placeholder="Additional notes..."
-            />
-          </div>
+              <Input
+                id="generalNotes"
+                as="textarea"
+                label="General Notes"
+                placeholder="Additional notes..."
+                rows={2}
+                registration={registerPrescription('generalNotes')}
+                error={prescriptionErrors.generalNotes}
+              />
 
-          <div className="flex gap-3">
-            <button
-              type="submit"
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
-            >
-              <Save className="h-4 w-4" />
-              Save Prescription
-            </button>
-          </div>
-        </form>
+              <div className="flex gap-3">
+                <Button
+                  type="submit"
+                  className="flex items-center gap-2"
+                >
+                  <Save className="h-4 w-4" />
+                  Save Prescription
+                </Button>
+              </div>
+            </form>
       </div>
 
       {/* Medicine Management */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">Medicines</h3>
-          <button
-            onClick={handleAddMedicine}
-            className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2 text-sm"
-          >
-            <Plus className="h-4 w-4" />
-            Add Medicine
-          </button>
-        </div>
-
-        {medicines.length === 0 ? (
-          <div className="text-center py-8">
-            <p className="text-gray-500 mb-4">No medicines added yet</p>
-            <button
-              onClick={handleAddMedicine}
-              className="px-4 py-2 bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200 transition-colors inline-flex items-center gap-2"
-            >
-              <Plus className="h-4 w-4" />
-              Add Your First Medicine
-            </button>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div className="flex items-center justify-between mb-2">
-              <span className="text-sm text-gray-600">{medicines.length} medicine(s) added</span>
-              {!currentPrescription?.patientId && (
-                <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
-                  Complete prescription details above
-                </span>
-              )}
+            <div className="flex justify-between items-center mb-4">
+              <h3 className="text-lg font-semibold text-gray-900">Medicines</h3>
+              <Button
+                onClick={handleAddMedicine}
+                size="sm"
+                className="flex items-center gap-2"
+              >
+                <Plus className="h-4 w-4" />
+                Add Medicine
+              </Button>
             </div>
-            {medicines.map((medicine) => (
-              <div key={medicine.id} className="border border-gray-200 rounded-lg p-4">
-                <div className="flex justify-between items-start">
-                  <div className="flex-1">
-                    <h4 className="font-medium text-gray-900">{medicine.name}</h4>
-                    <div className="mt-2 space-y-1 text-sm text-gray-600">
-                      <p><strong>Dosage:</strong> {medicine.dosage}</p>
-                      <p><strong>Frequency:</strong> {medicine.frequency}</p>
-                      <p><strong>Duration:</strong> {medicine.duration}</p>
-                      {medicine.instructions && (
-                        <p><strong>Instructions:</strong> {medicine.instructions}</p>
-                      )}
+
+            {medicines.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500 mb-4">No medicines added yet</p>
+                <Button
+                  onClick={handleAddMedicine}
+                  variant="outline"
+                  className="inline-flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Add Your First Medicine
+                </Button>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                <div className="flex items-center justify-between mb-2">
+                  <span className="text-sm text-gray-600">{medicines.length} medicine(s) added</span>
+                  {!currentPrescription?.patientId && (
+                    <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                      Complete prescription details above
+                    </span>
+                  )}
+                </div>
+                {medicines.map((medicine) => (
+                  <div key={medicine.id} className="border border-gray-200 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-1">
+                        <h4 className="font-medium text-gray-900">{medicine.name}</h4>
+                        <div className="mt-2 space-y-1 text-sm text-gray-600">
+                          <p><strong>Dosage:</strong> {medicine.dosage}</p>
+                          <p><strong>Frequency:</strong> {medicine.frequency}</p>
+                          <p><strong>Duration:</strong> {medicine.duration}</p>
+                          {medicine.instructions && (
+                            <p><strong>Instructions:</strong> {medicine.instructions}</p>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => handleEditMedicine(medicine)}
+                          variant="ghost"
+                          size="sm"
+                          className="text-blue-600 hover:text-blue-800"
+                        >
+                          Edit
+                        </Button>
+                        <Button
+                          onClick={() => handleRemoveMedicine(medicine.id)}
+                          variant="destructive"
+                          size="icon"
+                          className="h-8 w-8"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => handleEditMedicine(medicine)}
-                      className="text-blue-600 hover:text-blue-800 text-sm"
-                    >
-                      Edit
-                    </button>
-                    <button
-                      onClick={() => handleRemoveMedicine(medicine.id)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              </div>
             ))}
           </div>
         )}
       </div>
 
       {/* Medicine Form Modal */}
-      {showMedicineForm && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              {editingMedicine ? 'Edit Medicine' : 'Add Medicine'}
-            </h3>
-
-            <div className="mb-4">
-              <DrugSearch />
-            </div>
-
-            <DrugInfoPanel />
-
-            <form onSubmit={handleMedicineSubmit(onMedicineSubmit)} className="space-y-4 mt-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Medicine Name *
-                </label>
-                <input
-                  {...registerMedicine('name')}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                  placeholder="Enter medicine name"
-                />
-                {medicineErrors.name && (
-                  <p className="text-red-500 text-sm mt-1">{medicineErrors.name.message}</p>
-                )}
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Dosage *
-                  </label>
-                  <input
-                    {...registerMedicine('dosage')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="e.g., 500mg"
-                  />
-                  {medicineErrors.dosage && (
-                    <p className="text-red-500 text-sm mt-1">{medicineErrors.dosage.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Frequency *
-                  </label>
-                  <input
-                    {...registerMedicine('frequency')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="e.g., Twice daily"
-                  />
-                  {medicineErrors.frequency && (
-                    <p className="text-red-500 text-sm mt-1">{medicineErrors.frequency.message}</p>
-                  )}
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Duration *
-                  </label>
-                  <input
-                    {...registerMedicine('duration')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="e.g., 7 days"
-                  />
-                  {medicineErrors.duration && (
-                    <p className="text-red-500 text-sm mt-1">{medicineErrors.duration.message}</p>
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Instructions
-                  </label>
-                  <input
-                    {...registerMedicine('instructions')}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-                    placeholder="e.g., Take after meals"
-                  />
-                </div>
-              </div>
-
-              <div className="flex gap-3 justify-end">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowMedicineForm(false)
-                    setEditingMedicine(null)
-                    dispatch(setSelectedDrug(null))
-                  }}
-                  className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
-                  {editingMedicine ? 'Update' : 'Add'} Medicine
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddMedicineDialog
+        showMedicineForm={showMedicineForm}
+        editingMedicine={editingMedicine}
+        onClose={handleCloseMedicineForm}
+        currentPrescription={currentPrescription}
+      />
     </div>
   )
 }

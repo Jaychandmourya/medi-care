@@ -1,4 +1,4 @@
-import { db, type Patient } from '../features/patient/db/dexie';
+import { db, type Patient } from '../features/db/dexie';
 import type { PatientFormData } from '../lib/patientValidation';
 
 // Ensure database is ready

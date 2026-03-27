@@ -1,27 +1,29 @@
-import React, { useEffect } from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Calendar, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
+import  DatePicker from '@/components/ui/DatePicker';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { updateAppointment, generateTimeSlots, setShowRescheduleModal } from '@/features/appointment/appointmentSlice';
+import { updateAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
+import { rescheduleSchema } from '@/validation-schema/appointmentSchema'
 
-const rescheduleSchema = z.object({
-  date: z.string().min(1, 'Date is required'),
-  slot: z.string().min(1, 'Time slot is required'),
-  reason: z.string().optional(),
-});
 
 type RescheduleFormData = z.infer<typeof rescheduleSchema>;
 
-const RescheduleModal: React.FC = () => {
+const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRescheduleModal: boolean, closeRescheduleModal: () => void }) => {
+  // Redux dispatch
   const dispatch = useAppDispatch();
-  const { showRescheduleModal, selectedAppointment, appointments, doctors, availableSlots, loading } = useAppSelector(
+
+  //  Redux selectors
+  const { selectedAppointment, appointments, doctors, availableSlots, loading } = useAppSelector(
     (state) => state.appointments
   );
 
+  // Form control
   const {
     control,
     handleSubmit,
@@ -33,16 +35,19 @@ const RescheduleModal: React.FC = () => {
     resolver: zodResolver(rescheduleSchema),
   });
 
-  const watchedDoctorId = selectedAppointment?.doctorId;
+  // Watch form values
+  const watchedDoctorId = useMemo(() => selectedAppointment?.doctorId, [selectedAppointment?.doctorId]);
   const watchedDate = watch('date');
 
+  // Set initial values when modal opens
   useEffect(() => {
     if (selectedAppointment) {
       setValue('date', selectedAppointment.date);
       setValue('slot', selectedAppointment.slot);
     }
-  }, [selectedAppointment, setValue]);
+  }, [selectedAppointment, setValue, showRescheduleModal]);
 
+  // Generate time slots when doctor and date are selected
   useEffect(() => {
     if (watchedDoctorId && watchedDate) {
       const date = new Date(watchedDate);
@@ -50,9 +55,9 @@ const RescheduleModal: React.FC = () => {
     }
   }, [watchedDoctorId, watchedDate, dispatch]);
 
-  const handleReschedule = (data: RescheduleFormData) => {
+  // Update appointment
+  const handleReschedule = useCallback((data: RescheduleFormData) => {
     if (selectedAppointment) {
-      // Check for conflicts
       const conflict = appointments.find(
         apt => apt.id !== selectedAppointment.id &&
                 apt.doctorId === selectedAppointment.doctorId &&
@@ -78,19 +83,22 @@ const RescheduleModal: React.FC = () => {
         }
       }));
 
-      dispatch(setShowRescheduleModal(false));
+      toast.success('Appointment rescheduled successfully!');
+      closeRescheduleModal()
       reset();
     }
-  };
+  }, [selectedAppointment, appointments, dispatch, closeRescheduleModal, reset]);
 
-  const handleClose = () => {
-    dispatch(setShowRescheduleModal(false));
-  };
+  // Close model
+  const handleClose = useCallback(() => {
+    closeRescheduleModal()
+    reset()
+  }, [closeRescheduleModal, reset]);
 
-  const checkConflict = (slot: string) => {
+  // Check for conflicts
+  const checkConflict = useCallback((slot: string) => {
     if (!selectedAppointment || !watchedDate) return false;
 
-    // Check for actual conflicts with other appointments
     const conflict = appointments.find(
       apt => apt.id !== selectedAppointment.id &&
               apt.doctorId === selectedAppointment.doctorId &&
@@ -99,11 +107,35 @@ const RescheduleModal: React.FC = () => {
     );
 
     return !!conflict;
-  };
+  }, [selectedAppointment, watchedDate, appointments]);
+
+  // Check if the selected time slot is the same as the current appointment
+  const isSameTimeSlot = useMemo(() => {
+    const watchedDateValue = watch('date');
+    const watchedSlotValue = watch('slot');
+    return watchedDateValue === selectedAppointment?.date && watchedSlotValue === selectedAppointment?.slot;
+  }, [watch, selectedAppointment?.date, selectedAppointment?.slot]);
+
+  // Find the doctor for the selected appointment
+  const doctor = useMemo(() => doctors.find(d => d.id === selectedAppointment?.doctorId), [doctors, selectedAppointment?.doctorId]);
+
+  // Generate time slot options
+  const timeSlotOptions = useMemo(() => {
+    return availableSlots.map((slot) => {
+      const hasConflict = checkConflict(slot);
+      return (
+        <option
+          key={slot}
+          value={slot}
+          disabled={hasConflict}
+        >
+          {slot} {hasConflict ? '(Current Slot)' : ''}
+        </option>
+      );
+    });
+  }, [availableSlots, checkConflict]);
 
   if (!showRescheduleModal || !selectedAppointment) return null;
-
-  const doctor = doctors.find(d => d.id === selectedAppointment.doctorId);
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
@@ -128,7 +160,8 @@ const RescheduleModal: React.FC = () => {
 
         {/* Form */}
         <form onSubmit={handleSubmit(handleReschedule)} className="p-6 space-y-6">
-          {/* Current Appointment Info */}
+
+          {/* Current appointment info */}
           <div className="bg-orange-50 border-l-4 border-orange-400 p-4">
             <div className="flex">
               <div className="flex-shrink-0">
@@ -157,10 +190,10 @@ const RescheduleModal: React.FC = () => {
               name="date"
               control={control}
               render={({ field }) => (
-                <input
-                  type="date"
-                  {...field}
-                  min={new Date().toISOString().split('T')[0]}
+                <DatePicker
+                  value={field.value}
+                  onChange={field.onChange}
+                  placeholder="Select new date"
                   className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
                 />
               )}
@@ -191,18 +224,7 @@ const RescheduleModal: React.FC = () => {
                   <option value="">
                     {availableSlots.length ? 'Select time slot' : 'Select date first'}
                   </option>
-                  {availableSlots.map((slot) => {
-                    const hasConflict = checkConflict(slot);
-                    return (
-                      <option
-                        key={slot}
-                        value={slot}
-                        disabled={hasConflict}
-                      >
-                        {slot} {hasConflict ? '(Current Slot)' : ''}
-                      </option>
-                    );
-                  })}
+                  {timeSlotOptions}
                 </select>
               )}
             />
@@ -212,7 +234,7 @@ const RescheduleModal: React.FC = () => {
           </div>
 
           {/* Conflict Warning */}
-          {watch('date') === selectedAppointment.date && watch('slot') === selectedAppointment.slot && (
+          {isSameTimeSlot && (
             <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3">
               <div className="flex">
                 <div className="shrink-0">
@@ -258,7 +280,7 @@ const RescheduleModal: React.FC = () => {
             <Button
               type="submit"
               loading={loading}
-              disabled={loading || (watch('date') === selectedAppointment.date && watch('slot') === selectedAppointment.slot)}
+              disabled={loading || isSameTimeSlot}
             >
               Reschedule Appointment
             </Button>

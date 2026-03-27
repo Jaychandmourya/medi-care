@@ -7,9 +7,7 @@ interface Props {
 }
 
 const ProtectedRoute = ({ children }: Props) => {
-  console.log('children',children)
   const user = useAppSelector((state) => state.auth.user)
-
   if (!user) {
     return <Navigate to="/login" replace />
   }

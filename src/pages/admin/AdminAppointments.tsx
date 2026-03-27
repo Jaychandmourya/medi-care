@@ -2,17 +2,17 @@ import { useEffect, useState, useCallback, useMemo } from 'react';
 import { Plus, Filter, Calendar, Printer, Search } from 'lucide-react';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
 import {
   fetchDoctors,
   fetchDoctorSchedules,
+  fetchPatients,
   setSelectedDoctor,
-  setShowBookingModal,
   fetchAppointments,
   updateAppointment,
   setSelectedWeek,
   setSelectedDate,
   setSelectedAppointment,
-  setShowDetailModal
 } from '@/features/appointment/appointmentSlice';
 import WeeklyCalendar from '@/components/admin/appointment/WeeklyCalendar';
 import BookingModal from '@/components/admin/appointment/dialog/BookingModal';
@@ -25,23 +25,25 @@ const AdminAppointments = () => {
     doctors,
     selectedDoctor,
     appointments,
+    patients,
     loading,
     doctorSchedules
   } = useAppSelector(
     (state) => state.appointments
   );
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [showBookingModal, setShowBookingModal] = useState<boolean>(false)
+  const [showDetailModal, setShowDetailModal] = useState<boolean>(false)
+  const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false)
 
   useEffect(() => {
-    console.log('AdminAppointments useEffect - fetching initial data');
 
     // Wait a bit longer to ensure database is fully initialized
     const initializeData = async () => {
       await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
-
-      console.log('Starting data fetch...');
       dispatch(fetchDoctors());
       dispatch(fetchDoctorSchedules());
+      dispatch(fetchPatients());
 
       // Add another small delay before fetching appointments
       setTimeout(() => {
@@ -54,7 +56,7 @@ const AdminAppointments = () => {
     };
 
     initializeData();
-  }, [dispatch]);
+  }, [dispatch, selectedDoctor]);
 
   const handleDoctorFilter = useCallback((doctorId: string) => {
     dispatch(setSelectedDoctor(doctorId === 'all' ? null : doctorId));
@@ -63,10 +65,6 @@ const AdminAppointments = () => {
   const handlePrintSchedule = useCallback(() => {
     window.print();
   }, []);
-
-  const handleBookAppointment = useCallback(() => {
-    dispatch(setShowBookingModal(true));
-  }, [dispatch]);
 
   // Memoize filtered doctors to prevent recalculation on every render
   const filteredDoctors = useMemo(() => {
@@ -90,7 +88,7 @@ const AdminAppointments = () => {
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
             <Button
-              onClick={handleBookAppointment}
+              onClick={() => setShowBookingModal(true)}
               className="flex items-center"
             >
               <Plus className="w-5 h-5 mr-2" />
@@ -113,14 +111,13 @@ const AdminAppointments = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Doctor Filter */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Filter className="w-4 h-4 inline mr-2" />
-              Filter by Doctor
-            </label>
-            <select
+            <Input
+              id="doctor-filter"
+              as="select"
+              label="Filter by Doctor"
+              icon={Filter}
               value={selectedDoctor || 'all'}
               onChange={(e) => handleDoctorFilter(e.target.value)}
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             >
               <option value="all">All Doctors</option>
               {filteredDoctors.map((doctor) => (
@@ -128,21 +125,19 @@ const AdminAppointments = () => {
                   Dr. {doctor.name} - {doctor.department}
                 </option>
               ))}
-            </select>
+            </Input>
           </div>
 
           {/* Search */}
           <div className="flex-1">
-            <label className="block text-sm font-medium text-gray-700 mb-2">
-              <Search className="w-4 h-4 inline mr-2" />
-              Search Doctors
-            </label>
-            <input
+            <Input
+              id="doctor-search"
               type="text"
+              label="Search Doctors"
+              icon={Search}
+              placeholder="Search by name or department..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by name or department..."
-              className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
           </div>
         </div>
@@ -171,20 +166,21 @@ const AdminAppointments = () => {
         <WeeklyCalendar
           doctorId={selectedDoctor || undefined}
           appointments={appointments}
+          patients={patients}
           loading={loading}
           doctorSchedules={doctorSchedules}
           onUpdateAppointment={(params) => dispatch(updateAppointment(params))}
           onSetSelectedWeek={(week) => dispatch(setSelectedWeek(week))}
           onSetSelectedDate={(date) => dispatch(setSelectedDate(date))}
           onSetSelectedAppointment={(appointment) => dispatch(setSelectedAppointment(appointment))}
-          onShowDetailModal={(show) => dispatch(setShowDetailModal(show))}
+          onShowDetailModal={() => setShowDetailModal(true)}
         />
       </div>
 
       {/* Modals */}
-      <BookingModal />
-      <AppointmentDetailModal />
-      <RescheduleModal />
+      <BookingModal showBookingModal={showBookingModal} closeBookingModel={() => setShowBookingModal(false) } />
+      <AppointmentDetailModal showDetailModal={showDetailModal} closeShowDetailModal={() => setShowDetailModal(false)} handleRescheduleModal={ ()=> setShowRescheduleModal(true) } />
+      <RescheduleModal showRescheduleModal={showRescheduleModal} closeRescheduleModal={() => { setShowRescheduleModal(false); setShowDetailModal(false); }} />
 
 
       {/* Print Styles */}

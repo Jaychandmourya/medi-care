@@ -7,6 +7,7 @@ import DeleteDialog from "@/components/ui/dialog/DeleteDialog";
 import PatientDetailsDialog from "./PatientDetailsDialog";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
+import Input from "@/components/ui/Input";
 import { Plus, Search, Filter, Phone, Edit, Trash2, ChevronLeft, ChevronRight, MoreVertical, Eye } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import toast from "react-hot-toast";
@@ -175,15 +176,14 @@ export default function PatientList() {
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95 space-y-4">
           {/* Search Bar */}
-          <div className="relative">
-            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-            <input
-              placeholder="Search by name, phone, patient ID, or blood group..."
-              className="w-full pl-12 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-700 placeholder-gray-400 transition-all duration-200"
-              onChange={(e) => setSearch(e.target.value)}
-              value={search}
-            />
-          </div>
+          <Input
+            type="text"
+            placeholder="Search by name, phone, patient ID, or blood group..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            icon={Search}
+            iconPosition="left"
+          />
 
           {/* Filter Toggle */}
           <div className="flex justify-between items-center">
@@ -217,25 +217,25 @@ export default function PatientList() {
               {/* Gender Filter */}
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <select
+                <Input
+                  as="select"
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Genders</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </select>
+                </Input>
               </div>
 
               {/* Blood Group Filter */}
               <div className="space-y-2">
                 <Label>Blood Group</Label>
-                <select
+                <Input
+                  as="select"
                   value={bloodGroupFilter}
                   onChange={(e) => setBloodGroupFilter(e.target.value)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
                   <option value="">All Blood Groups</option>
                   <option value="A+">A+</option>
@@ -246,34 +246,34 @@ export default function PatientList() {
                   <option value="AB-">AB-</option>
                   <option value="O+">O+</option>
                   <option value="O-">O-</option>
-                </select>
+                </Input>
               </div>
 
               {/* Age Range Filter */}
-              <div className="space-y-2">
+              <div>
                 <Label>Age Range</Label>
-                <div className="flex flex-wrap gap-2">
-                  <input
+                <div className="flex gap-2">
+                  <Input
                     type="number"
                     placeholder="Min"
                     value={ageRange.min}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, min: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1"
                   />
-                  <input
+                  <Input
                     type="number"
                     placeholder="Max"
                     value={ageRange.max}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, max: e.target.value }))}
-                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="flex-1"
                   />
                 </div>
               </div>
 
               {/* Registration Date Range Filter */}
-              <div className="space-y-2">
+              <div>
                 <Label>Registration Date</Label>
-                <div className="flex flex-wrap gap-2">
+                <div className="flex gap-2">
                   <DatePicker
                     value={registrationDateRange.start}
                     onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, start: value }))}
@@ -358,37 +358,45 @@ export default function PatientList() {
                         </Button>
 
                         {activeDropdown === p.id && (
-                          <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
-                            <div className="py-1">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleView(p)}
-                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Eye className="w-4 h-4 mr-2 text-gray-400" />
-                                View
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleEdit(p)}
-                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                <Edit className="w-4 h-4 mr-2 text-blue-400" />
-                                Edit
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDelete(p)}
-                                className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2 text-red-400" />
-                                Delete
-                              </Button>
+                          <>
+                            {/* Backdrop to close dropdown when clicking outside */}
+                            <div
+                              className="fixed inset-0 z-10"
+                              onClick={() => setActiveDropdown(null)}
+                            />
+                            {/* Dropdown menu */}
+                            <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-20 animate-in slide-in-from-right-2 duration-200">
+                              <div className="py-2">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleView(p)}
+                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
+                                >
+                                  <Eye className="w-4 h-4 mr-3 text-gray-400" />
+                                  View Details
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleEdit(p)}
+                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
+                                >
+                                  <Edit className="w-4 h-4 mr-3 text-blue-400" />
+                                  Edit Patient
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={() => handleDelete(p)}
+                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mx-1"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-3 text-red-400" />
+                                  Delete Patient
+                                </Button>
+                              </div>
                             </div>
-                          </div>
+                          </>
                         )}
                       </div>
                     </td>

@@ -1,35 +1,31 @@
-import React, { useEffect } from 'react';
+import React from 'react';
+import { useEffect, useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
+import toast from 'react-hot-toast';
 import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+import DatePicker from '@/components/ui/DatePicker';
 import { Label } from '@/components/ui/Label';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { createAppointment, generateTimeSlots, setShowBookingModal } from '@/features/appointment/appointmentSlice';
-import { fetchPatients } from '@/features/appointment/appointmentSlice';
-import { fetchDoctors } from '@/features/appointment/appointmentSlice';
-import type { Appointment, Doctor, Patient } from '@/features/patient/db/dexie';
-
-const bookingSchema = z.object({
-  patientId: z.string().min(1, 'Patient is required'),
-  doctorId: z.string().min(1, 'Doctor is required'),
-  department: z.string().min(1, 'Department is required'),
-  date: z.string().min(1, 'Date is required'),
-  slot: z.string().min(1, 'Time slot is required'),
-  duration: z.number().min(15, 'Duration must be at least 15 minutes'),
-  reason: z.string().min(1, 'Reason is required'),
-  notes: z.string().optional(),
-});
+import { createAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
+import { fetchPatients } from '@/features/appointment/appointmentThunk';
+import { fetchDoctors } from '@/features/appointment/appointmentThunk';
+import type { Appointment, Doctor, Patient } from '@/features/db/dexie';
+import { bookingSchema } from '@/validation-schema/appointmentSchema'
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
-const BookingModal: React.FC = () => {
+const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { showBookingModal: boolean, closeBookingModel: () => void }) => {
+  // Redux dispatch
   const dispatch = useAppDispatch();
-  const { showBookingModal, doctors, patients, availableSlots, loading, appointments } = useAppSelector(
+  // Redux selectors
+  const { doctors, patients, availableSlots, loading, appointments } = useAppSelector(
     (state) => state.appointments
   );
-
+  // Control form
   const {
     control,
     handleSubmit,
@@ -44,21 +40,26 @@ const BookingModal: React.FC = () => {
     },
   });
 
-  const checkSlotConflict = (doctorId: string, date: string, slot: string) => {
+  // Check slot conflict
+  const checkSlotConflict = useCallback((doctorId: string, date: string, slot: string) => {
     const existingAppointment = appointments.find(
       (apt: Appointment) => apt.doctorId === doctorId && apt.date === date && apt.slot === slot
     );
     return existingAppointment;
-  };
+  }, [appointments]);
 
+  // Watch form values
   const watchedDoctorId = watch('doctorId');
   const watchedDate = watch('date');
   const watchedSlot = watch('slot');
+  const watchedDepartment = watch('department');
 
+  //  Check timeSlot conflict
   const conflict = watchedDoctorId && watchedDate && watchedSlot
     ? checkSlotConflict(watchedDoctorId, watchedDate, watchedSlot)
     : null;
 
+  // Call fetchPatients and fetchDoctors
   useEffect(() => {
     dispatch(fetchPatients());
     dispatch(fetchDoctors());
@@ -71,27 +72,40 @@ const BookingModal: React.FC = () => {
     }
   }, [watchedDoctorId, watchedDate, dispatch]);
 
-  const onSubmit = (data: BookingFormData) => {
-    dispatch(createAppointment({
-      ...data,
-      status: 'scheduled',
-    }));
+   // Create new appointment with toast
+  const onSubmit = useCallback((data: BookingFormData) => {
+    toast.promise(
+      dispatch(createAppointment({
+        ...data,
+        status: 'scheduled',
+      })),
+      {
+        loading: 'Creating appointment...',
+        success: 'Appointment booked successfully!',
+        error: 'Failed to book appointment. Please try again.',
+      }
+    ).then(() => {
+      reset();
+      closeBookingModel();
+    });
+  }, [dispatch, reset, closeBookingModel]);
+
+  // Close model and reset form
+  const handleCloseModal = useCallback(() => {
     reset();
-  };
+    closeBookingModel();
+  }, [reset, closeBookingModel]);
 
-  const handleClose = () => {
-    dispatch(setShowBookingModal(false));
-    reset();
-  };
 
-  const getDepartments = () => {
-    const departments = [...new Set(doctors.map((doctor: Doctor) => doctor.department))];
-    return departments;
-  };
+  //  Fetch departments list
+  const departments = useMemo(() => {
+    return [...new Set(doctors.map((doctor: Doctor) => doctor.department))];
+  }, [doctors]);
 
-  const getDoctorsByDepartment = (department: string) => {
+  // Fetch data departments wise doctor list
+  const getDoctorsByDepartment = useCallback((department: string) => {
     return doctors.filter((doctor: Doctor) => doctor.department === department);
-  };
+  }, [doctors]);
 
   if (!showBookingModal) return null;
 
@@ -108,7 +122,7 @@ const BookingModal: React.FC = () => {
             <Button
               variant="ghost"
               size="icon"
-              onClick={handleClose}
+              onClick={handleCloseModal}
               className="text-white hover:bg-blue-500"
             >
               <X className="w-5 h-5" />
@@ -119,264 +133,228 @@ const BookingModal: React.FC = () => {
         {/* Form */}
         <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
           {/* Patient Selection */}
-          <div>
-            <Label required>
-              <User className="w-4 h-4 inline mr-2" />
-              Patient
-            </Label>
-            <Controller
-              name="patientId"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value="">Select a patient</option>
-                  {patients.map((patient: Patient) => (
-                    <option key={patient.id} value={patient.id}>
-                      {patient.name} - {patient.phone}
-                    </option>
-                  ))}
-                </select>
-              )}
-            />
-            {errors.patientId && (
-              <p className="mt-1 text-sm text-red-600 flex items-center">
-                <AlertCircle className="w-4 h-4 mr-1" />
-                {errors.patientId.message}
-              </p>
+          <Controller
+            name="patientId"
+            control={control}
+            render={({ field }) => (
+              <Input
+                as="select"
+                label="Patient"
+                required
+                icon={User}
+                error={errors.patientId}
+                {...field}
+              >
+                <option value="">Select a patient</option>
+                {patients.map((patient: Patient) => (
+                  <option key={patient.id} value={patient.id} className='hover: cursor-pointer'>
+                    {patient.name}
+                  </option>
+                ))}
+              </Input>
             )}
-          </div>
+          />
 
           {/* Department and Doctor */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <Label required>
-                Department
-              </Label>
-              <Controller
-                name="department"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    {...field}
-                    onChange={(e) => {
-                      field.onChange(e);
-                      setValue('doctorId', '');
-                    }}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select department</option>
-                    {getDepartments().map((dept) => (
-                      <option key={dept} value={dept}>
-                        {dept}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              />
-              {errors.department && (
-                <p className="mt-1 text-sm text-red-600">{errors.department.message}</p>
+            <Controller
+              name="department"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  as="select"
+                  label="Department"
+                  required
+                  error={errors.department}
+                  {...field}
+                  onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
+                    field.onChange(e);
+                    setValue('doctorId', '');
+                  }}
+                >
+                  <option value="">Select department</option>
+                  {departments.map((dept) => (
+                    <option key={dept} value={dept}>
+                      {dept}
+                    </option>
+                  ))}
+                </Input>
               )}
-            </div>
+            />
 
-            <div>
-              <Label required>
-                <Stethoscope className="w-4 h-4 inline mr-2" />
-                Doctor
-              </Label>
-              <Controller
-                name="doctorId"
-                control={control}
-                render={({ field }) => (
-                  <select
-                    {...field}
-                    className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">Select a doctor</option>
-                    {getDoctorsByDepartment(watch('department')).map((doctor: Doctor) => (
-                      <option key={doctor.id} value={doctor.id}>
-                        Dr. {doctor.name} - {doctor.specialization}
-                      </option>
-                    ))}
-                  </select>
-                )}
-              />
-              {errors.doctorId && (
-                <p className="mt-1 text-sm text-red-600">{errors.doctorId.message}</p>
+            <Controller
+              name="doctorId"
+              control={control}
+              render={({ field }) => (
+                <Input
+                  as="select"
+                  label="Doctor"
+                  required
+                  icon={Stethoscope}
+                  error={errors.doctorId}
+                  {...field}
+                >
+                  <option value="">Select a doctor</option>
+                  {getDoctorsByDepartment(watchedDepartment).map((doctor: Doctor) => (
+                    <option key={doctor.id} value={doctor.id}>
+                      Dr. {doctor.name} - {doctor.specialization}
+                    </option>
+                  ))}
+                </Input>
               )}
-            </div>
+            />
           </div>
 
           {/* Date and Time */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Date */}
-            <div>
-              <Label required>
-                <Calendar className="w-4 h-4 inline mr-2" />
-                Date
-              </Label>
-              <Controller
-                name="date"
-                control={control}
-                render={({ field }) => (
-                  <input
-                    type="date"
-                    {...field}
-                    min={new Date().toISOString().split('T')[0]}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            <Controller
+              name="date"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Label required>Date</Label>
+                  <DatePicker
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    placeholder="Select appointment date"
+                    className="w-full h-11"
                   />
-                )}
-              />
-              {errors.date && (
-                <p className="mt-1 text-sm text-red-600 flex items-center">
-                  <AlertCircle className="w-4 h-4 mr-1" />
-                  {errors.date.message}
-                </p>
+                  {errors.date && (
+                    <p className="text-sm text-red-600 flex items-center">
+                      <AlertCircle className="w-4 h-4 mr-1" />
+                      {errors.date.message}
+                    </p>
+                  )}
+                </div>
               )}
-            </div>
+            />
 
             {/* Time Slot */}
-            <div>
-              <Label required>
-                <Clock className="w-4 h-4 inline mr-2" />
-                Time Slot
-              </Label>
-              <Controller
-                name="slot"
-                control={control}
-                render={({ field }) => (
-                  <select
+            <Controller
+              name="slot"
+              control={control}
+              render={({ field }) => (
+                <div className="space-y-2">
+                  <Input
+                    as="select"
+                    label="Time Slot"
+                    required
+                    icon={Clock}
+                    error={errors.slot}
                     {...field}
                     disabled={!watchedDoctorId || !watchedDate || availableSlots.length === 0}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                   >
                     <option value="">
                       {!watchedDoctorId ? 'Select doctor first' :
-                       !watchedDate ? 'Select date first' :
-                       availableSlots.length ? 'Select time slot' :
-                       'No available slots for selected date'}
+                      !watchedDate ? 'Select date first' :
+                      availableSlots.length ? 'Select time slot' :
+                      'No available slots for selected date'}
                     </option>
                     {availableSlots.map((slot) => (
                       <option key={slot} value={slot}>
                         {slot}
                       </option>
                     ))}
-                  </select>
-                )}
-              />
-              {errors.slot && (
-                <p className="mt-1 text-sm text-red-600">{errors.slot.message}</p>
-              )}
+                  </Input>
 
-              {/* Conflict Alert */}
-              {conflict && (
-                <div className="mt-2 bg-red-50 border-l-4 border-red-400 p-3">
-                  <div className="flex">
-                    <div className="shrink-0">
-                      <AlertCircle className="h-5 w-5 text-red-400" />
+                  {/* Conflict Alert */}
+                  {conflict && (
+                    <div className="bg-red-50 border-l-4 border-red-400 p-3">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <AlertCircle className="h-5 w-5 text-red-400" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-red-700">
+                            This time slot is already booked! Please select a different time.
+                          </p>
+                          <p className="text-xs text-red-600 mt-1">
+                            Existing appointment for Patient {conflict.patientId.slice(-4)}
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">
-                        This time slot is already booked! Please select a different time.
-                      </p>
-                      <p className="text-xs text-red-600 mt-1">
-                        Existing appointment for Patient {conflict.patientId.slice(-4)}
-                      </p>
+                  )}
+
+                  {/* Available slots info */}
+                  {watchedDoctorId && watchedDate && availableSlots.length > 0 && (
+                    <div className="bg-green-50 border-l-4 border-green-400 p-3">
+                      <div className="flex">
+                        <div className="shrink-0">
+                          <Clock className="h-5 w-5 text-green-400" />
+                        </div>
+                        <div className="ml-3">
+                          <p className="text-sm text-green-700">
+                            {availableSlots.length} time slots available
+                          </p>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
-
-              {/* Available slots info */}
-              {watchedDoctorId && watchedDate && availableSlots.length > 0 && (
-                <div className="mt-2 bg-green-50 border-l-4 border-green-400 p-3">
-                  <div className="flex">
-                    <div className="shrink-0">
-                      <Clock className="h-5 w-5 text-green-400" />
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-green-700">
-                        {availableSlots.length} time slots available
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
+            />
           </div>
 
           {/* Duration */}
-          <div>
-            <Label required>
-              Duration (minutes)
-            </Label>
-            <Controller
-              name="duration"
-              control={control}
-              render={({ field }) => (
-                <select
-                  {...field}
-                  onChange={(e) => field.onChange(Number(e.target.value))}
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                >
-                  <option value={15}>15 minutes</option>
-                  <option value={30}>30 minutes</option>
-                  <option value={45}>45 minutes</option>
-                  <option value={60}>60 minutes</option>
-                </select>
-              )}
-            />
-          </div>
+          <Controller
+            name="duration"
+            control={control}
+            render={({ field }) => (
+              <Input
+                as="select"
+                label="Duration (minutes)"
+                required
+                {...field}
+                onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => field.onChange(Number((e.target as HTMLSelectElement).value))}
+              >
+                <option value={15}>15 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>60 minutes</option>
+              </Input>
+            )}
+          />
 
           {/* Reason */}
-          <div>
-            <Label required>
-              Reason for Visit
-            </Label>
-            <Controller
-              name="reason"
-              control={control}
-              render={({ field }) => (
-                <textarea
-                  {...field}
-                  rows={3}
-                  placeholder="Describe the reason for the appointment..."
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              )}
-            />
-            {errors.reason && (
-              <p className="mt-1 text-sm text-red-600">{errors.reason.message}</p>
+          <Controller
+            name="reason"
+            control={control}
+            render={({ field }) => (
+              <Input
+                as="textarea"
+                label="Reason for Visit"
+                required
+                rows={3}
+                placeholder="Describe the reason for the appointment..."
+                error={errors.reason}
+                {...field}
+              />
             )}
-          </div>
+          />
 
           {/* Notes */}
-          <div>
-            <Label>
-              Additional Notes
-            </Label>
-            <Controller
-              name="notes"
-              control={control}
-              render={({ field }) => (
-                <textarea
-                  {...field}
-                  rows={2}
-                  placeholder="Any additional information..."
-                  className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              )}
-            />
-          </div>
+          <Controller
+            name="notes"
+            control={control}
+            render={({ field }) => (
+              <Input
+                as="textarea"
+                label="Additional Notes"
+                rows={2}
+                placeholder="Any additional information..."
+                {...field}
+              />
+            )}
+          />
 
           {/* Actions */}
           <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
             <Button
               type="button"
               variant="outline"
-              onClick={handleClose}
+              onClick={handleCloseModal}
             >
               Cancel
             </Button>
@@ -392,6 +370,8 @@ const BookingModal: React.FC = () => {
       </div>
     </div>
   );
-};
+});
+
+BookingModal.displayName = 'BookingModal';
 
 export default BookingModal;

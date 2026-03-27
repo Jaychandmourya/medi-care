@@ -16,7 +16,7 @@ import DoctorAutocomplete from '@/components/doctor/DoctorAutocomplete'
 import Pagination from '@/components/doctor/Pagination'
 import InternalDoctorList from '@/components/doctor/InternalDoctorList'
 import { type NPIResult } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/doctor/db/doctorDB'
+import { doctorDBOperations } from '@/features/db/doctorDB'
 
 const AdminDoctors = () => {
   const dispatch = useDispatch<AppDispatch>()

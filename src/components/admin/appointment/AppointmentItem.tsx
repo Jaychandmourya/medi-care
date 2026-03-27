@@ -1,9 +1,10 @@
 import React from 'react';
 import { User, GripVertical } from 'lucide-react';
-import type { Appointment } from '@/features/patient/db/dexie';
+import type { Appointment, Patient } from '@/features/db/dexie';
 
 interface AppointmentItemProps {
   appointment: Appointment;
+  patients: Patient[];
   isDragged: boolean;
   onDragStart: (e: React.DragEvent, appointment: Appointment) => void;
   onClick: (appointment: Appointment) => void;
@@ -14,6 +15,7 @@ interface AppointmentItemProps {
 
 const AppointmentItem: React.FC<AppointmentItemProps> = React.memo(({
   appointment,
+  patients,
   isDragged,
   onDragStart,
   onClick,
@@ -40,6 +42,10 @@ const AppointmentItem: React.FC<AppointmentItemProps> = React.memo(({
     }
   };
 
+  // Find patient by ID
+  const patient = patients.find(p => p.id === appointment.patientId);
+  const patientName = patient ? patient.name : `Patient ${appointment.patientId.slice(-4)}`;
+
   return (
     <div
       key={appointment.id}
@@ -59,8 +65,7 @@ const AppointmentItem: React.FC<AppointmentItemProps> = React.memo(({
         <GripVertical className="w-3 h-3 shrink-0 cursor-move" />
         <User className="w-3 h-3 shrink-0" />
         <span className="truncate">
-          {/* Patient name would need to be fetched */}
-          Patient {appointment.patientId.slice(-4)}
+          {patientName}
         </span>
       </div>
       <div className="text-xs opacity-75 mt-1 truncate">
@@ -73,7 +78,7 @@ const AppointmentItem: React.FC<AppointmentItemProps> = React.memo(({
       {/* Show Tooltip */}
       {showTooltip && (
         <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-3 py-2 bg-gray-900 text-white text-xs rounded-lg whitespace-nowrap z-50">
-          <div className="font-semibold text-sm mb-1">Appointment Details</div>
+          <div className="text-xs opacity-90 mb-1">Patient: {patientName}</div>
           <div className="text-xs opacity-90 mb-1">Status: {appointment.status.replace('_', ' ').toUpperCase()}</div>
           <div className="text-xs opacity-90 mb-1">Time: {appointment.slot}</div>
           <div className="text-xs opacity-90 mb-1">Duration: {appointment.duration}min</div>

@@ -28,7 +28,7 @@ const AdminPrescriptions = () => {
           <div className="flex space-x-1 p-1">
             <button
               onClick={() => handleViewChange('builder')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
                 activeView === 'builder'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -39,7 +39,7 @@ const AdminPrescriptions = () => {
             </button>
             <button
               onClick={() => handleViewChange('history')}
-              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+              className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
                 activeView === 'history'
                   ? 'bg-blue-600 text-white'
                   : 'text-gray-600 hover:bg-gray-100'
@@ -51,7 +51,7 @@ const AdminPrescriptions = () => {
             {currentPrescription && (
               <button
                 onClick={() => handleViewChange('preview')}
-                className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
                   activeView === 'preview'
                     ? 'bg-blue-600 text-white'
                     : 'text-gray-600 hover:bg-gray-100'

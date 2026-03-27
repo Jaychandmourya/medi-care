@@ -1,38 +1,73 @@
-import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import * as z from 'zod'
 import { issueToken } from '@/features/opd/opdSlice'
 import type { AppDispatch, RootState } from '@/app/store'
-import { Plus, User, Stethoscope, Building } from 'lucide-react'
+import { Plus, User, Building } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
+import Input from '@/components/ui/Input'
+import toast from 'react-hot-toast'
+import { tokenSchema } from '@/validation-schema/opdSchema'
+import { setLocalDoctors } from '@/features/doctor/doctorSlice'
+import { doctorDBOperations } from '@/features/db/doctorDB'
+import { useEffect } from 'react'
+
+type TokenFormData = z.infer<typeof tokenSchema>
 
 const TokenIssueForm = () => {
+  // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
+
+  // Redux selector
   const { departments, doctors } = useSelector((state: RootState) => state.opd)
 
-  const [formData, setFormData] = useState({
-    patientName: '',
-    department: '',
-    doctorId: ''
+  // React Hook Form
+  const {
+    register,
+    handleSubmit,
+    setValue,
+    reset,
+    watch,
+    formState: { errors }
+  } = useForm<TokenFormData>({
+    resolver: zodResolver(tokenSchema),
+    defaultValues: {
+      patientName: '',
+      department: '',
+      doctorId: ''
+    }
   })
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (formData.patientName && formData.department && formData.doctorId) {
-      dispatch(issueToken(formData))
-      setFormData({ patientName: '', department: '', doctorId: '' })
+  // Fetch doctors on component mount
+  useEffect(() => {
+    const fetchLocalDoctors = async () => {
+      try {
+        const doctors = await doctorDBOperations.getAll()
+        dispatch(setLocalDoctors(doctors))
+      } catch (error) {
+        console.error('Failed to load local doctors:', error)
+      }
     }
-  }
+    fetchLocalDoctors()
+  }, [dispatch])
 
+  // Department change handler
   const handleDepartmentChange = (department: string) => {
-    setFormData(prev => ({ ...prev, department }))
-    // Auto-select first doctor for department
+    setValue('department', department)
     const deptDoctors = Object.entries(doctors).filter(([, name]) =>
       name.includes(department.split(' ')[0])
     )
     if (deptDoctors.length > 0) {
-      setFormData(prev => ({ ...prev, doctorId: deptDoctors[0][0] }))
+      setValue('doctorId', deptDoctors[0][0])
     }
+  }
+
+  // Form submit handler
+  const onSubmit = (data: TokenFormData) => {
+    dispatch(issueToken(data))
+    toast.success('Token issued successfully!')
+    reset()
   }
 
   return (
@@ -42,63 +77,55 @@ const TokenIssueForm = () => {
         Issue New Token
       </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Patient Name
-          </Label>
-          <div className="relative">
-            <User className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={formData.patientName}
-              onChange={(e) => setFormData(prev => ({ ...prev, patientName: e.target.value }))}
-              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              placeholder="Enter patient name"
-              required
-            />
-          </div>
-        </div>
+      <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+        <Input
+          id="patientName"
+          type="text"
+          label="Patient Name"
+          placeholder="Enter patient name"
+          icon={User}
+          registration={register('patientName')}
+          error={errors.patientName}
+          required
+        />
 
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Department
-          </Label>
-          <div className="relative">
-            <Building className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <select
-              value={formData.department}
-              onChange={(e) => handleDepartmentChange(e.target.value)}
-              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-              required
-            >
-              <option value="">Select department</option>
-              {departments.map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <Input
+          id="department"
+          as="select"
+          label="Department"
+          icon={Building}
+          value={watch('department')}
+          onChange={(e) => handleDepartmentChange(e.target.value)}
+          error={errors.department}
+          required
+        >
+          <option value="">Select department</option>
+          {departments.map(dept => (
+            <option key={dept} value={dept}>{dept}</option>
+          ))}
+        </Input>
 
-        <div>
-          <Label className="block text-sm font-medium text-gray-700 mb-1">
-            Doctor
-          </Label>
-          <div className="relative">
-            <Stethoscope className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <select
-              value={formData.doctorId}
-              onChange={(e) => setFormData(prev => ({ ...prev, doctorId: e.target.value }))}
-              className="pl-10 w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none"
-              required
-            >
-              <option value="">Select doctor</option>
-              {Object.entries(doctors).map(([id, name]) => (
-                <option key={id} value={id}>{name}</option>
-              ))}
-            </select>
-          </div>
-        </div>
+        <Input
+          id="doctorId"
+          as="select"
+          label="Doctor"
+          icon={User}
+          value={watch('doctorId')}
+          onChange={(e) => setValue('doctorId', e.target.value)}
+          error={errors.doctorId}
+          required
+        >
+          <option value="">Select doctor</option>
+          {Object.entries(doctors).map(([id, name]) => {
+            const doctorName = name.split(' - ')[0]
+            const department = name.split(' - ')[1]
+            return (
+              <option key={id} value={id}>
+                {doctorName} - {department}
+              </option>
+            )
+          })}
+        </Input>
 
         <Button
           type="submit"

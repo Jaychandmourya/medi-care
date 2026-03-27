@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
 import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/features/prescription/prescriptionSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Prescription } from '@/features/prescription/prescriptionSlice'
+import Input from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+import toast from 'react-hot-toast'
 
 const PrescriptionHistory = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -22,39 +25,74 @@ const PrescriptionHistory = () => {
   }, [dispatch])
 
   // Get unique patients from history
-  const uniquePatients = Array.from(new Set(prescriptionHistory.map(p => p.patientId)))
-    .map(patientId => {
-      const prescription = prescriptionHistory.find(p => p.patientId === patientId)
-      return { id: patientId, name: prescription?.patientName || 'Unknown' }
+  const uniquePatients = useMemo(() => {
+    return Array.from(new Set(prescriptionHistory.map(p => p.patientId)))
+      .map(patientId => {
+        const prescription = prescriptionHistory.find(p => p.patientId === patientId)
+        return { id: patientId, name: prescription?.patientName || 'Unknown' }
+      })
+  }, [prescriptionHistory])
+
+  // Filter and sort prescriptions
+  const filteredPrescriptions = useMemo(() => {
+    return prescriptionHistory
+      .filter(prescription => {
+        const matchesSearch = prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              prescription.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                              prescription.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
+
+        const matchesPatient = !selectedPatient || prescription.patientId === selectedPatient
+        const matchesStatus = !selectedStatus || prescription.status === selectedStatus
+
+        return matchesSearch && matchesPatient && matchesStatus
+      })
+      .sort((a, b) => {
+        // Sort by date and time in descending order (most recent first)
+        const dateA = new Date(a.createdAt).getTime()
+        const dateB = new Date(b.createdAt).getTime()
+        return dateB - dateA
+      })
+  }, [prescriptionHistory, searchTerm, selectedPatient, selectedStatus])
+
+  // Group prescriptions by date (sorted by date descending)
+  const sortedGroupedPrescriptions = useMemo(() => {
+    // Group prescriptions by date
+    const groupedPrescriptions = filteredPrescriptions.reduce((groups, prescription) => {
+      const date = new Date(prescription.createdAt).toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      })
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(prescription)
+      return groups
+    }, {} as Record<string, Prescription[]>)
+
+    // Sort prescriptions within each date group by time (most recent first)
+    Object.keys(groupedPrescriptions).forEach(date => {
+      groupedPrescriptions[date].sort((a, b) => {
+        const timeA = new Date(a.createdAt).getTime()
+        const timeB = new Date(b.createdAt).getTime()
+        return timeB - timeA
+      })
     })
 
-  // Filter prescriptions
-  const filteredPrescriptions = prescriptionHistory.filter(prescription => {
-    const matchesSearch = prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prescription.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         prescription.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
+    // Sort the date groups in descending order (most recent date first)
+    return Object.entries(groupedPrescriptions)
+      .sort(([dateA], [dateB]) => {
+        const timestampA = new Date(dateA).getTime()
+        const timestampB = new Date(dateB).getTime()
+        return timestampB - timestampA
+      })
+      .reduce((acc, [date, prescriptions]) => {
+        acc[date] = prescriptions
+        return acc
+      }, {} as Record<string, Prescription[]>)
+  }, [filteredPrescriptions])
 
-    const matchesPatient = !selectedPatient || prescription.patientId === selectedPatient
-    const matchesStatus = !selectedStatus || prescription.status === selectedStatus
-
-    return matchesSearch && matchesPatient && matchesStatus
-  })
-
-  // Group prescriptions by date
-  const groupedPrescriptions = filteredPrescriptions.reduce((groups, prescription) => {
-    const date = new Date(prescription.createdAt).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    })
-    if (!groups[date]) {
-      groups[date] = []
-    }
-    groups[date].push(prescription)
-    return groups
-  }, {} as Record<string, Prescription[]>)
-
-  const getStatusColor = (status: string) => {
+  const getStatusColor = useCallback((status: string) => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800'
@@ -65,32 +103,14 @@ const PrescriptionHistory = () => {
       default:
         return 'bg-gray-100 text-gray-800'
     }
-  }
+  }, [])
 
-  const handleViewPrescription = (prescription: Prescription) => {
+  const handleViewPrescription = useCallback((prescription: Prescription) => {
     setSelectedPrescription(prescription)
     setShowDetailsModal(true)
-  }
+  }, [])
 
-  const handleDownloadPrescription = (prescription: Prescription) => {
-    // Generate PDF content
-    const printContent = generatePrescriptionPDF(prescription)
-
-    // Create a temporary window and print
-    const printWindow = window.open('', '_blank')
-    if (printWindow) {
-      printWindow.document.write(printContent)
-      printWindow.document.close()
-      printWindow.focus()
-
-      // Wait for content to load then print
-      setTimeout(() => {
-        printWindow.print()
-      }, 500)
-    }
-  }
-
-  const generatePrescriptionPDF = (prescription: Prescription) => {
+  const generatePrescriptionPDF = useCallback((prescription: Prescription) => {
     return `
       <!DOCTYPE html>
       <html>
@@ -159,31 +179,58 @@ const PrescriptionHistory = () => {
         ` : ''}
 
         <div class="footer">
-          <p>This prescription was generated electronically on ${new Date(prescription.createdAt).toLocaleString()}</p>
+          <p>This prescription was generated electronically on ${new Date(prescription.createdAt).toLocaleString('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            second: '2-digit',
+            hour12: true,
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          })}</p>
           <p>For medical emergencies, please call 911 or visit the nearest emergency room.</p>
         </div>
       </body>
       </html>
     `
-  }
+  }, [])
 
-  const handleDeletePrescription = (prescription: Prescription) => {
+  const handleDownloadPrescription = useCallback((prescription: Prescription) => {
+    // Generate PDF content
+    const printContent = generatePrescriptionPDF(prescription)
+
+    // Create a temporary window and print
+    const printWindow = window.open('', '_blank')
+    if (printWindow) {
+      printWindow.document.write(printContent)
+      printWindow.document.close()
+      printWindow.focus()
+
+      // Wait for content to load then print
+      setTimeout(() => {
+        printWindow.print()
+      }, 500)
+    }
+  }, [generatePrescriptionPDF])
+
+  const handleDeletePrescription = useCallback((prescription: Prescription) => {
     setPrescriptionToDelete(prescription)
     setShowDeleteModal(true)
-  }
+  }, [])
 
-  const confirmDeletePrescription = () => {
+  const confirmDeletePrescription = useCallback(() => {
     if (prescriptionToDelete) {
       dispatch(deletePrescriptionFromHistory(prescriptionToDelete.id))
+      toast.success(`Prescription for ${prescriptionToDelete.patientName} deleted successfully`)
       setShowDeleteModal(false)
       setPrescriptionToDelete(null)
     }
-  }
+  }, [prescriptionToDelete, dispatch])
 
-  const cancelDelete = () => {
+  const cancelDelete = useCallback(() => {
     setShowDeleteModal(false)
     setPrescriptionToDelete(null)
-  }
+  }, [])
 
   if (historyLoading) {
     return (
@@ -209,26 +256,24 @@ const PrescriptionHistory = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-5 w-5 text-gray-400" />
-              </div>
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by patient, doctor, or diagnosis..."
-                className="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
-              />
-            </div>
+            <Input
+              type="text"
+              value={searchTerm}
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSearchTerm(e.target.value)}
+              placeholder="Search by patient, doctor, or diagnosis..."
+              icon={Search}
+              iconPosition="left"
+              className="pl-10"
+            />
           </div>
 
           {/* Patient Filter */}
           <div>
-            <select
+            <Input
+              as="select"
               value={selectedPatient}
-              onChange={(e) => setSelectedPatient(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSelectedPatient(e.target.value)}
+              className="px-3 py-2"
             >
               <option value="">All Patients</option>
               {uniquePatients.map(patient => (
@@ -236,35 +281,36 @@ const PrescriptionHistory = () => {
                   {patient.name}
                 </option>
               ))}
-            </select>
+            </Input>
           </div>
 
           {/* Status Filter */}
           <div>
-            <select
+            <Input
+              as="select"
               value={selectedStatus}
-              onChange={(e) => setSelectedStatus(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSelectedStatus(e.target.value)}
+              className="px-3 py-2"
             >
               <option value="">All Status</option>
               <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
-            </select>
+            </Input>
           </div>
         </div>
       </div>
 
       {/* Prescriptions List */}
       <div className="space-y-6">
-        {Object.entries(groupedPrescriptions).length === 0 ? (
+        {Object.entries(sortedGroupedPrescriptions).length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No prescriptions found</h3>
             <p className="text-gray-500">Try adjusting your search or filters</p>
           </div>
         ) : (
-          Object.entries(groupedPrescriptions).map(([date, datePrescriptions]) => (
+          Object.entries(sortedGroupedPrescriptions).map(([date, datePrescriptions]) => (
             <div key={date} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
               {/* Date Header */}
               <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
@@ -297,7 +343,12 @@ const PrescriptionHistory = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Calendar className="h-4 w-4" />
-                            <span>Created: {new Date(prescription.createdAt).toLocaleTimeString()}</span>
+                            <span>Created: {new Date(prescription.createdAt).toLocaleTimeString('en-US', {
+                              hour: '2-digit',
+                              minute: '2-digit',
+                              second: '2-digit',
+                              hour12: true
+                            })}</span>
                           </div>
                         </div>
 
@@ -330,27 +381,33 @@ const PrescriptionHistory = () => {
                       </div>
 
                       <div className="flex gap-2 ml-4">
-                        <button
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleViewPrescription(prescription)}
-                          className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                          className="p-2 text-blue-600 hover:bg-blue-50"
                           title="View Prescription"
                         >
                           <Eye className="h-4 w-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDownloadPrescription(prescription)}
-                          className="p-2 text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+                          className="p-2 text-green-600 hover:bg-green-50"
                           title="Download PDF"
                         >
                           <Download className="h-4 w-4" />
-                        </button>
-                        <button
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
                           onClick={() => handleDeletePrescription(prescription)}
-                          className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                          className="p-2 text-red-600 hover:bg-red-50"
                           title="Delete Prescription"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </button>
+                        </Button>
                       </div>
                     </div>
                   </div>
@@ -367,15 +424,16 @@ const PrescriptionHistory = () => {
           <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="flex justify-between items-center p-6 border-b border-gray-200">
               <h2 className="text-xl font-semibold text-gray-900">Prescription Details</h2>
-              <button
+              <Button
+                variant="ghost"
                 onClick={() => {
                   setShowDetailsModal(false)
                   setSelectedPrescription(null)
                 }}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none"
+                className="text-gray-400 hover:text-gray-600 text-2xl leading-none p-0 h-auto"
               >
                 &times;
-              </button>
+              </Button>
             </div>
 
             <div className="p-6">
@@ -471,9 +529,25 @@ const PrescriptionHistory = () => {
               {/* Footer */}
               <div className="border-t border-gray-200 pt-4">
                 <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>Created: {new Date(selectedPrescription.createdAt).toLocaleString()}</span>
+                  <span>Created: {new Date(selectedPrescription.createdAt).toLocaleString('en-US', {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                    second: '2-digit',
+                    hour12: true,
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                  })}</span>
                   {selectedPrescription.updatedAt && (
-                    <span>Updated: {new Date(selectedPrescription.updatedAt).toLocaleString()}</span>
+                    <span>Updated: {new Date(selectedPrescription.updatedAt).toLocaleString('en-US', {
+                      hour: '2-digit',
+                      minute: '2-digit',
+                      second: '2-digit',
+                      hour12: true,
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric'
+                    })}</span>
                   )}
                 </div>
               </div>
@@ -481,22 +555,22 @@ const PrescriptionHistory = () => {
 
             {/* Actions */}
             <div className="flex gap-3 justify-end p-6 border-t border-gray-200">
-              <button
+              <Button
                 onClick={() => handleDownloadPrescription(selectedPrescription)}
-                className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 <Download className="h-4 w-4" />
                 Download PDF
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="outline"
                 onClick={() => {
                   setShowDetailsModal(false)
                   setSelectedPrescription(null)
                 }}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Close
-              </button>
+              </Button>
             </div>
           </div>
         </div>
@@ -540,19 +614,20 @@ const PrescriptionHistory = () => {
             </div>
 
             <div className="flex gap-3 justify-end">
-              <button
+              <Button
+                variant="outline"
                 onClick={cancelDelete}
-                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors"
               >
                 Cancel
-              </button>
-              <button
+              </Button>
+              <Button
+                variant="destructive"
                 onClick={confirmDeletePrescription}
-                className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors flex items-center gap-2"
+                className="flex items-center gap-2"
               >
                 <Trash2 className="h-4 w-4" />
                 Delete Prescription
-              </button>
+              </Button>
             </div>
           </div>
         </div>

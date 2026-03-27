@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { useAppSelector } from '@/app/hooks';
-import type { Appointment, Doctor } from '@/features/patient/db/dexie';
+import type { Appointment, Doctor } from '@/features/db/dexie';
 
 interface DailyPrintViewProps {
   doctorId: string;
@@ -10,7 +10,7 @@ interface DailyPrintViewProps {
 
 const DailyPrintView: React.FC<DailyPrintViewProps> = ({ doctorId, date }) => {
   const { appointments, doctors, patients } = useAppSelector((state) => state.appointments);
-  
+
   const doctor = doctors.find(d => d.id === doctorId);
   const dayAppointments = appointments
     .filter(apt => apt.doctorId === doctorId && apt.date === date)

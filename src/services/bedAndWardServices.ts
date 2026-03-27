@@ -1,21 +1,5 @@
-import Dexie, { type Table } from 'dexie'
+import { db } from '@/features/db/dexie'
 import type { Bed, Ward } from '@/features/bed/bedSlice'
-
-export class BedDatabase extends Dexie {
-  beds!: Table<Bed>
-  wards!: Table<Ward>
-
-  constructor() {
-    super('MediCareBedDB')
-    
-    this.version(1).stores({
-      beds: 'bedId, ward, status, patientId, admittedAt',
-      wards: 'wardId, name, totalBeds, floor'
-    })
-  }
-}
-
-export const db = new BedDatabase()
 
 // Initialize database with sample data
 export const initializeDatabase = async () => {
@@ -35,14 +19,14 @@ export const initializeDatabase = async () => {
   if (existingBeds === 0) {
     const sampleBeds: Bed[] = []
     const wards = await db.wards.toArray()
-    
+
     wards.forEach(ward => {
       for (let i = 1; i <= ward.totalBeds; i++) {
         const random = Math.random()
         let status: 'available' | 'occupied' | 'reserved' | 'maintenance'
         let patientId: string | undefined
         let admittedAt: string | undefined
-        
+
         if (random > 0.7) {
           status = 'occupied'
           patientId = `PAT-${Math.floor(Math.random() * 1000)}`
@@ -54,7 +38,7 @@ export const initializeDatabase = async () => {
         } else {
           status = 'available'
         }
-        
+
         sampleBeds.push({
           bedId: `${ward.wardId}-${i.toString().padStart(3, '0')}`,
           ward: ward.wardId,
@@ -65,7 +49,7 @@ export const initializeDatabase = async () => {
         })
       }
     })
-    
+
     await db.beds.bulkAdd(sampleBeds)
   }
 }

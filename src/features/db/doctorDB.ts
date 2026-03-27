@@ -1,5 +1,5 @@
-import { type LocalDoctor } from '../doctorSlice'
-import { db, type Doctor } from '../../db/dexie'
+import { type LocalDoctor } from '../doctor/doctorSlice'
+import { db, type Doctor } from './dexie'
 
 // Database operations using MediCareDB
 export const doctorDBOperations = {

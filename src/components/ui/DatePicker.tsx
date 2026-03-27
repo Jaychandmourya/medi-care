@@ -7,17 +7,33 @@ interface DatePickerProps {
   onChange: (value: string) => void;
   placeholder?: string;
   className?: string;
+  disablePastDates?: boolean;
+  onBlur?: () => void;
 }
 
 const DatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
   placeholder = 'Select date',
-  className = ''
+  className = '',
+  disablePastDates = false,
+  onBlur
 }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [currentMonth, setCurrentMonth] = useState(value ? new Date(value) : new Date());
-  const [selectedDate, setSelectedDate] = useState(value ? new Date(value) : null);
+  const [currentMonth, setCurrentMonth] = useState(() => {
+    try {
+      return value && value !== '' ? new Date(value) : new Date();
+    } catch {
+      return new Date();
+    }
+  });
+  const [selectedDate, setSelectedDate] = useState(() => {
+    try {
+      return value && value !== '' ? new Date(value) : null;
+    } catch {
+      return null;
+    }
+  });
   const datePickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -32,22 +48,40 @@ const DatePicker: React.FC<DatePickerProps> = ({
   }, []);
 
   const handleDateSelect = (date: Date) => {
+    // Check if past dates should be disabled
+    if (disablePastDates) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (date < today) {
+        return; // Don't allow selection of past dates
+      }
+    }
+
     setSelectedDate(date);
     onChange(format(date, 'yyyy-MM-dd'));
     setIsOpen(false);
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    onChange(e.target.value);
-    if (e.target.value) {
-      setSelectedDate(new Date(e.target.value));
-      setCurrentMonth(new Date(e.target.value));
+    const newValue = e.target.value;
+    onChange(newValue);
+    if (newValue) {
+      try {
+        const parsedDate = new Date(newValue);
+        if (!isNaN(parsedDate.getTime())) {
+          setSelectedDate(parsedDate);
+          setCurrentMonth(parsedDate);
+        }
+      } catch {
+        // Invalid date, don't update state
+      }
     }
   };
 
   const renderCalendar = () => {
-    const monthStart = startOfMonth(currentMonth);
-    const monthEnd = endOfMonth(currentMonth);
+    const validMonth = currentMonth && !isNaN(currentMonth.getTime()) ? currentMonth : new Date();
+    const monthStart = startOfMonth(validMonth);
+    const monthEnd = endOfMonth(validMonth);
     const startDate = startOfMonth(monthStart);
     const endDate = endOfMonth(monthEnd);
 
@@ -62,7 +96,10 @@ const DatePicker: React.FC<DatePickerProps> = ({
         <div className="flex items-center justify-between mb-4">
           <button
             type="button"
-            onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
+            onClick={() => {
+              const validMonth = currentMonth && !isNaN(currentMonth.getTime()) ? currentMonth : new Date();
+              setCurrentMonth(subMonths(validMonth, 1));
+            }}
             className="p-1 hover:bg-gray-100 rounded"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -70,18 +107,23 @@ const DatePicker: React.FC<DatePickerProps> = ({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setCurrentMonth(subMonths(currentMonth, 12))}
+              onClick={() => {
+                const validMonth = currentMonth && !isNaN(currentMonth.getTime()) ? currentMonth : new Date();
+                setCurrentMonth(subMonths(validMonth, 12));
+              }}
               className="p-1 hover:bg-gray-100 rounded"
             >
               <ChevronLeft className="w-3 h-3" />
             </button>
             <select
-              value={format(currentMonth, 'yyyy')}
+              value={currentMonth && !isNaN(currentMonth.getTime()) ? format(currentMonth, 'yyyy') : new Date().getFullYear().toString()}
               onChange={(e) => {
                 const newYear = parseInt(e.target.value);
                 const newDate = new Date(currentMonth);
-                newDate.setFullYear(newYear);
-                setCurrentMonth(newDate);
+                if (!isNaN(newDate.getTime())) {
+                  newDate.setFullYear(newYear);
+                  setCurrentMonth(newDate);
+                }
               }}
               className="font-semibold text-gray-900 bg-transparent border border-gray-300 rounded px-2 py-1 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
@@ -96,18 +138,24 @@ const DatePicker: React.FC<DatePickerProps> = ({
             </select>
             <button
               type="button"
-              onClick={() => setCurrentMonth(addMonths(currentMonth, 12))}
+              onClick={() => {
+                const validMonth = currentMonth && !isNaN(currentMonth.getTime()) ? currentMonth : new Date();
+                setCurrentMonth(addMonths(validMonth, 12));
+              }}
               className="p-1 hover:bg-gray-100 rounded"
             >
               <ChevronRight className="w-3 h-3" />
             </button>
             <span className="font-semibold text-gray-900">
-              {format(currentMonth, 'MMMM')}
+              {currentMonth && !isNaN(currentMonth.getTime()) ? format(currentMonth, 'MMMM') : format(new Date(), 'MMMM')}
             </span>
           </div>
           <button
             type="button"
-            onClick={() => setCurrentMonth(addMonths(currentMonth, 1))}
+            onClick={() => {
+              const validMonth = currentMonth && !isNaN(currentMonth.getTime()) ? currentMonth : new Date();
+              setCurrentMonth(addMonths(validMonth, 1));
+            }}
             className="p-1 hover:bg-gray-100 rounded"
           >
             <ChevronRight className="w-4 h-4" />
@@ -133,17 +181,20 @@ const DatePicker: React.FC<DatePickerProps> = ({
           {days.map(day => {
             const isSelected = selectedDate && isSameDay(day, selectedDate);
             const isTodayDate = isToday(day);
+            const isPastDate = disablePastDates && day < new Date(new Date().setHours(0, 0, 0, 0));
 
             return (
               <button
                 key={day.toISOString()}
                 type="button"
                 onClick={() => handleDateSelect(day)}
+                disabled={isPastDate}
                 className={`
-                  p-2 text-sm rounded hover:bg-blue-50 transition-colors
+                  p-2 text-sm rounded transition-colors
                   ${isSelected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''}
                   ${isTodayDate && !isSelected ? 'bg-blue-100 text-blue-700 font-semibold' : ''}
-                  ${!isSelected && !isTodayDate ? 'text-gray-700' : ''}
+                  ${!isSelected && !isTodayDate && !isPastDate ? 'text-gray-700 hover:bg-blue-50' : ''}
+                  ${isPastDate ? 'text-gray-300 cursor-not-allowed' : ''}
                 `}
               >
                 {format(day, 'd')}
@@ -163,8 +214,9 @@ const DatePicker: React.FC<DatePickerProps> = ({
           value={value || ''}
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
+          onBlur={onBlur}
           placeholder={placeholder}
-          className={`w-full px-3 py-2 pr-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent ${className}`}
+          className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${className}`}
         />
         <button
           type="button"

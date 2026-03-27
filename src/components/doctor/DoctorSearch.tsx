@@ -6,7 +6,7 @@ import { X, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import { type AppDispatch, type RootState } from '@/app/store'
 import { clearError, addLocalDoctor } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/doctor/db/doctorDB'
+import { doctorDBOperations } from '@/features/db/doctorDB'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
 

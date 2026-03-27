@@ -1,4 +1,4 @@
-import { db } from '@/features/patient/db/dexie';
+import { db } from '@/features/db/dexie';
 import { seedAllData } from '@/data/seedData';
 
 export const resetAndSeedData = async () => {
@@ -6,11 +6,11 @@ export const resetAndSeedData = async () => {
     console.log('Clearing existing data...');
     await db.delete();
     await db.open();
-    
+
     console.log('Seeding fresh data...');
     await seedAllData();
     console.log('Data reset and seeded successfully!');
-    
+
     // Reload the page to refresh the UI
     window.location.reload();
   } catch (error) {
