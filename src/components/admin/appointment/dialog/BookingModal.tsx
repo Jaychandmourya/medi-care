@@ -13,12 +13,18 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { createAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
 import { fetchPatients } from '@/features/appointment/appointmentThunk';
 import { fetchDoctors } from '@/features/appointment/appointmentThunk';
+import { fetchDoctorSchedules } from '@/features/appointment/appointmentThunk';
 import type { Appointment, Doctor, Patient } from '@/features/db/dexie';
 import { bookingSchema } from '@/validation-schema/appointmentSchema'
+import type { RoleColors } from '@/types/appointment/appointmentType';
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
-const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { showBookingModal: boolean, closeBookingModel: () => void }) => {
+const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColors }: {
+  showBookingModal: boolean,
+  closeBookingModel: () => void,
+  roleColors?: RoleColors
+}) => {
   // Redux dispatch
   const dispatch = useAppDispatch();
   // Redux selectors
@@ -59,15 +65,22 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { show
     ? checkSlotConflict(watchedDoctorId, watchedDate, watchedSlot)
     : null;
 
+  // Debug available slots
+  useEffect(() => {
+    console.log('🔄 Available slots updated:', availableSlots);
+  }, [availableSlots]);
+
   // Call fetchPatients and fetchDoctors
   useEffect(() => {
     dispatch(fetchPatients());
     dispatch(fetchDoctors());
+    dispatch(fetchDoctorSchedules());
   }, [dispatch]);
 
   useEffect(() => {
     if (watchedDoctorId && watchedDate) {
       const date = new Date(watchedDate);
+      console.log('🕐 BookingModal: Generating time slots for doctor:', watchedDoctorId, 'on date:', date);
       dispatch(generateTimeSlots({ doctorId: watchedDoctorId, date }));
     }
   }, [watchedDoctorId, watchedDate, dispatch]);
@@ -107,13 +120,49 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { show
     return doctors.filter((doctor: Doctor) => doctor.department === department);
   }, [doctors]);
 
+  // Get role-based header class
+  const getHeaderClass = () => {
+    if (!roleColors) return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
+
+    switch (roleColors.header) {
+      case 'bg-purple-600':
+        return 'bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-lg';
+      case 'bg-blue-600':
+        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
+      case 'bg-green-600':
+        return 'bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-lg';
+      case 'bg-pink-600':
+        return 'bg-gradient-to-r from-pink-600 to-pink-700 text-white p-6 rounded-t-lg';
+      default:
+        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
+    }
+  };
+
+  // Get role-based button hover class
+  const getButtonHoverClass = () => {
+    if (!roleColors) return 'hover:bg-blue-500';
+
+    switch (roleColors.header) {
+      case 'bg-purple-600':
+        return 'hover:bg-purple-500';
+      case 'bg-blue-600':
+        return 'hover:bg-blue-500';
+      case 'bg-green-600':
+        return 'hover:bg-green-500';
+      case 'bg-pink-600':
+        return 'hover:bg-pink-500';
+      default:
+        return 'hover:bg-blue-500';
+    }
+  };
+
   if (!showBookingModal) return null;
 
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
         {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
+        <div className={getHeaderClass()}>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
               <Calendar className="w-6 h-6" />
@@ -123,7 +172,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { show
               variant="ghost"
               size="icon"
               onClick={handleCloseModal}
-              className="text-white hover:bg-blue-500"
+              className={`text-white ${getButtonHoverClass()}`}
             >
               <X className="w-5 h-5" />
             </Button>
@@ -219,6 +268,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { show
                     onChange={field.onChange}
                     placeholder="Select appointment date"
                     className="w-full h-11"
+                    disablePastDates={true}
                   />
                   {errors.date && (
                     <p className="text-sm text-red-600 flex items-center">
@@ -243,11 +293,12 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel }: { show
                     icon={Clock}
                     error={errors.slot}
                     {...field}
-                    disabled={!watchedDoctorId || !watchedDate || availableSlots.length === 0}
+                    disabled={!watchedDoctorId || !watchedDate || loading || availableSlots.length === 0}
                   >
                     <option value="">
                       {!watchedDoctorId ? 'Select doctor first' :
                       !watchedDate ? 'Select date first' :
+                      loading ? 'Loading available slots...' :
                       availableSlots.length ? 'Select time slot' :
                       'No available slots for selected date'}
                     </option>

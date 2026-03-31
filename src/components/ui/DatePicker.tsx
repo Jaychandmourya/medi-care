@@ -216,7 +216,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           onFocus={() => setIsOpen(true)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${className}`}
+          className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm ${className}`}
         />
         <button
           type="button"

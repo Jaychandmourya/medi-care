@@ -1,5 +1,8 @@
-import { type LocalDoctor } from '../doctor/doctorSlice'
-import { db, type Doctor } from './dexie'
+import { type LocalDoctor } from '../features/doctor/doctorSlice'
+import { db, type Doctor } from '../features/db/dexie'
+
+// Re-export LocalDoctor for use in other modules
+export type { LocalDoctor } from '../features/doctor/doctorSlice'
 
 // Database operations using MediCareDB
 export const doctorDBOperations = {
@@ -13,6 +16,7 @@ export const doctorDBOperations = {
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       email: doctor.email,
       specialty: doctor.specialization,
+      department: doctor.department || 'General Medicine',
       city: doctor.city,
       state: doctor.state,
       country: doctor.country, // Map country to county for compatibility
@@ -20,7 +24,7 @@ export const doctorDBOperations = {
       contact: doctor.contact,
       postalCode: doctor.postalCode || '',
       credential: undefined,
-      gender: undefined,
+      gender: doctor.gender || 'M',
       addedAt: doctor.createdAt
     }))
   },
@@ -30,7 +34,7 @@ export const doctorDBOperations = {
     const doctorData: Doctor = {
       id: doctor.npi || `DOC-${Date.now()}`,
       name: `${doctor.firstName} ${doctor.lastName}`.trim(),
-      department: doctor.specialty || 'General',
+      department: doctor.department,
       specialization: doctor.specialty || 'General Practice',
       email: doctor.email || '',
       contact: doctor.contact,
@@ -38,6 +42,8 @@ export const doctorDBOperations = {
       state: doctor.state,
       country: doctor.country,
       postalCode: doctor.postalCode || '',
+      gender: doctor.gender,
+      address: doctor.address,
       isActive: true,
       createdAt: new Date().toISOString()
     }
@@ -45,10 +51,9 @@ export const doctorDBOperations = {
   },
 
   // Update an existing doctor
-  update: async (id: number, updates: Partial<LocalDoctor>): Promise<number> => {
+  update: async (id: string, updates: Partial<LocalDoctor>): Promise<number> => {
     console.log('updates',updates)
-    const doctorId = id.toString()
-    const existingDoctor = await db.doctors.get(doctorId)
+    const existingDoctor = await db.doctors.get(id)
     if (!existingDoctor) return 0
 
     const updateData: Partial<Doctor> = {}
@@ -57,19 +62,29 @@ export const doctorDBOperations = {
     }
     if (updates.specialty !== undefined) {
       updateData.specialization = updates.specialty
-      updateData.department = updates.specialty
+    }
+    if (updates.department !== undefined) {
+      updateData.department = updates.department
     }
     if (updates.city !== undefined) updateData.city = updates.city
     if (updates.state !== undefined) updateData.state = updates.state
     if (updates.county !== undefined) updateData.country = updates.county
     if (updates.contact !== undefined) updateData.contact = updates.contact
     if(updates.email !== undefined) updateData.email = updates.email
-    return await db.doctors.update(doctorId, updateData)
+    return await db.doctors.update(id, updateData)
   },
 
   // Remove a doctor
-  remove: async (id: number): Promise<void> => {
-    return await db.doctors.delete(id.toString())
+  remove: async (id: string): Promise<void> => {
+    console.log(`Attempting to delete doctor with ID: ${id}`);
+    const doctor = await db.doctors.get(id);
+    if (!doctor) {
+      console.log(`❌ Doctor with ID ${id} not found in database`);
+      throw new Error(`Doctor with ID ${id} not found`);
+    }
+    console.log(`✅ Found doctor to delete:`, doctor);
+    await db.doctors.delete(id);
+    console.log(`✅ Successfully deleted doctor with ID: ${id}`);
   },
 
   // Find by NPI (using doctor ID)
@@ -83,6 +98,7 @@ export const doctorDBOperations = {
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || 'General Medicine',
       city: doctor.city,
       state: doctor.state,
       country: doctor.country,
@@ -97,16 +113,17 @@ export const doctorDBOperations = {
   },
 
   // Find by ID
-  findById: async (id: number): Promise<LocalDoctor | undefined> => {
-    const doctor = await db.doctors.get(id.toString())
+  findById: async (id: string): Promise<LocalDoctor | undefined> => {
+    const doctor = await db.doctors.get(id)
     if (!doctor) return undefined
 
     return {
-      id: parseInt(doctor.id),
+      id: doctor.id,
       npi: doctor.id,
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || 'General Medicine',
       city: doctor.city,
       email: doctor.email,
       state: doctor.state,
@@ -139,6 +156,7 @@ export const doctorDBOperations = {
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || 'General Medicine',
       city: doctor.city,
       state: doctor.state,
       email: doctor.email,

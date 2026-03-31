@@ -1,9 +1,21 @@
 import PatientFormWizard from "./PatientFormWizard";
 import { Button } from "@/components/ui/Button";
 import { useState, useCallback } from "react";
+import { type PatientFormData } from "@/lib/patientValidation";
+import { useAppSelector } from "@/app/hooks";
+import { getRoleColors } from "@/utils/roleColors";
 
-export default function AddPatientDialog({isOpen,onClose,editData}: {isOpen: boolean, onClose: () => void, editData?: any}) {
+interface AddPatientDialogProps {
+  isOpen: boolean;
+  onClose: () => void;
+  editData?: Partial<PatientFormData>;
+  titleClass?: string;
+}
+
+export default function AddPatientDialog({isOpen, onClose, editData, titleClass}: AddPatientDialogProps) {
   const [safeCloseHandler, setSafeCloseHandler] = useState<(() => void) | null>(null);
+  const userRole = useAppSelector((state) => state.auth.user?.role);
+  const roleColors = getRoleColors(userRole || 'admin');
 
   const handleDialogClose = useCallback(() => {
     if (safeCloseHandler) {
@@ -27,11 +39,11 @@ export default function AddPatientDialog({isOpen,onClose,editData}: {isOpen: boo
         <div className="sticky top-0 bg-white border-b border-gray-200 rounded-t-3xl p-6 pb-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-3">
-              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <div className={`w-12 h-12 bg-gradient-to-br ${roleColors.primary} rounded-xl flex items-center justify-center shadow-lg`}>
                 <span className="text-white text-xl">👤</span>
               </div>
               <div>
-                <h2 className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent">
+                <h2 className={`text-2xl font-bold ${titleClass || 'bg-gradient-to-r from-gray-800 to-gray-600 bg-clip-text text-transparent'}`}>
                   {editData ? "Edit Patient" : "Add New Patient"}
                 </h2>
                 <p className="text-gray-500 text-sm mt-1">
@@ -55,8 +67,8 @@ export default function AddPatientDialog({isOpen,onClose,editData}: {isOpen: boo
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
-          <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-6">
-            <p className="text-blue-700 text-sm">
+          <div className={`${roleColors.light} rounded-xl p-4 mb-6`}>
+            <p className={`${roleColors.text} text-sm`}>
               <span className="font-semibold">Required fields:</span> All fields marked with * are required to proceed.
             </p>
           </div>

@@ -6,15 +6,16 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   variant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
   size?: 'default' | 'sm' | 'lg' | 'icon';
   loading?: boolean;
+  customColor?: string;
   children: React.ReactNode;
 }
 
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant = 'default', size = 'default', loading = false, disabled, children, ...props }, ref) => {
+  ({ className, variant = 'default', size = 'default', loading = false, disabled, children, customColor, ...props }, ref) => {
     const baseClasses = 'inline-flex cursor-pointer items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variants = {
-      default: 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:scale-105 focus:ring-blue-500',
+      default: customColor || 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:scale-105 focus:ring-blue-500',
       destructive: 'bg-gradient-to-r from-red-600 to-pink-600 text-white hover:shadow-lg transform hover:scale-105 focus:ring-red-500',
       outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
       secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',

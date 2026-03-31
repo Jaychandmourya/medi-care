@@ -5,7 +5,7 @@ import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
 import type { Appointment } from '@/features/db/dexie';
-import type{ WeeklyCalendarProps } from '@/types/appointment/appointmentType';
+import type{ WeeklyCalendarProps, RoleColors } from '@/types/appointment/appointmentType';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
@@ -17,7 +17,8 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   onSetSelectedWeek,
   onSetSelectedDate,
   onSetSelectedAppointment,
-  onShowDetailModal
+  onShowDetailModal,
+  roleColors
 }) => {
 
   // State management
@@ -155,12 +156,13 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   }, [onSetSelectedWeek]);
 
   return (
-    <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+    <div className={`bg-white rounded-lg shadow-lg overflow-hidden ${roleColors ? roleColors.calendar : ''}`}>
       {/* Calendar Header */}
       <CalendarHeader
         currentWeek={currentWeek}
         onNavigateWeek={navigateWeek}
         onGoToToday={goToToday}
+        roleColors={roleColors}
       />
 
       {/* Calendar Grid */}

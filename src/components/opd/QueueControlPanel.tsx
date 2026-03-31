@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/Button'
 const QueueControlPanel = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { queue, currentToken, simulationRunning, countdownTimer } = useSelector((state: RootState) => state.opd)
+  const { user } = useSelector((state: RootState) => state.auth)
   const intervalRef = useRef<number | null>(null)
 
   useEffect(() => {
@@ -100,6 +101,7 @@ const QueueControlPanel = () => {
             onClick={toggleSimulationHandler}
             variant={simulationRunning ? 'destructive' : 'default'}
             className="flex items-center gap-2"
+            customColor={!simulationRunning && user?.role === 'receptionist' ? 'bg-purple-600 hover:bg-purple-700 text-white hover:shadow-lg transform hover:scale-105 focus:ring-purple-500' : undefined}
           >
             {simulationRunning ? (
               <>

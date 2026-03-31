@@ -122,26 +122,52 @@ export const appointmentServices = {
 
   // Generate time slots
   async generateTimeSlots({ doctorId, date }: { doctorId: string; date: Date }) {
+    console.log('Generating time slots for doctor:', doctorId, 'on date:', date);
+
+    // First check all schedules to see what we have
+    const allSchedules = await db.doctorSchedules.toArray();
+    console.log('All schedules in database:', allSchedules);
+
     const schedule = await db.doctorSchedules.where('doctorId').equals(doctorId).first();
-    if (!schedule) throw new Error('No schedule found for doctor');
+    console.log('Found schedule for doctor', doctorId, ':', schedule);
+
+    if (!schedule) {
+      console.log('No schedule found for doctor:', doctorId);
+      // Try to find if doctor exists
+      const doctor = await db.doctors.where('id').equals(doctorId).first();
+      console.log('Doctor exists check:', doctor);
+      throw new Error('No schedule found for doctor');
+    }
 
     const dayOfWeek = date.getDay();
+    console.log('Day of week:', dayOfWeek, 'Working days:', schedule.workingDays);
+
     if (!schedule.workingDays.includes(dayOfWeek)) {
+      console.log('Doctor not working on this day');
       return [];
     }
 
     const dateStr = format(date, 'yyyy-MM-dd');
+    console.log('Date string:', dateStr);
+
     const appointments = await db.appointments
       .where('date')
       .equals(dateStr)
       .toArray();
 
+    console.log('All appointments on this date:', appointments);
+
     const doctorAppointments = appointments.filter((apt: Appointment) => apt.doctorId === doctorId);
     const bookedSlots = doctorAppointments.map((apt: Appointment) => apt.slot);
+
+    console.log('Doctor appointments:', doctorAppointments);
+    console.log('Booked slots:', bookedSlots);
 
     const startTime = parse(schedule.startTime, 'HH:mm', date);
     const endTime = parse(schedule.endTime, 'HH:mm', date);
     const slots: string[] = [];
+
+    console.log('Start time:', startTime, 'End time:', endTime, 'Slot duration:', schedule.slotDuration);
 
     let currentTime = startTime;
     while (isBefore(currentTime, endTime)) {
@@ -165,6 +191,7 @@ export const appointmentServices = {
       currentTime = addMinutes(currentTime, schedule.slotDuration);
     }
 
+    console.log('Generated slots:', slots);
     return slots;
   }
 };

@@ -3,10 +3,14 @@ import { Label } from "@/components/ui/Label";
 import DatePicker from "@/components/ui/DatePicker";
 import Input from "@/components/ui/Input";
 import {Phone, Mail} from 'lucide-react'
+import { useAppSelector } from "@/app/hooks";
+import { getRoleColors } from "@/utils/roleColors";
 
 export default function StepPersonal() {
   const { register, formState: { errors }, setValue, watch, setError, clearErrors } = useFormContext();
   const photoPreview = watch("photo");
+  const userRole = useAppSelector((state) => state.auth.user?.role);
+  const roleColors = getRoleColors(userRole || 'admin');
 
   // Upload photo
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -46,7 +50,7 @@ export default function StepPersonal() {
             />
             <label
               htmlFor="photo-upload"
-              className="cursor-pointer px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+              className={`cursor-pointer px-4 py-2 ${roleColors.secondary} text-white rounded-lg transition-colors`}
             >
               Upload Photo
             </label>

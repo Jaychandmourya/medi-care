@@ -121,8 +121,19 @@ const appointmentSlice = createSlice({
       .addCase(deleteAppointment.fulfilled, (state, action) => {
         state.appointments = state.appointments.filter(apt => apt.id !== action.payload);
       })
+      .addCase(generateTimeSlots.pending, (state) => {
+        state.loading = true;
+        state.availableSlots = [];
+        state.error = null;
+      })
       .addCase(generateTimeSlots.fulfilled, (state, action) => {
+        state.loading = false;
         state.availableSlots = action.payload;
+      })
+      .addCase(generateTimeSlots.rejected, (state, action) => {
+        state.loading = false;
+        state.availableSlots = [];
+        state.error = action.error.message || 'Failed to generate time slots';
       });
   },
 });

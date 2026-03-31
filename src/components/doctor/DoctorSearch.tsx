@@ -1,12 +1,14 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState, useEffect, useRef, useMemo } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
-import { X, Plus } from 'lucide-react'
+import toast from 'react-hot-toast'
 import { Button } from '@/components/ui/Button'
+import Input from '@/components/ui/Input'
 import { type AppDispatch, type RootState } from '@/app/store'
-import { clearError, addLocalDoctor } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/db/doctorDB'
+import { clearError } from '@/features/doctor/doctorSlice'
+import { addLocalDoctor } from '@/features/doctor/doctorThunk'
+import { doctorDBOperations } from '@/services/doctorServices'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
 
@@ -30,47 +32,58 @@ interface DoctorSearchProps {
     specialty?: string
     postalCode?: string
     address?: string
+    gender?: string
+    email?: string
   }
+  onClear?: () => void
 }
 
-export default function DoctorSearch({ onSearch, initialValues }: DoctorSearchProps) {
-  console.log('DoctorSearch rendered with initialValues:', initialValues)
+export default function DoctorSearch({ initialValues, onClear }: DoctorSearchProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { error } = useSelector((state: RootState) => state.doctors)
   const [adding, setAdding] = useState(false)
-  const [showSuggestions, setShowSuggestions] = useState(false)
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false)
+
+  const defaultValues = useMemo(() => ({
+    firstName: initialValues?.firstName || '',
+    lastName: initialValues?.lastName || '',
+    middleName: '',
+    specialty: initialValues?.specialty || '',
+    department: 'General Medicine' as const,
+    contact: initialValues?.contact || '',
+    email: initialValues?.email || '',
+    city: initialValues?.city || '',
+    state: initialValues?.state || '',
+    postalCode: initialValues?.postalCode || '',
+    address: initialValues?.address || '',
+    country: initialValues?.country || '',
+    gender: (initialValues?.gender as 'M' | 'F' | 'O' | undefined) || undefined
+  }), [initialValues])
 
   const {
     register,
     handleSubmit,
-    formState: { errors, isValid },
+    formState: { errors },
     setValue,
     watch,
     reset
   } = useForm<DoctorFormData>({
     resolver: zodResolver(doctorFormSchema),
-    defaultValues: {
-      firstName: initialValues?.firstName || '',
-      lastName: initialValues?.lastName || '',
-      middleName: '',
-      specialty: initialValues?.specialty || '',
-      phone: '',
-      contact: initialValues?.contact || '',
-      email: initialValues?.email || '',
-      city: initialValues?.city || '',
-      state: initialValues?.state || '',
-      postalCode: initialValues?.postalCode || '',
-      address: initialValues?.address || '',
-      country: initialValues?.country || '',
-      credential: '',
-      gender: undefined
-    }
+    defaultValues
   })
 
   const watchedValues = watch()
+  const specialtyValue = watchedValues.specialty
   const searchRef = useRef<HTMLDivElement>(null)
   const specialtyRef = useRef<HTMLDivElement>(null)
+
+  const selectSpecialty = useCallback((taxonomy: typeof COMMON_TAXONOMIES[0]) => {
+    setValue('specialty', taxonomy.desc)
+    setShowSpecialtyDropdown(false)
+  }, [setValue])
+
+  const toggleSpecialtyDropdown = useCallback(() => {
+    setShowSpecialtyDropdown(prev => !prev)
+  }, [])
 
   useEffect(() => {
     if (initialValues) {
@@ -82,80 +95,32 @@ export default function DoctorSearch({ onSearch, initialValues }: DoctorSearchPr
       setValue('contact', initialValues.contact || '')
       setValue('postalCode', initialValues.postalCode || '')
       setValue('address', initialValues.address || '')
+      setValue('gender', initialValues.gender || '')
+      setValue('specialty', initialValues.specialty || '')
     }
   }, [initialValues, setValue])
 
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
-        setShowSuggestions(false)
-        setShowSpecialtyDropdown(false)
-      }
-      if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
-        setShowSpecialtyDropdown(false)
-      }
+  const handleClickOutside = useCallback((event: MouseEvent) => {
+    if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
+      setShowSpecialtyDropdown(false)
     }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
+    if (specialtyRef.current && !specialtyRef.current.contains(event.target as Node)) {
+      setShowSpecialtyDropdown(false)
+    }
   }, [])
 
-  const handleInputChange = (field: string, value: string) => {
-    setValue(field as keyof DoctorFormData, value)
-  }
+  useEffect(() => {
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [handleClickOutside])
 
-  const handleSearch = () => {
-    // Get current form values
-    const currentValues = watchedValues
-
-    // Create search params object, filtering out empty values
-    const searchParams: Record<string, string> = {}
-
-    if (currentValues.firstName?.trim()) {
-      searchParams.firstName = currentValues.firstName.trim()
-    }
-    if (currentValues.lastName?.trim()) {
-      searchParams.lastName = currentValues.lastName.trim()
-    }
-    if (currentValues.specialty?.trim()) {
-      searchParams.taxonomy = currentValues.specialty.trim()
-    }
-    if (currentValues.city?.trim()) {
-      searchParams.city = currentValues.city.trim()
-    }
-    if (currentValues.state?.trim()) {
-      searchParams.state = currentValues.state.trim()
-    }
-    if (currentValues.country?.trim()) {
-      searchParams.country = currentValues.country.trim()
-    }
-    if (currentValues.contact?.trim()) {
-      searchParams.contact = currentValues.contact.trim()
-    }
-
-    // Check if at least one search parameter is provided
-    if (Object.keys(searchParams).length === 0) {
-      alert('Please enter at least one search criteria (name, specialty, city, or state)')
-      return
-    }
-
-    console.log('Search params being sent:', searchParams) // Debug log
-    onSearch(searchParams)
-  }
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter') {
-      handleSearch()
-    }
-  }
-
-  const handleAddToSystem = async (data: DoctorFormData) => {
+  const handleAddToSystem = useCallback(async (data: DoctorFormData) => {
     if (!data.firstName?.trim()) {
-      alert('First name is required')
+      toast.error('First name is required')
       return
     }
     if (!data.lastName?.trim()) {
-      alert('Last name is required')
+      toast.error('Last name is required')
       return
     }
 
@@ -172,7 +137,7 @@ export default function DoctorSearch({ onSearch, initialValues }: DoctorSearchPr
       )
 
       if (exists) {
-        alert('A doctor with this name already exists in your system')
+        toast.error('A doctor with this name already exists in your system')
         return
       }
 
@@ -182,292 +147,245 @@ export default function DoctorSearch({ onSearch, initialValues }: DoctorSearchPr
         firstName: data.firstName?.trim() || '',
         lastName: data.lastName?.trim() || '',
         specialty: data.specialty?.trim(),
+        department: data.department,
         email: data.email?.trim(),
         city: data.city?.trim(),
         state: data.state?.trim(),
         country: data.country?.trim(),
         contact: data.contact?.trim(),
         address: data.address,
-        credential: data.credential?.trim(),
         gender: data.gender,
-        postalCode: data.postalCode
+        postalCode: data.postalCode,
+        addedAt: new Date().toISOString()
       }
-      console.log('Adding doctor to system:', doctorData)
-      await doctorDBOperations.add(doctorData)
       dispatch(addLocalDoctor(doctorData))
 
-      alert('Doctor added to your system successfully!')
+      toast.success('Doctor added to your system successfully!')
       reset()
+      onClear?.()
     } catch (error) {
       console.error('Failed to add doctor:', error)
-      alert('Failed to add doctor to system')
+      toast.error('Failed to add doctor to system')
     } finally {
       setAdding(false)
     }
-  }
+  }, [dispatch, reset, onClear])
 
-  const handleClear = () => {
-    reset()
+  const handleClear = useCallback(() => {
+    reset({
+      firstName: '',
+      lastName: '',
+      specialty: '',
+      department: 'General Medicine',
+      contact: '',
+      email: '',
+      city: '',
+      state: '',
+      postalCode: '',
+      address: '',
+      country: '',
+      gender: '' as '' | 'M' | 'F' | 'O'
+    })
     dispatch(clearError())
-  }
-
-  const selectSpecialty = (taxonomy: typeof COMMON_TAXONOMIES[0]) => {
-    setValue('specialty', taxonomy.desc)
-    setShowSpecialtyDropdown(false)
-  }
+  }, [reset, dispatch])
 
   const filteredSpecialties = useMemo(() => {
-    const currentSpecialty = watchedValues.specialty || ''
+    const currentSpecialty = specialtyValue || ''
     if (currentSpecialty) {
       return COMMON_TAXONOMIES.filter(tax =>
         tax.desc.toLowerCase().includes(currentSpecialty.toLowerCase())
       )
     }
     return COMMON_TAXONOMIES
-  }, [watchedValues.specialty])
+  }, [specialtyValue])
 
   return (
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-      <form onSubmit={handleSubmit(handleAddToSystem)}>
+      <form onSubmit={handleSubmit(handleAddToSystem, (errors) => {
+        console.error('Form validation errors:', errors)
+        const errorMessages = Object.values(errors).map(err => err?.message).filter(Boolean).join(', ')
+        toast.error(`Please fix the following errors: ${errorMessages}`)
+      })}>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {/* First Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            First Name *
-          </label>
-          <input
-            {...register('firstName')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.firstName ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter first name"
-          />
-          {errors.firstName && (
-            <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-          )}
-        </div>
+        <Input
+          id="firstName"
+          label="First Name"
+          placeholder="Enter first name"
+          registration={register('firstName')}
+          required
+          error={errors.firstName}
+        />
 
         {/* Last Name */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Last Name *
-          </label>
-          <input
-            {...register('lastName')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.lastName ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter last name"
-          />
-          {errors.lastName && (
-            <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-          )}
-        </div>
+        <Input
+          id="lastName"
+          label="Last Name"
+          placeholder="Enter last name"
+          registration={register('lastName')}
+          required
+          error={errors.lastName}
+        />
 
         {/* Specialty */}
-        <div className="relative" ref={specialtyRef}>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Specialty
-          </label>
-          <input
-            {...register('specialty')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.specialty ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter or select specialty"
-            onFocus={() => setShowSpecialtyDropdown(true)}
+        <div ref={specialtyRef} className="relative">
+          <Input
+            id="specialty"
+            label="Specialty"
+            placeholder="Enter specialty or select from dropdown"
+            registration={register('specialty')}
+            error={errors.specialty}
+            onClick={toggleSpecialtyDropdown}
           />
-          {errors.specialty && (
-            <p className="mt-1 text-sm text-red-600">{errors.specialty.message}</p>
-          )}
 
           {/* Specialty Dropdown */}
           {showSpecialtyDropdown && filteredSpecialties.length > 0 && (
             <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
-              <div className="p-2 border-b border-gray-100">
+              <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
                 <p className="text-xs text-gray-500">
                   {filteredSpecialties.length} specialties found. Click to select.
                 </p>
               </div>
-              {filteredSpecialties.map((taxonomy, index) => (
-                <div
-                  key={`${taxonomy.code}-${index}`}
-                  className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer"
-                  onClick={() => selectSpecialty(taxonomy)}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-medium text-gray-900">{taxonomy.desc}</span>
-                    <span className="text-sm text-gray-500">{taxonomy.code}</span>
+              <div className="max-h-80 overflow-y-auto">
+                {filteredSpecialties.map((taxonomy, index) => (
+                  <div
+                    key={`${taxonomy.code}-${index}`}
+                    className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer"
+                    onClick={() => selectSpecialty(taxonomy)}
+                  >
+                    <div className="flex flex-col">
+                      <span className="font-medium text-gray-900">{taxonomy.desc}</span>
+                      <span className="text-sm text-gray-500">{taxonomy.code}</span>
+                    </div>
                   </div>
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           )}
         </div>
 
+        {/* Department */}
+        <Input
+          id="department"
+          label="Department"
+          required
+          as="select"
+          registration={register('department')}
+          error={errors.department}
+        >
+          <option value="">Select Department</option>
+          <option value="General Medicine">General Medicine</option>
+          <option value="Cardiology">Cardiology</option>
+          <option value="Orthopedics">Orthopedics</option>
+          <option value="Pediatrics">Pediatrics</option>
+          <option value="Dermatology">Dermatology</option>
+        </Input>
+
         {/* Contact */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Contact
-          </label>
-          <input
-            {...register('contact')}
-            type="tel"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.contact ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter phone number"
-          />
-          {errors.contact && (
-            <p className="mt-1 text-sm text-red-600">{errors.contact.message}</p>
-          )}
-        </div>
+        <Input
+          id="contact"
+          label="Contact"
+          placeholder="Phone or email"
+          registration={register('contact')}
+          error={errors.contact}
+        />
 
         {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Email
-          </label>
-          <input
-            {...register('email')}
-            type="email"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter email address"
-          />
-          {errors.email && (
-            <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-          )}
-        </div>
+        <Input
+          id="email"
+          label="Email"
+          placeholder="Enter email address"
+          registration={register('email')}
+          error={errors.email}
+        />
 
         {/* City */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            City
-          </label>
-          <input
-            {...register('city')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.city ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter city"
-          />
-          {errors.city && (
-            <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-          )}
-        </div>
+        <Input
+          id="city"
+          label="City"
+          placeholder="Enter city"
+          registration={register('city')}
+          error={errors.city}
+        />
 
         {/* State */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            State
-          </label>
-          <input
-            {...register('state')}
-            type="text"
-            maxLength={2}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase ${
-              errors.state ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter state (e.g., CA, NY)"
-          />
-          {errors.state && (
-            <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-          )}
-        </div>
+        <Input
+          id="state"
+          label="State"
+          placeholder="Enter state"
+          registration={register('state')}
+          error={errors.state}
+        />
 
-        {/* County */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Country
-          </label>
-          <input
-            {...register('country')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.country ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter country"
-          />
-          {errors.country && (
-            <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
-          )}
-        </div>
+        {/* country */}
+        <Input
+          id="country"
+          label="country"
+          placeholder="Enter country"
+          registration={register('country')}
+          error={errors.country}
+        />
+
         {/* Postal Code */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Postal Code
-          </label>
-          <input
-            {...register('postalCode')}
-            type="text"
-            maxLength={10}
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.postalCode ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter postal code (e.g., 12345, 12345-6789, or 077537594)"
-          />
-          {errors.postalCode && (
-            <p className="mt-1 text-sm text-red-600">{errors.postalCode.message}</p>
-          )}
-        </div>
+        <Input
+          id="postalCode"
+          label="Postal Code"
+          placeholder="Enter postal code (e.g., 12345, 12345-6789, or 077537594)"
+          registration={register('postalCode')}
+          error={errors.postalCode}
+        />
 
         {/* Address */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            Address
+        <Input
+          id="address"
+          label="Address"
+          placeholder="Enter street address (e.g., 123 Main St, Apt 4B)"
+          registration={register('address')}
+          error={errors.address}
+          as="textarea"
+          rows={3}
+        />
+
+        {/* Gender */}
+        <div>
+          <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
+            Gender
           </label>
-          <input
-            {...register('address')}
-            type="text"
-            className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-              errors.address ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Enter street address (e.g., 123 Main St, Apt 4B)"
-          />
-          {errors.address && (
-            <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
+          <select
+            id="gender"
+            {...register('gender')}
+            className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm border-gray-300"
+          >
+            <option value="">Select gender</option>
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+            <option value="O">Other</option>
+          </select>
+          {errors.gender && (
+            <p className="mt-1 text-sm text-red-600">{errors.gender.message}</p>
           )}
         </div>
-
-        {/* Add Button */}
-        <div className="flex items-end gap-2">
+        </div>
+        <div className="flex flex-wrap gap-3 pt-4">
+          <Button
+            type="submit"
+            variant="outline"
+            loading={adding}
+            disabled={adding}
+            className="px-6 py-3"
+          >
+            {adding ? 'Adding...' : 'Add to System'}
+          </Button>
           <Button
             type="button"
-            disabled={adding}
-            loading={adding}
-            onClick={() => {
-              const formData = watchedValues
-              handleAddToSystem(formData)
-            }}
-            className="flex-1 bg-green-600 hover:bg-green-700"
-          >
-            <Plus className="w-4 h-4" />
-            Add to System
-          </Button>
-          <Button
-            variant="outline"
-            size="icon"
-            className="bg-red-500 hover:bg-red-600 h-[55px]"
+            variant="ghost"
             onClick={handleClear}
+            className="px-6 py-3"
           >
-            <X className="w-4 h-4" />
+            Clear
           </Button>
         </div>
-      </div>
       </form>
-
-      {/* Error Message */}
-      {error && (
-        <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-md">
-          <p className="text-sm text-red-600">{error}</p>
-        </div>
-      )}
     </div>
   )
 }

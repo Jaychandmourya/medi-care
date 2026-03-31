@@ -42,7 +42,7 @@ const Input: React.FC<InputProps> = ({
   onChange,
   onClick,
 }) => {
-  const baseClasses = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
+  const baseClasses = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm ${
     error ? 'border-red-500' : 'border-gray-300'
   } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`;
 

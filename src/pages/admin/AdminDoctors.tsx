@@ -2,21 +2,17 @@ import { useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { Search, Users, Database } from 'lucide-react'
 import { type AppDispatch, type RootState } from '@/app/store'
+import { searchDoctors } from '@/features/doctor/doctorThunk'
 import {
-  searchDoctors,
   setCurrentPage,
   setActiveTab,
-  clearError,
-  setLocalDoctors
+  clearError
 } from '@/features/doctor/doctorSlice'
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
 import DoctorSearch from '@/components/doctor/DoctorSearch'
-import DoctorCard from '@/components/doctor/DoctorCard'
-import DoctorProfile from '@/components/doctor/DoctorProfile'
 import DoctorAutocomplete from '@/components/doctor/DoctorAutocomplete'
-import Pagination from '@/components/doctor/Pagination'
 import InternalDoctorList from '@/components/doctor/InternalDoctorList'
-import { type NPIResult } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/db/doctorDB'
+import { type NPIResult } from '@/features/doctor/doctorThunk'
 
 const AdminDoctors = () => {
   const dispatch = useDispatch<AppDispatch>()
@@ -33,6 +29,7 @@ const AdminDoctors = () => {
 
   const [selectedDoctor, setSelectedDoctor] = useState<NPIResult | null>(null)
   const [lastSearchParams, setLastSearchParams] = useState<Record<string, string>>({})
+  const [clearTrigger, setClearTrigger] = useState(0)
   const [formValues, setFormValues] = useState({
     firstName: '',
     lastName: '',
@@ -42,7 +39,8 @@ const AdminDoctors = () => {
     contact: '',
     specialty: '',
     postalCode: '',
-    address: ''
+    address: '',
+    gender: ''
   })
 
   useEffect(() => {
@@ -52,8 +50,7 @@ const AdminDoctors = () => {
   useEffect(() => {
     const loadLocalDoctors = async () => {
       try {
-        const doctors = await doctorDBOperations.getAll()
-        dispatch(setLocalDoctors(doctors))
+        dispatch(fetchLocalDoctors())
       } catch (error) {
         console.error('Failed to load local doctors:', error)
       }
@@ -62,6 +59,7 @@ const AdminDoctors = () => {
   }, [dispatch])
 
   const handleSearch = async (params: Record<string, string>) => {
+    console.log('Searching with params:', params)
     setLastSearchParams(params)
     dispatch(setCurrentPage(1))
     dispatch(searchDoctors({ ...params, skip: 0 }))
@@ -81,7 +79,8 @@ const AdminDoctors = () => {
     setSelectedDoctor(null)
   }
 
-  const handleFormPopulate = (fields: { firstName: string; lastName: string; city?: string; state?: string; country?: string; contact?: string, specialty?: string, postalCode?: string, address?: string }) => {
+  const handleFormPopulate = (fields: { firstName: string; lastName: string; city?: string; state?: string; country?: string; contact?: string, specialty?: string, postalCode?: string, address?: string, gender?: string }) => {
+    console.log('fields',fields)
     // Populate the DoctorSearch form fields
     setFormValues({
       firstName: fields.firstName || '',
@@ -92,11 +91,33 @@ const AdminDoctors = () => {
       contact: fields.contact || '',
       specialty: fields.specialty || '',
       postalCode: fields.postalCode || '',
-      address: fields.address || ''
+      address: fields.address || '',
+      gender: fields.gender || ''
     })
   }
 
+  const handleClearForm = () => {
+    // Clear form values
+    setFormValues({
+      firstName: '',
+      lastName: '',
+      city: '',
+      state: '',
+      country: '',
+      contact: '',
+      specialty: '',
+      postalCode: '',
+      address: '',
+      gender: ''
+    })
+    // Clear last search params
+    setLastSearchParams({})
+    // Trigger clear for DoctorAutocomplete
+    setClearTrigger(prev => prev + 1)
+  }
+
   const handleFieldPopulate = (fields: { firstName: string; lastName: string; city?: string; state?: string }) => {
+    console.log('handleFieldPopulate1111', fields)
     // Auto-fill the search form with selected doctor's data
     const params: Record<string, string> = {}
     if (fields.firstName) {
@@ -112,9 +133,10 @@ const AdminDoctors = () => {
       params.state = fields.state
     }
 
-    setLastSearchParams(params)
-    dispatch(setCurrentPage(1))
-    dispatch(searchDoctors({ ...params, skip: 0 }))
+    // setLastSearchParams(params)
+    // dispatch(setCurrentPage(1))
+    console.log('params1111', params)
+    // dispatch(searchDoctors({ ...params, skip: 0 }))
   }
 
   return (
@@ -135,7 +157,7 @@ const AdminDoctors = () => {
           <nav className="flex space-x-8">
             <button
               onClick={() => dispatch(setActiveTab('search'))}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2 px-1 border-b-2 font-medium cursor-pointer text-sm transition-colors ${
                 activeTab === 'search'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -148,7 +170,7 @@ const AdminDoctors = () => {
             </button>
             <button
               onClick={() => dispatch(setActiveTab('internal'))}
-              className={`py-2 px-1 border-b-2 font-medium text-sm transition-colors ${
+              className={`py-2 px-1 border-b-2 font-medium cursor-pointer text-sm transition-colors ${
                 activeTab === 'internal'
                   ? 'border-blue-500 text-blue-600'
                   : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
@@ -169,7 +191,7 @@ const AdminDoctors = () => {
             <p className="text-blue-700 text-sm mb-4">
               Type a doctor's name to instantly search and add them to your system
             </p>
-            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} />
+            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} clearTrigger={clearTrigger} />
           </div>
         </div>
 
@@ -177,71 +199,10 @@ const AdminDoctors = () => {
         {activeTab === 'search' ? (
           <div>
             {/* Search Component */}
-            <DoctorSearch onSearch={handleSearch} initialValues={formValues} />
-
-            {/* Results Summary */}
-            {searchResults.length > 0 && (
-              <div className="mt-6 flex items-center justify-between">
-                <div className="text-sm text-gray-600">
-                  Showing {searchResults.length} of {resultCount} results
-                </div>
-              </div>
-            )}
-
-            {/* Search Results */}
-            {loading && (
-              <div className="mt-6 flex items-center justify-center py-12">
-                <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-
-            {!loading && error && (
-              <div className="mt-6 bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-red-600">{error}</p>
-              </div>
-            )}
-
-            {!loading && !error && searchResults.length === 0 && Object.keys(lastSearchParams).length > 0 && (
-              <div className="mt-6 text-center py-12">
-                <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">No doctors found</h3>
-                <p className="text-gray-600">
-                  Try adjusting your search criteria or browse different terms
-                </p>
-              </div>
-            )}
-
-            {!loading && !error && searchResults.length > 0 && (
-              <div className="mt-6 space-y-4">
-                {searchResults.map((doctor, index) => (
-                  <DoctorCard
-                    key={`${doctor.basic?.npi}-${index}`}
-                    doctor={doctor}
-                    onViewDetails={handleViewDetails}
-                    isAdded={localDoctors.some(local => local.npi === doctor.basic?.npi)}
-                  />
-                ))}
-
-                {/* Pagination */}
-                <Pagination
-                  currentPage={currentPage}
-                  totalPages={totalPages}
-                  onPageChange={handlePageChange}
-                  loading={loading}
-                />
-              </div>
-            )}
+            <DoctorSearch onSearch={handleSearch} initialValues={formValues} onClear={handleClearForm} />
           </div>
         ) : (
           <InternalDoctorList />
-        )}
-
-        {/* Doctor Profile Modal */}
-        {selectedDoctor && (
-          <DoctorProfile
-            doctor={selectedDoctor}
-            onClose={handleCloseProfile}
-          />
         )}
       </div>
     </div>

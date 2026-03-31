@@ -2,7 +2,7 @@ import { useState, useMemo, useCallback, useEffect } from "react";
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { patientSchema, type PatientFormData, stepSchemas } from "@/lib/patientValidation";
-import { useAppDispatch } from "../../../app/hooks"
+import { useAppDispatch, useAppSelector } from "../../../app/hooks"
 import { addPatient, updatePatient } from "@/features/patient/patientThunk"
 import toast from "react-hot-toast"
 import { Button } from "@/components/ui/Button";
@@ -11,6 +11,7 @@ import StepPersonal from "./step-components/StepPersonal";
 import StepMedical from "./step-components/StepMedical";
 import StepEmergency from "./step-components/StepEmergency";
 import StepReview from "./step-components/StepReview";
+import { getRoleColors } from "@/utils/roleColors";
 
 export default function PatientFormWizard({ defaultData, onClose, onSafeCloseReady }: {
   defaultData?: Partial<PatientFormData>;
@@ -22,6 +23,8 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const dispatch = useAppDispatch();
+  const userRole = useAppSelector((state) => state.auth.user?.role);
+  const roleColors = getRoleColors(userRole || 'admin');
 
   const methods = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
@@ -176,7 +179,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
       <div className="relative">
         <div className="h-2 bg-gray-200 rounded-full overflow-hidden">
           <div
-            className="h-full bg-gradient-to-r from-blue-500 to-purple-600 rounded-full transition-all duration-300 ease-out"
+            className={`h-full bg-gradient-to-r ${roleColors.progress} rounded-full transition-all duration-300 ease-out`}
             style={{ width: `${(step / 4) * 100}%` }}
           />
         </div>
@@ -185,7 +188,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
             <div
               key={index}
               className={`text-xs font-medium ${
-                index + 1 <= step ? "text-purple-600" : "text-gray-400"
+                index + 1 <= step ? roleColors.text.replace('700', '600') : "text-gray-400"
               }`}
             >
               {index + 1}. {stepName}
@@ -223,6 +226,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
             disabled={hasStepErrors()}
             variant="default"
             size="default"
+            customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
           >
             Next →
           </Button>
@@ -234,6 +238,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
             variant="default"
             size="default"
             loading={isSubmitting}
+            customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
           >
             {isSubmitting ? "Saving..." : "Save Patient"}
           </Button>

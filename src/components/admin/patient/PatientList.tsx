@@ -11,17 +11,43 @@ import Input from "@/components/ui/Input";
 import { Plus, Search, Filter, Phone, Edit, Trash2, ChevronLeft, ChevronRight, MoreVertical, Eye } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
 import toast from "react-hot-toast";
+import { ROLE_THEME } from "@/utils/theme";
+import { type PatientFormData } from "@/lib/patientValidation";
 
 export default function PatientList() {
   // Redux dispatch and selector
   const dispatch = useAppDispatch();
   const patients = useAppSelector((state: RootState) => state.patients.list);
+  const user = useAppSelector((state: RootState) => state.auth.user);
+
+  // Get theme colors based on user role
+  const themeColors = user ? ROLE_THEME[user.role] : ROLE_THEME.receptionist;
 
   // Dialog states
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [isOpenDelete, setIsOpenDelete] = useState<boolean>(false);
   const [isOpenViewDialog, setIsOpenViewDialog] = useState<boolean>(false);
-  const [selectedPatient, setSelectedPatient] = useState<{ id: string; name: string; phone: string; gender: string; bloodGroup: string; dob: string } | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<{
+    id?: string;
+    name: string;
+    phone: string;
+    gender: "Male" | "Female" | "Other" | string;
+    bloodGroup: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | string;
+    dob: string;
+    patientId?: string;
+    email?: string;
+    address?: string;
+    allergies?: string;
+    conditions?: string;
+    surgeries?: string;
+    medications?: string;
+    contactName?: string;
+    emergencyPhone?: string;
+    relationship?: string;
+    photo?: string;
+    createdAt?: string;
+    updatedAt?: string;
+  } | null>(null);
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
@@ -96,24 +122,30 @@ export default function PatientList() {
   }, [filtered, page]);
 
   //  Edit and open edit patients dialog
-  const handleEdit = useCallback((patient: any) => {
-    setSelectedPatient(patient);
-    setIsOpenDialog(true);
-    setActiveDropdown(null);
+  const handleEdit = useCallback((patient: typeof selectedPatient) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setIsOpenDialog(true);
+      setActiveDropdown(null);
+    }
   }, []);
 
   // Open delete confirmation dialog
-  const handleDelete = useCallback((patient: any) => {
-    setSelectedPatient(patient);
-    setIsOpenDelete(true);
-    setActiveDropdown(null);
+  const handleDelete = useCallback((patient: typeof selectedPatient) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setIsOpenDelete(true);
+      setActiveDropdown(null);
+    }
   }, []);
 
   // Open View detail Dialog
-  const handleView = useCallback((patient: any) => {
-    setSelectedPatient(patient);
-    setIsOpenViewDialog(true);
-    setActiveDropdown(null);
+  const handleView = useCallback((patient: typeof selectedPatient) => {
+    if (patient) {
+      setSelectedPatient(patient);
+      setIsOpenViewDialog(true);
+      setActiveDropdown(null);
+    }
   }, []);
 
   //  Toggle open filter section
@@ -123,14 +155,14 @@ export default function PatientList() {
 
   // Confirmation delete patient data
   const confirmDelete = useCallback(() => {
-    if (selectedPatient) {
+    if (selectedPatient && selectedPatient.id) {
       const loadingToast = toast.loading('Deleting patient...');
 
-      dispatch(deletePatient(selectedPatient.id) as any)
+      dispatch(deletePatient(selectedPatient.id))
         .then(() => {
           toast.success('Patient deleted successfully!', { id: loadingToast });
         })
-        .catch((error: any) => {
+        .catch((error: Error) => {
           toast.error('Failed to delete patient', { id: loadingToast });
           console.error('Delete error:', error);
         });
@@ -158,14 +190,14 @@ export default function PatientList() {
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+              <h1 className={`text-3xl font-bold ${themeColors.text}`}>
                 Patients
               </h1>
               <p className="text-gray-600 mt-1">Manage your patient records</p>
             </div>
             <Button
               onClick={() => setIsOpenDialog(true)}
-              className="flex items-center gap-2"
+              className={`flex items-center gap-2 ${themeColors.button}`}
             >
               <Plus className="w-5 h-5" />
               Add Patient
@@ -190,12 +222,12 @@ export default function PatientList() {
             <Button
               variant="ghost"
               onClick={() => setShowFilters(!showFilters)}
-              className="flex items-center gap-2 text-blue-600 hover:text-blue-800"
+              className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
             >
               <Filter className="w-4 h-4" />
               {showFilters ? 'Hide Filters' : 'Show Filters'}
               {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
-                <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-800 text-xs rounded-full">
+                <span className={`ml-2 px-2 py-1 ${themeColors.bg} ${themeColors.text} text-xs rounded-full`}>
                   Active
                 </span>
               )}
@@ -446,7 +478,8 @@ export default function PatientList() {
             setIsOpenDialog(false);
             setSelectedPatient(null);
           }}
-          editData={selectedPatient}
+          editData={selectedPatient as unknown as Partial<PatientFormData> || undefined}
+          titleClass={themeColors.text}
         />
 
         {/* Delete Confirmation Dialog */}
@@ -456,7 +489,9 @@ export default function PatientList() {
             setIsOpenDelete(false);
             setSelectedPatient(null);
           }}
-          deleteTitle="Delete Patient"
+          deleteTitle={`Delete Patient`}
+          deleteTitleClass={themeColors.text}
+          confirmButtonClass={themeColors.button}
           onConfirm={confirmDelete}
         />
 
@@ -464,8 +499,10 @@ export default function PatientList() {
         <PatientDetailsDialog
           isOpen={isOpenViewDialog}
           onClose={() => setIsOpenViewDialog(false)}
-          selectedPatient={selectedPatient}
+          selectedPatient={selectedPatient as unknown as any}
           calculateAge={calculateAge}
+          titleClass={themeColors.text}
+          headerClass={themeColors.header}
         />
       </div>
     </div>

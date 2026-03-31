@@ -27,9 +27,6 @@ const Header = ({ setIsOpen }: any) => {
         <button className="md:hidden" onClick={() => setIsOpen(true)}>
           <Menu size={22} />
         </button>
-        <h1 className="text-lg font-semibold text-gray-700">
-          Dashboard
-        </h1>
       </div>
 
       {/* Right */}

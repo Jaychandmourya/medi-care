@@ -2,20 +2,40 @@ import React from 'react';
 import { format, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
+import type { RoleColors } from '@/types/appointment/appointmentType';
 
 interface CalendarHeaderProps {
   currentWeek: Date;
   onNavigateWeek: (direction: 'prev' | 'next') => void;
   onGoToToday: () => void;
+  roleColors?: RoleColors;
 }
 
 const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
   currentWeek,
   onNavigateWeek,
-  onGoToToday
+  onGoToToday,
+  roleColors
 }) => {
+  const getHeaderClass = () => {
+    if (!roleColors) return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4';
+
+    switch (roleColors.header) {
+      case 'bg-purple-600':
+        return 'bg-gradient-to-r from-purple-600 to-purple-700 text-white p-4';
+      case 'bg-blue-600':
+        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4';
+      case 'bg-green-600':
+        return 'bg-gradient-to-r from-green-600 to-green-700 text-white p-4';
+      case 'bg-pink-600':
+        return 'bg-gradient-to-r from-pink-600 to-pink-700 text-white p-4';
+      default:
+        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4';
+    }
+  };
+
   return (
-    <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-4">
+    <div className={getHeaderClass()}>
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-4">
           <Calendar className="w-6 h-6" />

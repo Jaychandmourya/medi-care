@@ -8,6 +8,8 @@ interface DeleteDialogProps {
   onConfirm?: () => void;
   description?: string;
   itemName?: string;
+  deleteTitleClass?: string;
+  confirmButtonClass?: string;
 }
 
 export default function DeleteDialog({
@@ -17,12 +19,13 @@ export default function DeleteDialog({
   onConfirm,
   description = "Are you sure you want to delete this item? This action cannot be undone.",
   itemName,
+  deleteTitleClass = "text-gray-900",
+  confirmButtonClass = "bg-red-600 hover:bg-red-700",
 }: DeleteDialogProps) {
   if (!isOpenDelete) return null;
 
   const handleConfirm = () => {
     onConfirm?.();
-    onClose();
   };
 
   return (
@@ -36,7 +39,7 @@ export default function DeleteDialog({
               <AlertTriangle className="w-6 h-6 text-red-600" />
             </div>
             <div>
-              <h2 className="text-xl font-semibold text-gray-900">
+              <h2 className={`text-xl font-semibold ${deleteTitleClass}`}>
                 {deleteTitle || "Delete Item"}
               </h2>
               {itemName && (
@@ -74,7 +77,7 @@ export default function DeleteDialog({
           <Button
             onClick={handleConfirm}
             variant="destructive"
-            className="flex-1 order-1 sm:order-2"
+            className={`flex-1 order-1 sm:order-2`}
           >
             Delete
           </Button>

@@ -2,6 +2,7 @@ import { BrowserRouter } from "react-router-dom"
 import AppRouter from "@/app/routes/AppRouter"
 import { Toaster } from "react-hot-toast"
 import "@/utils/fixDatabase" // Load database fix utility
+import DataDebugger from "@/components/debug/DataDebugger"
 
 function App() {
 
@@ -10,6 +11,7 @@ function App() {
       <BrowserRouter>
         <AppRouter />
       </BrowserRouter>
+      {/* <DataDebugger /> */}
       <Toaster
         position="top-right"
         toastOptions={{

@@ -24,9 +24,11 @@ interface PatientDetailsDialogProps {
   onClose: () => void;
   selectedPatient: Patient | null;
   calculateAge: (dob: string) => number;
+  titleClass?: string;
+  headerClass?: string;
 }
 
-const PatientDetailsDialog = ({ isOpen, onClose, selectedPatient, calculateAge }: PatientDetailsDialogProps) => {
+const PatientDetailsDialog = ({ isOpen, onClose, selectedPatient, calculateAge, titleClass = "text-white", headerClass = "bg-gradient-to-r from-blue-600 to-indigo-600" }: PatientDetailsDialogProps) => {
   if (!isOpen || !selectedPatient) return null;
 
   return (
@@ -41,7 +43,7 @@ const PatientDetailsDialog = ({ isOpen, onClose, selectedPatient, calculateAge }
         {/* Dialog Panel */}
         <div className="relative w-full max-w-4xl max-h-[90vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col">
           {/* Fixed Header */}
-          <div className="sticky top-0 z-10 bg-linear-to-r from-blue-600 to-indigo-600 text-white p-6">
+          <div className={`sticky top-0 z-10 ${headerClass} text-white p-6`}>
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="w-16 h-16 bg-white text-black bg-opacity-20 rounded-full flex items-center justify-center overflow-hidden">
@@ -58,7 +60,7 @@ const PatientDetailsDialog = ({ isOpen, onClose, selectedPatient, calculateAge }
                   )}
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold">{selectedPatient.name}</h2>
+                  <h2 className={`text-2xl font-bold text-white`}>{selectedPatient.name}</h2>
                   <p className="text-blue-100">Patient Details</p>
                 </div>
               </div>

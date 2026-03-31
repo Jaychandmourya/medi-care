@@ -9,8 +9,7 @@ import { Button } from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 import toast from 'react-hot-toast'
 import { tokenSchema } from '@/validation-schema/opdSchema'
-import { setLocalDoctors } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/db/doctorDB'
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
 import { useEffect } from 'react'
 
 type TokenFormData = z.infer<typeof tokenSchema>
@@ -21,6 +20,7 @@ const TokenIssueForm = () => {
 
   // Redux selector
   const { departments, doctors } = useSelector((state: RootState) => state.opd)
+  const { user } = useSelector((state: RootState) => state.auth)
 
   // React Hook Form
   const {
@@ -41,15 +41,7 @@ const TokenIssueForm = () => {
 
   // Fetch doctors on component mount
   useEffect(() => {
-    const fetchLocalDoctors = async () => {
-      try {
-        const doctors = await doctorDBOperations.getAll()
-        dispatch(setLocalDoctors(doctors))
-      } catch (error) {
-        console.error('Failed to load local doctors:', error)
-      }
-    }
-    fetchLocalDoctors()
+    dispatch(fetchLocalDoctors())
   }, [dispatch])
 
   // Department change handler
@@ -130,6 +122,7 @@ const TokenIssueForm = () => {
         <Button
           type="submit"
           className="w-full flex items-center justify-center gap-2"
+          customColor={user?.role === 'receptionist' ? 'bg-purple-600 hover:bg-purple-700 text-white hover:shadow-lg transform hover:scale-105 focus:ring-purple-500' : undefined}
         >
           <Plus className="w-4 h-4" />
           Issue Token

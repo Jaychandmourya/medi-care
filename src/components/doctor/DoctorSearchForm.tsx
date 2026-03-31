@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { X, Loader2, Plus } from 'lucide-react'
 import { type AppDispatch, type RootState } from '@/app/store'
 import { clearError } from '@/features/doctor/doctorSlice'
-import { doctorDBOperations } from '@/features/db/doctorDB'
+import { doctorDBOperations } from '@/services/doctorServices'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
 

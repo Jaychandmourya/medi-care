@@ -2,6 +2,11 @@ import { z } from 'zod'
 
 // Doctor form validation schema
 export const doctorFormSchema = z.object({
+  id: z.string().optional(),
+  npi: z.string()
+    .min(1, 'NPI is required')
+    .regex(/^\d{10}$/, 'NPI must be exactly 10 digits'),
+
   firstName: z.string()
     .min(1, 'First name is required')
     .max(50, 'First name must be less than 50 characters')
@@ -17,20 +22,23 @@ export const doctorFormSchema = z.object({
     .regex(/^[a-zA-Z\s'-]*$/, 'Middle name can only contain letters, spaces, hyphens and apostrophes')
     .optional(),
 
+  credential: z.string()
+    .max(50, 'Credential must be less than 50 characters')
+    .optional(),
+
+  gender: z.enum(['M', 'F', 'O'], 'Please select a valid gender')
+    .optional(),
+
   specialty: z.string()
     .max(100, 'Specialty must be less than 100 characters')
     .optional(),
 
-  phone: z.string()
-    .regex(/^[+]?[\d\s\-\(\)]{10,15}$/, 'Please enter a valid phone number')
-    .optional(),
+  department: z.string()
+    .min(1, 'Department is required')
+    .max(50, 'Department must be less than 50 characters'),
 
-  contact: z.string()
-    .max(200, 'Contact information must be less than 200 characters')
-    .optional(),
-
-  email: z.string()
-    .email('Please enter a valid email address')
+  address: z.string()
+    .max(200, 'Address must be less than 200 characters')
     .optional(),
 
   city: z.string()
@@ -43,7 +51,7 @@ export const doctorFormSchema = z.object({
     .regex(/^[a-zA-Z]{2}$/, 'State must contain exactly 2 letters')
     .optional(),
 
-  country: z.string()
+  county: z.string()
     .max(50, 'County must be less than 50 characters')
     .regex(/^[a-zA-Z\s'-]+$/, 'County can only contain letters, spaces, hyphens and apostrophes')
     .optional(),
@@ -52,17 +60,20 @@ export const doctorFormSchema = z.object({
     .regex(/^(\d{5}(-\d{4})?|\d{9})$/, 'Please enter a valid postal code (e.g., 780285333, 12345-6789)')
     .optional(),
 
-  address: z.string()
-    .max(200, 'Address must be less than 200 characters')
+  phone: z.string()
+    .max(20, 'Phone number must be less than 20 characters')
     .optional(),
 
-  credential: z.string()
-    .max(20, 'Credential must be less than 20 characters')
-    .regex(/^[a-zA-Z\s.\-]+$/, 'Credential can only contain letters, spaces, dots and hyphens')
+  contact: z.string()
+    .max(200, 'Contact information must be less than 200 characters')
     .optional(),
 
-  gender: z.enum(['male', 'female', 'other'], 'Please select a valid gender')
-    .optional()
+  email: z.string()
+    .email('Please enter a valid email address')
+    .max(100, 'Email must be less than 100 characters')
+    .optional(),
+
+  addedAt: z.string().optional(),
 })
 
 // Search form validation schema
@@ -90,7 +101,7 @@ export const doctorSearchSchema = z.object({
     .regex(/^[a-zA-Z]{2}$/, 'State must contain exactly 2 letters')
     .optional(),
 
-  county: z.string()
+  country: z.string()
     .max(50, 'County must be less than 50 characters')
     .optional(),
 

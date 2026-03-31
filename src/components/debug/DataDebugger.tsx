@@ -1,0 +1,70 @@
+import React, { useEffect, useState } from 'react';
+import { db } from '@/features/db/dexie';
+import { seedAllData } from '@/data/seedData';
+
+const DataDebugger = () => {
+  const [dataInfo, setDataInfo] = useState<any>({});
+  const [loading, setLoading] = useState(true);
+
+  const checkData = async () => {
+    try {
+      const doctorCount = await db.doctors.count();
+      const scheduleCount = await db.doctorSchedules.count();
+      const patientCount = await db.patients.count();
+      const appointmentCount = await db.appointments.count();
+
+      const info = {
+        doctorCount,
+        scheduleCount,
+        patientCount,
+        appointmentCount,
+      };
+
+      setDataInfo(info);
+      console.log('Data check:', info);
+
+      // If no schedules exist, try to seed data
+      if (doctorCount > 0 && scheduleCount === 0) {
+        console.log('Doctors exist but no schedules found - reseeding data...');
+        await seedAllData();
+        // Check again after seeding
+        const newScheduleCount = await db.doctorSchedules.count();
+        setDataInfo(prev => ({ ...prev, scheduleCount: newScheduleCount, reseeded: true }));
+      }
+    } catch (error) {
+      console.error('Error checking data:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    checkData();
+  }, []);
+
+  if (loading) return <div>Checking data...</div>;
+
+  return (
+    <div style={{ 
+      position: 'fixed', 
+      top: '10px', 
+      right: '10px', 
+      background: 'white', 
+      padding: '10px', 
+      border: '1px solid #ccc',
+      borderRadius: '4px',
+      fontSize: '12px',
+      zIndex: 9999
+    }}>
+      <h4>Data Debug Info</h4>
+      <p>Doctors: {dataInfo.doctorCount}</p>
+      <p>Schedules: {dataInfo.scheduleCount}</p>
+      <p>Patients: {dataInfo.patientCount}</p>
+      <p>Appointments: {dataInfo.appointmentCount}</p>
+      {dataInfo.reseeded && <p style={{color: 'green'}}>Data reseeded!</p>}
+      <button onClick={checkData} style={{marginTop: '5px'}}>Refresh</button>
+    </div>
+  );
+};
+
+export default DataDebugger;

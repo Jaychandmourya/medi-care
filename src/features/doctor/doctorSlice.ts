@@ -1,51 +1,13 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
-
-// NPI API Types
-export interface NPIAddress {
-  address_1?: string
-  address_2?: string
-  city?: string
-  state?: string
-  postal_code?: string
-  country_code?: string
-  telephone_number?: string
-}
-
-export interface NPITaxonomy {
-  code?: string
-  desc?: string
-  primary?: boolean
-}
-
-export interface NPIBasic {
-  npi?: string
-  first_name?: string
-  last_name?: string
-  middle_name?: string
-  credential?: string
-  gender?: string
-  enumeration_date?: string
-  last_updated?: string
-  status?: string
-}
-
-export interface NPIResult {
-  basic?: NPIBasic
-  addresses?: NPIAddress[]
-  taxonomies?: NPITaxonomy[]
-}
-
-export interface NPISearchResponse {
-  result_count?: number
-  results?: NPIResult[]
-  skip?: number
-  limit?: number
-  Errors?: Array<{
-    description?: string
-    field?: string
-    number?: number
-  }>
-}
+import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import {
+  searchDoctors,
+  fetchLocalDoctors,
+  addLocalDoctor,
+  updateLocalDoctor,
+  deleteLocalDoctor,
+  searchLocalDoctors,
+  type NPIResult
+} from './doctorThunk'
 
 // Local Doctor Type (stored in Dexie)
 export interface LocalDoctor {
@@ -57,6 +19,7 @@ export interface LocalDoctor {
   credential?: string
   gender?: string
   specialty?: string
+  department: string
   address?: string
   city?: string
   state?: string
@@ -64,6 +27,7 @@ export interface LocalDoctor {
   postalCode?: string
   phone?: string
   contact?: string
+  email?: string
   addedAt: string
 }
 
@@ -94,81 +58,6 @@ const initialState: DoctorState = {
   activeTab: 'search'
 }
 
-// Async Thunks
-export const searchDoctors = createAsyncThunk(
-  'doctor/searchDoctors',
-  async ({
-    firstName,
-    lastName,
-    taxonomy,
-    city,
-    state,
-    skip = 0,
-    limit = 10
-  }: {
-    firstName?: string
-    lastName?: string
-    taxonomy?: string
-    city?: string
-    state?: string
-    skip?: number
-    limit?: number
-  }) => {
-    // Check if at least one search parameter is provided (trim whitespace)
-    const hasSearchCriteria =
-      (firstName && firstName.trim()) ||
-      (lastName && lastName.trim()) ||
-      (taxonomy && taxonomy.trim()) ||
-      (city && city.trim()) ||
-      (state && state.trim())
-
-    if (!hasSearchCriteria) {
-      throw new Error('Please provide at least one search criteria (name, specialty, city, or state)')
-    }
-
-    const params = new URLSearchParams({
-      version: '2.1',
-      limit: limit.toString(),
-      skip: skip.toString()
-    })
-
-    // Only add parameters that have actual values
-    if (firstName && firstName.trim()) {
-      params.append('first_name', firstName.trim())
-    }
-    if (lastName && lastName.trim()) {
-      params.append('last_name', lastName.trim())
-    }
-    if (taxonomy && taxonomy.trim()) {
-      params.append('taxonomy_description', taxonomy.trim())
-    }
-    if (city && city.trim()) {
-      params.append('city', city.trim())
-    }
-    if (state && state.trim()) {
-      params.append('state', state.trim())
-    }
-
-    // const url = `http://localhost:3001/api/npi?${params.toString()}`
-    const url = `http://localhost:3001/api/npi?${params.toString()}`
-    console.log('NPI API URL:', url) // Debug log
-
-    const response = await fetch(url)
-
-    if (!response.ok) {
-      throw new Error('Failed to fetch doctors from NPI registry')
-    }
-
-    const data: NPISearchResponse = await response.json()
-
-    // Check for API errors
-    if (data.Errors && data.Errors.length > 0) {
-      throw new Error(data.Errors[0].description || 'API error occurred')
-    }
-
-    return data
-  }
-)
 
 // Common taxonomy codes for dropdown
 export const COMMON_TAXONOMIES = [
@@ -204,26 +93,11 @@ const doctorSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null
-    },
-    addLocalDoctor: (state, action: PayloadAction<LocalDoctor>) => {
-      state.localDoctors.unshift(action.payload)
-    },
-    removeLocalDoctor: (state, action: PayloadAction<number>) => {
-      state.localDoctors = state.localDoctors.filter(doc => doc.id !== action.payload)
-    },
-    updateLocalDoctor: (state, action: PayloadAction<{ id: string; updates: Partial<LocalDoctor> }>) => {
-      const { id, updates } = action.payload
-      const index = state.localDoctors.findIndex(doc => doc.id === id)
-      if (index !== -1) {
-        state.localDoctors[index] = { ...state.localDoctors[index], ...updates }
-      }
-    },
-    setLocalDoctors: (state, action: PayloadAction<LocalDoctor[]>) => {
-      state.localDoctors = action.payload
     }
   },
   extraReducers: (builder) => {
     builder
+      // NPI Search
       .addCase(searchDoctors.pending, (state) => {
         state.loading = true
         state.error = null
@@ -239,6 +113,57 @@ const doctorSlice = createSlice({
         state.error = action.error.message || 'Failed to search doctors'
         state.searchResults = []
       })
+      // Fetch Local Doctors
+      .addCase(fetchLocalDoctors.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(fetchLocalDoctors.fulfilled, (state, action) => {
+        state.loading = false
+        state.localDoctors = action.payload
+      })
+      .addCase(fetchLocalDoctors.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to fetch local doctors'
+      })
+      // Add Local Doctor
+      .addCase(addLocalDoctor.fulfilled, (state, action) => {
+        state.localDoctors.unshift(action.payload)
+      })
+      .addCase(addLocalDoctor.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to add doctor'
+      })
+      // Update Local Doctor
+      .addCase(updateLocalDoctor.fulfilled, (state, action) => {
+        const { id, updates } = action.payload
+        const index = state.localDoctors.findIndex(doc => doc.id === id)
+        if (index !== -1) {
+          state.localDoctors[index] = { ...state.localDoctors[index], ...updates }
+        }
+      })
+      .addCase(updateLocalDoctor.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to update doctor'
+      })
+      // Delete Local Doctor
+      .addCase(deleteLocalDoctor.fulfilled, (state, action) => {
+        state.localDoctors = state.localDoctors.filter(doc => doc.id !== action.payload)
+      })
+      .addCase(deleteLocalDoctor.rejected, (state, action) => {
+        state.error = action.error.message || 'Failed to delete doctor'
+      })
+      // Search Local Doctors
+      .addCase(searchLocalDoctors.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
+      .addCase(searchLocalDoctors.fulfilled, (state, action) => {
+        state.loading = false
+        state.localDoctors = action.payload
+      })
+      .addCase(searchLocalDoctors.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to search local doctors'
+      })
   }
 })
 
@@ -247,11 +172,7 @@ export const {
   setSelectedTaxonomy,
   setCurrentPage,
   setActiveTab,
-  clearError,
-  addLocalDoctor,
-  removeLocalDoctor,
-  updateLocalDoctor,
-  setLocalDoctors
+  clearError
 } = doctorSlice.actions
 
 export default doctorSlice.reducer

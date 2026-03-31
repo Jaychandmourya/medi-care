@@ -38,6 +38,7 @@ export interface Doctor {
   city?: string;
   state?: string;
   country?: string;
+  postalCode?: string;
   isActive: boolean;
   createdAt: string;
 }

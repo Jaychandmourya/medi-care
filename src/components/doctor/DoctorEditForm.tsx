@@ -1,10 +1,12 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { X, Save, Loader2 } from 'lucide-react'
+import { X } from 'lucide-react'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import { type LocalDoctor } from '@/features/doctor/doctorSlice'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
+import Input from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
 
 interface DoctorEditFormProps {
   doctor: LocalDoctor
@@ -29,17 +31,17 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
       id: doctor.id,
       firstName: doctor.firstName,
       lastName: doctor.lastName,
-      middleName: doctor.middleName || '',
+      gender: (doctor.gender as 'M' | 'F' | 'O' | undefined) || undefined,
       specialty: doctor.specialty || '',
-      phone: doctor.phone || '',
-      contact: doctor.contact || '',
-      email: doctor.email || '',
+      department: doctor.department || '',
+      address: doctor.address || '',
       city: doctor.city || '',
       state: doctor.state || '',
-      country: doctor.country || '',
+      county: doctor.country || '',
       postalCode: doctor.postalCode || '',
-      address: doctor.address || '',
-      credential: doctor.credential || '',
+      contact: doctor.contact || '',
+      email: doctor.email || '',
+      addedAt: doctor.addedAt || '',
     }
   })
 
@@ -89,66 +91,49 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
           <h2 className="text-xl font-semibold text-gray-900">Edit Doctor</h2>
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             onClick={onCancel}
-            className="text-gray-400 hover:text-gray-600"
           >
             <X className="w-6 h-6" />
-          </button>
+          </Button>
         </div>
 
         <form onSubmit={handleSubmit(handleSave)} className="p-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+
             {/* First Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                First Name *
-              </label>
-              <input
-                {...register('firstName')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.firstName ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.firstName && (
-                <p className="mt-1 text-sm text-red-600">{errors.firstName.message}</p>
-              )}
-            </div>
+            <Input
+              id="firstName"
+              label="First Name"
+              required
+              registration={register('firstName')}
+              error={errors.firstName}
+              placeholder="Enter first name"
+            />
 
             {/* Last Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Last Name *
-              </label>
-              <input
-                {...register('lastName')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.lastName ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.lastName && (
-                <p className="mt-1 text-sm text-red-600">{errors.lastName.message}</p>
-              )}
-            </div>
-            {/* Specialty */}
+            <Input
+              id="lastName"
+              label="Last Name"
+              required
+              registration={register('lastName')}
+              error={errors.lastName}
+              placeholder="Enter last name"
+            />
+
+                        {/* Specialty */}
             <div className="relative" ref={specialtyRef}>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Specialty
-              </label>
-              <input
-                {...register('specialty')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.specialty ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="Enter or select specialty"
-                onFocus={() => setShowSpecialtyDropdown(true)}
-              />
-              {errors.specialty && (
-                <p className="mt-1 text-sm text-red-600">{errors.specialty.message}</p>
-              )}
+              <div onClick={() => setShowSpecialtyDropdown(true)}>
+                <Input
+                  id="specialty"
+                  label="Specialty"
+                  registration={register('specialty')}
+                  error={errors.specialty}
+                  placeholder="Enter or select specialty"
+                />
+              </div>
 
               {/* Specialty Dropdown */}
               {showSpecialtyDropdown && filteredSpecialties.length > 0 && (
@@ -174,154 +159,128 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
               )}
             </div>
 
-            {/* Phone */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Contact
-              </label>
-              <input
-                {...register('contact')}
-                type="tel"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.contact ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.contact && (
-                <p className="mt-1 text-sm text-red-600">{errors.contact.message}</p>
-              )}
-            </div>
+
+            {/* Contact */}
+            <Input
+              id="contact"
+              label="Contact"
+              registration={register('contact')}
+              error={errors.contact}
+              placeholder="Enter contact information"
+            />
 
             {/* Email */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Email
-              </label>
-              <input
-                {...register('email')}
-                type="email"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.email ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.email && (
-                <p className="mt-1 text-sm text-red-600">{errors.email.message}</p>
-              )}
-            </div>
+            <Input
+              id="email"
+              label="Email"
+              type="email"
+              registration={register('email')}
+              error={errors.email}
+              placeholder="Enter email address"
+            />
+
+
+
+            {/* Gender */}
+            <Input
+              id="gender"
+              label="Gender"
+              as="select"
+              registration={register('gender')}
+              error={errors.gender}
+            >
+              <option value="">Select Gender</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="O">Other</option>
+            </Input>
+
+            {/* Department */}
+            <Input
+              id="department"
+              label="Department"
+              as="select"
+              registration={register('department')}
+              error={errors.department}
+              required
+            >
+              <option value="">Select Department</option>
+              <option value="General Medicine">General Medicine</option>
+              <option value="Cardiology">Cardiology</option>
+              <option value="Orthopedics">Orthopedics</option>
+              <option value="Pediatrics">Pediatrics</option>
+              <option value="Dermatology">Dermatology</option>
+            </Input>
 
             {/* City */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                City
-              </label>
-              <input
-                {...register('city')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.city ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.city && (
-                <p className="mt-1 text-sm text-red-600">{errors.city.message}</p>
-              )}
-            </div>
+            <Input
+              id="city"
+              label="City"
+              registration={register('city')}
+              error={errors.city}
+              placeholder="Enter city"
+            />
 
             {/* State */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                State
-              </label>
-              <input
-                {...register('state')}
-                type="text"
-                maxLength={2}
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent uppercase ${
-                  errors.state ? 'border-red-500' : 'border-gray-300'
-                }`}
-                placeholder="e.g., CA, NY"
-              />
-              {errors.state && (
-                <p className="mt-1 text-sm text-red-600">{errors.state.message}</p>
-              )}
-            </div>
+            <Input
+              id="state"
+              label="State"
+              registration={register('state')}
+              error={errors.state}
+              placeholder="e.g., CA, NY"
+            />
 
             {/* County */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Country
-              </label>
-              <input
-                {...register('country')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.country ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.country && (
-                <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
-              )}
-            </div>
+            <Input
+              id="county"
+              label="County"
+              registration={register('county')}
+              error={errors.county}
+              placeholder="Enter county"
+            />
 
             {/* Postal Code */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Postal Code
-              </label>
-              <input
-                {...register('postalCode')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.postalCode ? 'border-red-500' : 'border-gray-300'
-                }`}
-              />
-              {errors.postalCode && (
-                <p className="mt-1 text-sm text-red-600">{errors.postalCode.message}</p>
-              )}
-            </div>
+            <Input
+              id="postalCode"
+              label="Postal Code"
+              registration={register('postalCode')}
+              error={errors.postalCode}
+              placeholder="Enter postal code"
+            />
 
             {/* Address */}
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Address
-              </label>
-              <input
-                {...register('address')}
-                type="text"
-                className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                  errors.address ? 'border-red-500' : 'border-gray-300'
-                }`}
+              <Input
+                id="address"
+                label="Address"
+                registration={register('address')}
+                error={errors.address}
+                placeholder="Enter address"
               />
-              {errors.address && (
-                <p className="mt-1 text-sm text-red-600">{errors.address.message}</p>
-              )}
             </div>
           </div>
 
           {/* Action Buttons */}
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
-            <button
+            <Button
               type="button"
+              variant="secondary"
               onClick={onCancel}
-              className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               type="submit"
+              loading={saving}
               disabled={saving}
-              className="flex items-center gap-2 px-6 py-2 text-sm font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50"
               onClick={() => {
                 const formData = watchedValues
                 console.log('Click me', formData)
                 handleSave(formData)
               }}
             >
-              {saving ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : (
-                <Save className="w-4 h-4" />
-              )}
               {saving ? 'Saving...' : 'Save Changes'}
-            </button>
+            </Button>
           </div>
         </form>
       </div>
