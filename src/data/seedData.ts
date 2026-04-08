@@ -53,6 +53,16 @@ export const seedDoctors = async () => {
       isActive: true,
       createdAt: new Date().toISOString(),
     },
+    {
+      id: crypto.randomUUID(),
+      name: 'Jaychand Mourya',
+      department: 'General Medicine',
+      specialization: 'Internal Medicine',
+      phone: '+1-555-0128',
+      email: 'jaychand.mourya@medicare.com',
+      isActive: true,
+      createdAt: new Date().toISOString(),
+    },
   ];
 
   await db.doctors.bulkAdd(doctors);
@@ -150,10 +160,24 @@ export const seedAppointments = async (doctors: Doctor[], patients: Patient[]) =
   const appointments: Appointment[] = [];
   const today = new Date();
 
+  // Find Jaychand Mourya specifically
+  const jaychandDoctor = doctors.find(doc => doc.name === 'Jaychand Mourya');
+
   // Create sample appointments for the current week
-  for (let i = 0; i < 5; i++) { // Create 5 sample appointments
-    const randomDoctor = doctors[Math.floor(Math.random() * doctors.length)];
-    const randomPatient = patients[Math.floor(Math.random() * patients.length)];
+  for (let i = 0; i < 8; i++) { // Create 8 sample appointments
+    let selectedDoctor;
+    let selectedPatient;
+
+    // Create 3 specific appointments for Jaychand
+    if (i < 3 && jaychandDoctor) {
+      selectedDoctor = jaychandDoctor;
+      selectedPatient = patients[i % patients.length];
+    } else {
+      // Random appointments for other doctors
+      selectedDoctor = doctors[Math.floor(Math.random() * doctors.length)];
+      selectedPatient = patients[Math.floor(Math.random() * patients.length)];
+    }
+
     const dayOffset = Math.floor(Math.random() * 7); // Random day in current week
     const appointmentDate = addDays(today, dayOffset);
 
@@ -163,15 +187,15 @@ export const seedAppointments = async (doctors: Doctor[], patients: Patient[]) =
 
     appointments.push({
       id: crypto.randomUUID(),
-      patientId: randomPatient.id,
-      doctorId: randomDoctor.id,
-      department: randomDoctor.department,
+      patientId: selectedPatient.id,
+      doctorId: selectedDoctor.id,
+      department: selectedDoctor.department,
       date: format(appointmentDate, 'yyyy-MM-dd'),
       slot: `${hour.toString().padStart(2, '0')}:${minute}`,
       duration: 30,
       status: ['scheduled', 'confirmed'][Math.floor(Math.random() * 2)] as Appointment['status'],
       reason: ['Regular checkup', 'Follow-up consultation', 'New patient visit', 'Emergency'][Math.floor(Math.random() * 4)],
-      notes: 'Sample appointment for testing',
+      notes: selectedDoctor.name === 'Jaychand Mourya' ? `Appointment with Dr. ${selectedDoctor.name}` : 'Sample appointment for testing',
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     });

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { PatientFormData } from "../../lib/patientValidation";
+import type { PatientFormData } from "../../validation-schema/patientValidation";
 import { getAllPatients, addPatient as addPatientThunk, updatePatient as updatePatientThunk, deletePatient as deletePatientThunk } from "./patientThunk"
 
 
@@ -17,7 +17,7 @@ const patientSlice = createSlice({
       console.error('Add patient rejected:', action.payload);
     });
     builder.addCase(getAllPatients.fulfilled, (state, action) => {
-      state.list = action.payload;
+      state.list = action.payload.filter((p) => p.isActive);
     });
     builder.addCase(updatePatientThunk.fulfilled, (state, action) => {
       const index = state.list.findIndex(p => p.id === action.payload.id);

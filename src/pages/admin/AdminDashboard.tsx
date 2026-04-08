@@ -5,34 +5,38 @@ import RevenueChart from "@/components/admin/dashboard/RevenueChart";
 import TopDepartmentsChart from "@/components/admin/dashboard/TopDepartmentsChart";
 import AlertsPanel from "@/components/admin/dashboard/AlertsPanel";
 import DoctorAvailability from "@/components/admin/dashboard/DoctorAvailability";
+import { useDashboardData } from "@/hooks/useDashboardData";
+
+
 const AdminDashboard = () => {
+    const { data, loading } = useDashboardData();
+
+    if (loading) {
+      return (
+        <div className="p-6 flex items-center justify-center">
+          <div className="text-lg">Loading dashboard data...</div>
+        </div>
+      );
+    }
+
     return (
       <>
         <div className="p-6 grid grid-cols-3 gap-6">
-         <PatientsTodayCard total={128} />
-          <BedOccupancyChart occupied={70} available={30} />
-        <OPDQueueWidget queueCount={14} />
+          <PatientsTodayCard total={data.patientsToday} />
+          <BedOccupancyChart occupied={data.bedOccupancy.occupied} available={data.bedOccupancy.available} maintenance={data.bedOccupancy.maintenance} />
+          <OPDQueueWidget queueCount={data.opdQueueCount} />
 
-        <div className="col-span-1">
-          <RevenueChart data={[
-            { month: "Jan", revenue: 4000 },
-            { month: "Feb", revenue: 3000 },
-          ]} />
-        </div>
+          <div className="col-span-1">
+            <RevenueChart data={data.revenueData} />
+          </div>
 
-        <TopDepartmentsChart data={[
-          { name: "Cardiology", patients: 120 },
-          { name: "Orthopedic", patients: 90 },
-        ]} />
+          <TopDepartmentsChart data={data.departmentData} />
 
-        <DoctorAvailability/>
+          <DoctorAvailability doctors={data.doctorAvailability}/>
 
-        <div className="col-span-3">
-          <AlertsPanel alerts={[
-            { id: "1", message: "Bed 12 freed", time: "2 min ago" },
-            { id: "2", message: "Emergency admitted", time: "5 min ago" },
-          ]} />
-        </div>
+          <div className="col-span-3">
+            <AlertsPanel alerts={data.alerts} />
+          </div>
 
         </div>
       </>

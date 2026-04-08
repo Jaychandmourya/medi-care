@@ -191,7 +191,7 @@ const AdminDoctors = () => {
             <p className="text-blue-700 text-sm mb-4">
               Type a doctor's name to instantly search and add them to your system
             </p>
-            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} clearTrigger={clearTrigger} />
+            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} onClearForm={handleClearForm} clearTrigger={clearTrigger} />
           </div>
         </div>
 

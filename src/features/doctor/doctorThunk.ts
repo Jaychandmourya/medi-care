@@ -1,52 +1,9 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-import { doctorDBOperations, type LocalDoctor } from '../../services/doctorServices'
+import { doctorDBOperations } from '../../services/doctorServices'
 
-// NPI API Types
-export interface NPIAddress {
-  address_1?: string
-  address_2?: string
-  city?: string
-  state?: string
-  postal_code?: string
-  country_code?: string
-  telephone_number?: string
-}
-
-export interface NPITaxonomy {
-  code?: string
-  desc?: string
-  primary?: boolean
-}
-
-export interface NPIBasic {
-  npi?: string
-  first_name?: string
-  last_name?: string
-  middle_name?: string
-  credential?: string
-  gender?: string
-  enumeration_date?: string
-  last_updated?: string
-  status?: string
-}
-
-export interface NPIResult {
-  basic?: NPIBasic
-  addresses?: NPIAddress[]
-  taxonomies?: NPITaxonomy[]
-}
-
-export interface NPISearchResponse {
-  result_count?: number
-  results?: NPIResult[]
-  skip?: number
-  limit?: number
-  Errors?: Array<{
-    description?: string
-    field?: string
-    number?: number
-  }>
-}
+// Import types files
+import type { LocalDoctor } from '@/types/doctors/doctorType'
+import type{ NPISearchResponse } from '@/types/doctors/NpiType'
 
 // Async Thunks
 export const searchDoctors = createAsyncThunk(
@@ -90,21 +47,10 @@ export const searchDoctors = createAsyncThunk(
     if (firstName && firstName.trim()) {
       params.append('first_name', firstName.trim())
     }
-    if (lastName && lastName.trim()) {
-      params.append('last_name', lastName.trim())
-    }
-    if (taxonomy && taxonomy.trim()) {
-      params.append('taxonomy_description', taxonomy.trim())
-    }
-    if (city && city.trim()) {
-      params.append('city', city.trim())
-    }
-    if (state && state.trim()) {
-      params.append('state', state.trim())
-    }
-
+    // Always search for US country doctors
+    params.append('country', 'US')
     const url = `http://localhost:3001/api/npi?${params.toString()}`
-    console.log('NPI API URL:', url) // Debug log
+    console.log('NPI API URL:11111111', url) // Debug log
 
     const response = await fetch(url)
 
@@ -117,6 +63,14 @@ export const searchDoctors = createAsyncThunk(
     // Check for API errors
     if (data.Errors && data.Errors.length > 0) {
       throw new Error(data.Errors[0].description || 'API error occurred')
+    }
+
+    // Add country to each result since we're filtering by US
+    if (data.results) {
+      data.results = data.results.map(result => ({
+        ...result,
+        country: 'US'
+      }))
     }
 
     return data

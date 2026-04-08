@@ -1,8 +1,11 @@
+/* eslint-disable react-hooks/purity */
 import { useAppDispatch } from "@/app/hooks"
 import { login } from "@/features/auth/authSlice"
 import { useNavigate } from "react-router-dom"
 import type{ Role } from "@/types/auth/auth"
-import { UserCog, Stethoscope, Users, Activity } from "lucide-react";
+import { UserCog, Stethoscope, Users, Activity } from "lucide-react"
+import { doctorDBOperations } from "@/services/doctorServices"
+import toast from "react-hot-toast"
 
 const roles = [
   {
@@ -47,15 +50,51 @@ const Login = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
-  const handleSelectRole = (selectedRole: typeof roles[0]) => {
-    dispatch(
-      login({
-        role: selectedRole.role,
-        name: selectedRole.name,
-        id: Date.now(),
-        avatar: "https://i.pravatar.cc/150",
-      })
-    )
+  const handleSelectRole = async (selectedRole: typeof roles[0]) => {
+    // If role is doctor, check if doctors exist in database
+    if (selectedRole.role === 'doctor') {
+      try {
+        const doctors = await doctorDBOperations.getAll()
+
+        if (doctors.length === 0) {
+          toast.error('No doctors found in the system. Please contact admin to add doctors.')
+          return
+        }
+
+        // Select a random doctor from the available doctors
+        const randomIndex = Math.floor(Math.random() * doctors.length)
+        const randomDoctor = doctors[randomIndex]
+        console.log('randomIndex',randomIndex)
+        console.log('randomDoctor',randomDoctor)
+
+        dispatch(
+          login({
+            role: selectedRole.role,
+            name: randomDoctor.firstName && randomDoctor.lastName
+              ? `${randomDoctor.firstName} ${randomDoctor.lastName}`
+              : selectedRole.name,
+            id: randomDoctor.id ? randomDoctor.id : Date.now(),
+            avatar: "https://i.pravatar.cc/150",
+            doctorId: randomDoctor.id, // Pass the actual doctor ID
+          })
+        )
+      } catch (error) {
+        console.error('Error fetching doctors:', error)
+        toast.error('Error accessing doctor database. Please try again.')
+        return
+      }
+    } else {
+      // For non-doctor roles, use the existing logic
+      dispatch(
+        login({
+          role: selectedRole.role,
+          name: selectedRole.name,
+          id: Date.now(),
+          avatar: "https://i.pravatar.cc/150",
+        })
+      )
+    }
+
     const routeMap: Record<Role, string> = {
       doctor: "/doctor",
       admin: "/admin",

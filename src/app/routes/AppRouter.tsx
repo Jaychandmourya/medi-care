@@ -27,10 +27,15 @@ const AdminReports = lazy(() => import("@/pages/admin/AdminReports"))
 // Doctor lazy loaded components
 const DoctorLayout = lazy(() => import("@/components/layout/main-layout/DoctorLayout"))
 const DoctorDashboard = lazy(() => import("@/pages/doctor/DoctorDashboard"))
+const DoctorPatients = lazy(() => import("@/pages/doctor/DoctorPatients"))
+const DoctorAppointments = lazy(() => import("@/pages/doctor/DoctorAppointments"))
+const DoctorPrescriptions = lazy(() => import("@/pages/doctor/DoctorPrescriptions"))
 
 // Nurse lazy loaded components
 const NurseLayout = lazy(() => import("@/components/layout/main-layout/NurseLayout"))
 const NurseDashboard = lazy(() => import("@/pages/nurse/NurseDashboard"))
+const NurseBeds = lazy(() => import("@/pages/nurse/NurseBeds"))
+const NurseVitals = lazy(() => import("@/pages/nurse/NurseVitals"))
 
 // Receptionist lazy loaded components
 const ReceptionistLayout = lazy(() => import("@/components/layout/main-layout/ReceptionistLayout"))
@@ -82,6 +87,10 @@ const AppRoutes = () => {
           }
         >
           <Route index element={<DoctorDashboard />} />
+          <Route path="patients" element={<DoctorPatients />} />
+          <Route path="appointments" element={<DoctorAppointments />} />
+          <Route path="prescriptions" element={<DoctorPrescriptions />} />
+
         </Route>
 
         {/* Admin */}
@@ -117,6 +126,8 @@ const AppRoutes = () => {
           }
         >
           <Route index element={<NurseDashboard />} />
+          <Route path="beds" element={<NurseBeds />} />
+          <Route path="vitals" element={<NurseVitals />} />
         </Route>
 
         {/* Receptionist */}

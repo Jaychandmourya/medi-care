@@ -1,22 +1,36 @@
-import PatientFormWizard from "./PatientFormWizard";
-import { Button } from "@/components/ui/Button";
 import { useState, useCallback } from "react";
-import { type PatientFormData } from "@/lib/patientValidation";
-import { useAppSelector } from "@/app/hooks";
+
+// Import UI components
+import { Button } from "@/components/ui/Button";
+import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+
+// Import Types files
+import type { AddPatientDialogProps } from '@/types/patients/patientType'
+
+// Import utils file
 import { getRoleColors } from "@/utils/roleColors";
 
-interface AddPatientDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  editData?: Partial<PatientFormData>;
-  titleClass?: string;
-}
+// Import selector for redux
+import { useAppSelector } from "@/app/hooks";
 
-export default function AddPatientDialog({isOpen, onClose, editData, titleClass}: AddPatientDialogProps) {
-  const [safeCloseHandler, setSafeCloseHandler] = useState<(() => void) | null>(null);
+// Import components files
+import PatientFormWizard from "@/components/admin/patient/PatientFormWizard";
+
+
+export default function AddPatientDialog({ isOpen, onClose, editData, titleClass }: AddPatientDialogProps) {
+
+  // Redux selector
   const userRole = useAppSelector((state) => state.auth.user?.role);
+
+  // Utile
   const roleColors = getRoleColors(userRole || 'admin');
 
+  // Variable
+  const [safeCloseHandler, setSafeCloseHandler] = useState<(() => void) | null>(null);
+  const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false);
+
+
+  // Methods
   const handleDialogClose = useCallback(() => {
     if (safeCloseHandler) {
       safeCloseHandler();
@@ -27,6 +41,22 @@ export default function AddPatientDialog({isOpen, onClose, editData, titleClass}
 
   const handleSafeCloseReady = useCallback((handler: () => void) => {
     setSafeCloseHandler(() => handler);
+  }, []);
+
+   // Open OpenCloseConfirmation dialog
+  const handleOpenCloseConfirmation = () => {
+    setShowCloseConfirmation(true)
+  }
+
+  //  Handle Confirm Close dialog
+  const handleConfirmClose = useCallback(() => {
+    setShowCloseConfirmation(false);
+    onClose();
+  }, [onClose]);
+
+  // Handle close confirm close dialog
+  const handleCancelClose = useCallback(() => {
+    setShowCloseConfirmation(false);
   }, []);
 
   if (!isOpen) return null;
@@ -69,7 +99,7 @@ export default function AddPatientDialog({isOpen, onClose, editData, titleClass}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
           <div className={`${roleColors.light} rounded-xl p-4 mb-6`}>
             <p className={`${roleColors.text} text-sm`}>
-              <span className="font-semibold">Required fields:</span> All fields marked with * are required to proceed.
+              <span className="font-semibold">Required fields:</span> All fields marked with <span className="text-red-500">*</span> are required to proceed.
             </p>
           </div>
 
@@ -78,6 +108,7 @@ export default function AddPatientDialog({isOpen, onClose, editData, titleClass}
             defaultData={editData}
             onClose={onClose}
             onSafeCloseReady={handleSafeCloseReady}
+            openCloseConfirmation={ handleOpenCloseConfirmation }
           />
         </div>
 
@@ -99,6 +130,17 @@ export default function AddPatientDialog({isOpen, onClose, editData, titleClass}
           </div>
         </div>
       </div>
+      {/* Close Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showCloseConfirmation}
+        title="Unsaved Changes"
+        message="You have unsaved changes. Are you sure you want to close? All entered data will be lost."
+        confirmText="Close"
+        cancelText="Cancel"
+        type="warning"
+        onConfirm={handleConfirmClose}
+        onCancel={handleCancelClose}
+      />
     </div>
   );
 }

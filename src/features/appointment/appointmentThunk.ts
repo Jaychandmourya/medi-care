@@ -9,14 +9,6 @@ export const fetchAppointments = createAsyncThunk(
   }
 );
 
-export const fetchDoctors = createAsyncThunk('appointment/fetchDoctors', async () => {
-  return await appointmentServices.fetchDoctors();
-});
-
-export const fetchPatients = createAsyncThunk('appointment/fetchPatients', async () => {
-  return await appointmentServices.fetchPatients();
-});
-
 export const fetchDoctorSchedules = createAsyncThunk('appointment/fetchDoctorSchedules', async () => {
   return await appointmentServices.fetchDoctorSchedules();
 });
@@ -39,6 +31,13 @@ export const deleteAppointment = createAsyncThunk(
   'appointment/deleteAppointment',
   async (id: string) => {
     return await appointmentServices.deleteAppointment(id);
+  }
+);
+
+export const fetchAppointmentsByPatientId = createAsyncThunk(
+  'appointment/fetchAppointmentsByPatientId',
+  async (patientId: string) => {
+    return await appointmentServices.fetchAppointmentsByPatientId(patientId);
   }
 );
 

@@ -2,8 +2,10 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
 import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/features/prescription/prescriptionSlice'
+import { getAllPatients } from '@/features/patient/patientThunk'
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Prescription } from '@/features/prescription/prescriptionSlice'
+import type { Appointment } from '@/features/db/dexie'
 import Input from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
@@ -11,6 +13,9 @@ import toast from 'react-hot-toast'
 const PrescriptionHistory = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { prescriptionHistory, historyLoading } = useSelector((state: RootState) => state.prescriptions)
+  const { user } = useSelector((state: RootState) => state.auth)
+  const appointments = useSelector((state: RootState) => state.appointments.appointments)
+  const patients = useSelector((state: RootState) => state.patients.list)
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedPatient, setSelectedPatient] = useState('')
   const [selectedStatus, setSelectedStatus] = useState('')
@@ -19,29 +24,79 @@ const PrescriptionHistory = () => {
   const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [prescriptionToDelete, setPrescriptionToDelete] = useState<Prescription | null>(null)
 
-  // Load prescription history on component mount
+  // Get current doctor's ID from localStorage
+  const getCurrentDoctorId = useCallback(() => {
+    if (user?.role === 'doctor') {
+      const doctorInfo = localStorage.getItem('doctorInfo')
+      if (doctorInfo) {
+        const info = JSON.parse(doctorInfo)
+        return info.doctorId
+      }
+    }
+    return null
+  }, [user])
+
+  // Load prescription history and patients on component mount
   useEffect(() => {
     dispatch(loadPrescriptionHistory())
+    dispatch(getAllPatients())
   }, [dispatch])
 
-  // Get unique patients from history
+  // Filter prescriptions by current doctor if user is a doctor
+  const filteredPrescriptionHistory = useMemo(() => {
+    const currentDoctorId = getCurrentDoctorId()
+
+    if (!currentDoctorId || user?.role !== 'doctor') {
+      // If not a doctor or no doctor ID, show all prescriptions
+      return prescriptionHistory
+    }
+
+    // Filter prescriptions created by the current doctor
+    return prescriptionHistory.filter(p => p.doctorId === currentDoctorId)
+  }, [prescriptionHistory, getCurrentDoctorId, user])
+
+  // Get unique patients from current doctor's appointments using patients table
+  // This ensures both the patient dropdown and history show the same patient list
   const uniquePatients = useMemo(() => {
-    return Array.from(new Set(prescriptionHistory.map(p => p.patientId)))
+    const currentDoctorId = getCurrentDoctorId()
+    if (!currentDoctorId || user?.role !== 'doctor') {
+      // If not a doctor or no doctor ID, show all patients from patients table
+      return patients.map(patient => ({
+        id: patient.patientId,
+        name: patient.name
+      }))
+    }
+
+    // Filter patients who have appointments with the current doctor
+    const doctorPatientIds = appointments
+      .filter((apt: Appointment) => apt.doctorId === currentDoctorId)
+      .map((apt: Appointment) => apt.patientId)
+
+    // Get unique patient IDs
+    const uniquePatientIds = Array.from(new Set(doctorPatientIds))
+
+    // Match with patients table to get patient names
+    return uniquePatientIds
       .map(patientId => {
-        const prescription = prescriptionHistory.find(p => p.patientId === patientId)
-        return { id: patientId, name: prescription?.patientName || 'Unknown' }
+        const patient = patients.find(p => p.id === patientId)
+        return {
+          id: patient?.patientId || patientId,
+          name: patient?.name || 'Unknown Patient'
+        }
       })
-  }, [prescriptionHistory])
+      .filter(patient => patient.name !== 'Unknown Patient') // Remove patients not found in database
+  }, [patients, getCurrentDoctorId, user, appointments])
 
   // Filter and sort prescriptions
   const filteredPrescriptions = useMemo(() => {
-    return prescriptionHistory
+    return filteredPrescriptionHistory
       .filter(prescription => {
         const matchesSearch = prescription.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               prescription.diagnosis.toLowerCase().includes(searchTerm.toLowerCase()) ||
                               prescription.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesPatient = !selectedPatient || prescription.patientId === selectedPatient
+        console.log('matchesPatient', prescription)
         const matchesStatus = !selectedStatus || prescription.status === selectedStatus
 
         return matchesSearch && matchesPatient && matchesStatus
@@ -52,7 +107,7 @@ const PrescriptionHistory = () => {
         const dateB = new Date(b.createdAt).getTime()
         return dateB - dateA
       })
-  }, [prescriptionHistory, searchTerm, selectedPatient, selectedStatus])
+  }, [filteredPrescriptionHistory, searchTerm, selectedPatient, selectedStatus])
 
   // Group prescriptions by date (sorted by date descending)
   const sortedGroupedPrescriptions = useMemo(() => {

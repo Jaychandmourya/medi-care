@@ -1,25 +1,7 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-
-export interface Token {
-  tokenId: number
-  patientName: string
-  department: string
-  doctorId: string
-  issuedAt: Date
-  status: 'waiting' | 'in-progress' | 'skipped' | 'done'
-  waitTime?: number
-}
-
-export interface OPDState {
-  queue: Token[]
-  currentToken: number | null
-  simulationRunning: boolean
-  servedToday: number
-  lastTokenId: number
-  departments: string[]
-  doctors: { [key: string]: string }
-  countdownTimer: number
-}
+import { db } from '@/features/db/dexie'
+import type { Appointment } from '@/types/appointment/appointmentType'
+import type { OPDState, Token } from '@/types/opd/opdType'
 
 const initialState: OPDState = {
   queue: [],
@@ -28,13 +10,6 @@ const initialState: OPDState = {
   servedToday: 0,
   lastTokenId: 0,
   departments: ['General Medicine', 'Cardiology', 'Orthopedics', 'Pediatrics', 'Dermatology'],
-  doctors: {
-    'DOC001': 'Dr. Smith - General Medicine',
-    'DOC002': 'Dr. Johnson - Cardiology',
-    'DOC003': 'Dr. Williams - Orthopedics',
-    'DOC004': 'Dr. Brown - Pediatrics',
-    'DOC005': 'Dr. Davis - Dermatology',
-  },
   countdownTimer: 30
 }
 
@@ -42,21 +17,44 @@ const opdSlice = createSlice({
   name: 'opd',
   initialState,
   reducers: {
-    issueToken: (state, action: PayloadAction<{ patientName: string; department: string; doctorId: string }>) => {
-      const { patientName, department, doctorId } = action.payload
+    issueToken: (state, action: PayloadAction<{ patientId: string; patientName?: string; department: string; doctorId: string }>) => {
+      const { patientId, patientName, department, doctorId } = action.payload
       state.lastTokenId += 1
 
       const newToken: Token = {
         tokenId: state.lastTokenId,
+        patientId,
         patientName,
         department,
         doctorId,
-        issuedAt: new Date(),
+        issuedAt: new Date().toISOString(),
         status: 'waiting',
         waitTime: 0
       }
 
       state.queue.push(newToken)
+
+      // Save as appointment to database
+      const appointmentId = `opd-${Date.now()}-${newToken.tokenId}`
+      const appointment: Appointment = {
+        id: appointmentId,
+        patientId,
+        doctorId,
+        department,
+        date: new Date().toISOString().split('T')[0],
+        slot: 'OPD',
+        duration: 15,
+        status: 'scheduled',
+        reason: 'OPD Token',
+        notes: `Token ID: ${newToken.tokenId}${patientName ? ` - Patient: ${patientName}` : ''}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
+      }
+
+      // Save to database asynchronously
+      db.appointments.add(appointment).catch(error => {
+        console.error('Failed to save OPD appointment:', error)
+      })
 
       // Set as current token if it's the first one
       if (state.queue.length === 1) {
@@ -72,6 +70,19 @@ const opdSlice = createSlice({
         state.queue[currentIndex].status = 'done'
         state.servedToday += 1
 
+        // Update appointment status in database
+        const completedToken = state.queue[currentIndex]
+        db.appointments.where('id').startsWith(`opd-${completedToken.tokenId}`).first().then(appointment => {
+          if (appointment) {
+            return db.appointments.update(appointment.id, {
+              status: 'completed',
+              updatedAt: new Date().toISOString()
+            })
+          }
+        }).catch(error => {
+          console.error('Failed to update appointment status:', error)
+        })
+
         // Find next waiting token
         const nextIndex = state.queue.findIndex((token, index) =>
           index > currentIndex && token.status === 'waiting'
@@ -80,6 +91,19 @@ const opdSlice = createSlice({
         if (nextIndex !== -1) {
           state.currentToken = state.queue[nextIndex].tokenId
           state.queue[nextIndex].status = 'in-progress'
+
+          // Update next token to in-progress in database
+          const nextToken = state.queue[nextIndex]
+          db.appointments.where('id').startsWith(`opd-${nextToken.tokenId}`).first().then(appointment => {
+            if (appointment) {
+              return db.appointments.update(appointment.id, {
+                status: 'in_progress',
+                updatedAt: new Date().toISOString()
+              })
+            }
+          }).catch(error => {
+            console.error('Failed to update appointment status:', error)
+          })
         } else {
           state.currentToken = null
         }
@@ -89,6 +113,18 @@ const opdSlice = createSlice({
         if (firstWaiting) {
           state.currentToken = firstWaiting.tokenId
           firstWaiting.status = 'in-progress'
+
+          // Update first waiting token to in-progress in database
+          db.appointments.where('id').startsWith(`opd-${firstWaiting.tokenId}`).first().then(appointment => {
+            if (appointment) {
+              return db.appointments.update(appointment.id, {
+                status: 'in_progress',
+                updatedAt: new Date().toISOString()
+              })
+            }
+          }).catch(error => {
+            console.error('Failed to update appointment status:', error)
+          })
         }
       }
     },
@@ -149,7 +185,8 @@ const opdSlice = createSlice({
       const now = new Date()
       state.queue.forEach(token => {
         if (token.status === 'waiting' || token.status === 'skipped') {
-          token.waitTime = Math.floor((now.getTime() - token.issuedAt.getTime()) / 1000 / 60) // minutes
+          const issuedAt = new Date(token.issuedAt)
+          token.waitTime = Math.floor((now.getTime() - issuedAt.getTime()) / 1000 / 60) // minutes
         }
       })
     },

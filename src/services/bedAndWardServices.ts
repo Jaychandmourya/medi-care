@@ -1,5 +1,5 @@
 import { db } from '@/features/db/dexie'
-import type { Bed, Ward } from '@/features/bed/bedSlice'
+import type{ Bed, Ward } from '@/types/bed/bedType'
 
 // Initialize database with sample data
 export const initializeDatabase = async () => {
@@ -52,6 +52,66 @@ export const initializeDatabase = async () => {
 
     await db.beds.bulkAdd(sampleBeds)
   }
+}
+
+// ==================== SHOW/GET FUNCTIONS ====================
+
+export const getAllBeds = async (): Promise<Bed[]> => {
+  return await db.beds.toArray()
+}
+
+export const getAllWards = async (): Promise<Ward[]> => {
+  return await db.wards.toArray()
+}
+
+export const getBedById = async (bedId: string): Promise<Bed | undefined> => {
+  return await db.beds.get(bedId)
+}
+
+export const getWardById = async (wardId: string): Promise<Ward | undefined> => {
+  return await db.wards.get(wardId)
+}
+
+export const getBedsByWard = async (wardId: string): Promise<Bed[]> => {
+  return await db.beds.where('ward').equals(wardId).toArray()
+}
+
+// ==================== ADD FUNCTIONS ====================
+
+export const addBed = async (bed: Bed): Promise<string> => {
+  return await db.beds.add(bed)
+}
+
+export const addWard = async (ward: Ward): Promise<string> => {
+  return await db.wards.add(ward)
+}
+
+export const addBedsBulk = async (beds: Bed[]): Promise<void> => {
+  await db.beds.bulkAdd(beds)
+}
+
+// ==================== UPDATE FUNCTIONS ====================
+
+export const updateBed = async (bedId: string, updates: Partial<Bed>): Promise<number> => {
+  return await db.beds.update(bedId, updates)
+}
+
+export const updateWard = async (wardId: string, updates: Partial<Ward>): Promise<number> => {
+  return await db.wards.update(wardId, updates)
+}
+
+// ==================== DELETE FUNCTIONS ====================
+
+export const deleteBed = async (bedId: string): Promise<void> => {
+  await db.beds.delete(bedId)
+}
+
+export const deleteWard = async (wardId: string): Promise<void> => {
+  await db.wards.delete(wardId)
+}
+
+export const deleteBedsByWard = async (wardId: string): Promise<number> => {
+  return await db.beds.where('ward').equals(wardId).delete()
 }
 
 export default db

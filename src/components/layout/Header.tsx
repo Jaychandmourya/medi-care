@@ -1,12 +1,13 @@
 import { Menu, Bell, User, Settings, LogOut } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import { useAppDispatch } from "@/app/hooks"
+import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { logout } from "@/features/auth/authSlice"
 
 const Header = ({ setIsOpen }: any) => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -47,10 +48,10 @@ const Header = ({ setIsOpen }: any) => {
             className="flex items-center gap-2 cursor-pointer"
           >
             <div className="w-9 h-9 rounded-full bg-blue-500 text-white flex items-center justify-center font-semibold">
-              A
+              {user?.name?.charAt(0).toUpperCase() || 'U'}
             </div>
             <span className="hidden sm:block text-sm font-medium">
-              Admin
+              {user?.role ? user.role.charAt(0).toUpperCase() + user.role.slice(1) : 'User'}
             </span>
           </div>
 
@@ -58,12 +59,8 @@ const Header = ({ setIsOpen }: any) => {
           {open && (
             <div className="absolute right-0 mt-3 w-48 bg-white rounded-xl shadow-lg border py-2 z-50">
 
-              <button className="flex items-center gap-2 px-4 py-2 w-full hover:bg-gray-100 text-sm">
+              <button className="flex cursor-pointer items-center gap-2 px-4 py-2 w-full hover:bg-gray-100 text-sm">
                 <User size={16} /> Profile
-              </button>
-
-              <button className="flex items-center gap-2 px-4 py-2 w-full hover:bg-gray-100 text-sm">
-                <Settings size={16} /> Settings
               </button>
 
               <hr className="my-2" />

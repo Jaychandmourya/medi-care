@@ -15,7 +15,7 @@ export const doctorDBOperations = {
       specialty: doctor.specialization,
       city: doctor.city,
       state: doctor.state,
-      country: doctor.country, // Map country to county for compatibility
+      country: doctor.country, // Map country to country for compatibility
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       contact: doctor.contact,
       postalCode: doctor.postalCode || '',
@@ -61,7 +61,7 @@ export const doctorDBOperations = {
     }
     if (updates.city !== undefined) updateData.city = updates.city
     if (updates.state !== undefined) updateData.state = updates.state
-    if (updates.county !== undefined) updateData.country = updates.county
+    if (updates.country !== undefined) updateData.country = updates.country
     if (updates.contact !== undefined) updateData.contact = updates.contact
     if(updates.email !== undefined) updateData.email = updates.email
     return await db.doctors.update(doctorId, updateData)
@@ -110,7 +110,7 @@ export const doctorDBOperations = {
       city: doctor.city,
       email: doctor.email,
       state: doctor.state,
-      county: doctor.country,
+      country: doctor.country,
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,
@@ -142,7 +142,7 @@ export const doctorDBOperations = {
       city: doctor.city,
       state: doctor.state,
       email: doctor.email,
-      county: doctor.country,
+      country: doctor.country,
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,

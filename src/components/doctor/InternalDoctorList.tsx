@@ -37,7 +37,7 @@ export default function InternalDoctorList() {
         doctor.specialty?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.city?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.state?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        doctor.county?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        doctor.country?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.department?.toLowerCase().includes(searchQuery.toLowerCase()) ||
         doctor.gender?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -112,7 +112,7 @@ export default function InternalDoctorList() {
         address: data.address,
         city: data.city,
         state: data.state,
-        county: data.county,
+        country: data.country,
         postalCode: data.postalCode,
         gender: data.gender,
         contact: data.contact,
@@ -246,8 +246,8 @@ export default function InternalDoctorList() {
                             : doctor.city || doctor.state || 'N/A'
                           }
                         </div>
-                        {doctor.county && (
-                          <div className="text-xs text-gray-500">{doctor.county}</div>
+                        {doctor.country && (
+                          <div className="text-xs text-gray-500">{doctor.country}</div>
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">

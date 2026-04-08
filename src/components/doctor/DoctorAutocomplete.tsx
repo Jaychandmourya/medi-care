@@ -13,6 +13,7 @@ import DoctorDetailsModal from './DoctorDetailsModal'
 interface DoctorAutocompleteProps {
   onFieldPopulate?: (fields: { firstName: string; lastName: string; city?: string; state?: string; country?: string; contact?: string }) => void
   onFormPopulate?: (fields: { firstName: string; lastName: string; city?: string; state?: string; country?: string; contact?: string }) => void
+  onClearForm?: () => void
   clearTrigger?: number
 }
 
@@ -29,7 +30,6 @@ interface AutocompleteDoctor {
   specialty?: string
   fullName: string,
   gender: string
-  sex?: string
   address?: string
   address2?: string
   postalCode?: string
@@ -53,7 +53,7 @@ const useDebounce = <T extends (...args: never[]) => unknown>(callback: T, delay
   }, [callback, delay]) as T
 }
 
-export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, clearTrigger }: DoctorAutocompleteProps) {
+export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, onClearForm, clearTrigger }: DoctorAutocompleteProps) {
   const dispatch = useDispatch<AppDispatch>()
   const { searchResults, loading } = useSelector((state: RootState) => state.doctors)
   const [query, setQuery] = useState('')
@@ -145,6 +145,7 @@ export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, cl
   // Transform NPI results to AutocompleteDoctor format - memoized for performance
   const suggestions: AutocompleteDoctor[] = useMemo(() => {
     return searchResults.map((doctor: NPIResult) => {
+      console.log('doctor',doctor)
       const basic = doctor.basic
       const primaryAddress = doctor.addresses?.find(addr => addr.address_1)
       const primaryTaxonomy = doctor.taxonomies?.find(tax => tax.primary)
@@ -158,14 +159,14 @@ export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, cl
         contact: primaryAddress?.telephone_number || '',
         city: primaryAddress?.city || '',
         state: primaryAddress?.state || '',
-        country: primaryAddress?.country_code || '',
+        country: doctor?.country || '',
         postalCode: primaryAddress?.postal_code || '',
         address: primaryAddress?.address_1 || '',
         address2: primaryAddress?.address_2 || '',
         specialty: primaryTaxonomy?.desc || '',
         taxonomyCode: primaryTaxonomy?.code || '',
         fullName: `${basic?.first_name || ''} ${basic?.middle_name ? basic.middle_name + ' ' : ''}${basic?.last_name || ''}`.trim(),
-        gender: basic?.sex || '',
+        gender: basic?.gender || '',
         enumerationDate: basic?.enumeration_date || '',
         lastUpdated: basic?.last_updated || '',
         status: basic?.status || ''
@@ -213,7 +214,8 @@ export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, cl
     setIsUserTyping(true)
     setQuery('')
     setShowSuggestions(false)
-  }, [])
+    onClearForm?.()
+  }, [onClearForm])
 
   const handleViewDetails = useCallback((doctor: AutocompleteDoctor, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -379,18 +381,6 @@ export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, cl
                     >
                       <Eye className="w-3 h-3 mr-1" />
                       View Details
-                    </Button>
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleAddToSystem(doctor)
-                      }}
-                      loading={adding}
-                      size="sm"
-                      className="bg-linear-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white shadow-sm hover:shadow-md transition-all duration-200"
-                    >
-                      <Plus className="w-3 h-3 mr-1" />
-                      Add to System
                     </Button>
                   </div>
                 </div>

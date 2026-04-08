@@ -10,23 +10,27 @@ import { motion } from "framer-motion";
 interface Props {
   occupied: number;
   available: number;
+  maintenance: number;
 }
 
 const COLORS = {
   occupied: "#dc2626", // red-600
   available: "#16a34a", // green-600
+  maintenance: "#f59e0b", // amber-500
 };
 
 export default function BedOccupancyChart({
   occupied = 70,
-  available = 30,
+  available = 20,
+  maintenance = 10,
 }: Props) {
   const data = [
     { name: "Occupied", value: occupied, fill: COLORS.occupied },
     { name: "Available", value: available, fill: COLORS.available },
+    { name: "Maintenance", value: maintenance, fill: COLORS.maintenance },
   ];
 
-  const totalBeds = occupied + available;
+  const totalBeds = occupied + available + maintenance;
   const occupancyRate = Math.round((occupied / totalBeds) * 100);
 
   return (

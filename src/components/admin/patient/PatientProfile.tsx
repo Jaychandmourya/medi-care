@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { getAllPatients } from "@/features/patient/patientThunk";
 import type { RootState } from "@/app/store";
-import type { PatientFormData } from "@/lib/patientValidation";
+import type { PatientFormData } from "@/validation-schema/patientValidation";
 import { Calendar, FileText, Activity, CreditCard, User, ArrowLeft, Edit } from "lucide-react";
 
 export default function PatientProfile() {

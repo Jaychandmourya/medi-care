@@ -1,17 +1,30 @@
 import { useFormContext } from "react-hook-form";
+
+// Import icons file
+import {Phone, Mail} from 'lucide-react'
+// Import UI components
 import { Label } from "@/components/ui/Label";
 import DatePicker from "@/components/ui/DatePicker";
 import Input from "@/components/ui/Input";
-import {Phone, Mail} from 'lucide-react'
-import { useAppSelector } from "@/app/hooks";
+
+// Import utils file
 import { getRoleColors } from "@/utils/roleColors";
 
+// Import selector for redux
+import { useAppSelector } from "@/app/hooks";
+
 export default function StepPersonal() {
+  //  Form control
   const { register, formState: { errors }, setValue, watch, setError, clearErrors } = useFormContext();
   const photoPreview = watch("photo");
+
+  // Redux Selector
   const userRole = useAppSelector((state) => state.auth.user?.role);
+
+  // Utils
   const roleColors = getRoleColors(userRole || 'admin');
 
+  // Methods
   // Upload photo
   const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];

@@ -1,4 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
+import type { DoctorState } from '@/types/doctors/doctorType'
+
 import {
   searchDoctors,
   fetchLocalDoctors,
@@ -6,44 +8,11 @@ import {
   updateLocalDoctor,
   deleteLocalDoctor,
   searchLocalDoctors,
-  type NPIResult
 } from './doctorThunk'
 
-// Local Doctor Type (stored in Dexie)
-export interface LocalDoctor {
-  id?: string
-  npi: string
-  firstName: string
-  lastName: string
-  middleName?: string
-  credential?: string
-  gender?: string
-  specialty?: string
-  department: string
-  address?: string
-  city?: string
-  state?: string
-  county?: string
-  postalCode?: string
-  phone?: string
-  contact?: string
-  email?: string
-  addedAt: string
-}
+
 
 // Search State
-interface DoctorState {
-  searchResults: NPIResult[]
-  localDoctors: LocalDoctor[]
-  loading: boolean
-  error: string | null
-  searchQuery: string
-  selectedTaxonomy: string
-  currentPage: number
-  totalPages: number
-  resultCount: number
-  activeTab: 'search' | 'internal'
-}
 
 const initialState: DoctorState = {
   searchResults: [],

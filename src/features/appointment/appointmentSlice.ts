@@ -1,8 +1,6 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 import {
   fetchAppointments,
-  fetchDoctors,
-  fetchPatients,
   fetchDoctorSchedules,
   createAppointment,
   updateAppointment,
@@ -32,8 +30,6 @@ interface AppointmentState {
 
 const initialState: AppointmentState = {
   appointments: [],
-  doctors: [],
-  patients: [],
   doctorSchedules: [],
   selectedDoctor: null,
   selectedWeek: startOfWeek(new Date()).toISOString(),
@@ -41,6 +37,9 @@ const initialState: AppointmentState = {
   loading: false,
   error: null,
   selectedAppointment: null,
+  showBookingModal: false,
+  showDetailModal: false,
+  showRescheduleModal: false,
   availableSlots: [],
   timeSlotConflict: false,
 };
@@ -93,12 +92,6 @@ const appointmentSlice = createSlice({
         state.loading = false;
         state.error = action.error.message || 'Failed to fetch appointments';
       })
-      .addCase(fetchDoctors.fulfilled, (state, action) => {
-        state.doctors = action.payload;
-      })
-      .addCase(fetchPatients.fulfilled, (state, action) => {
-        state.patients = action.payload;
-      })
       .addCase(fetchDoctorSchedules.fulfilled, (state, action) => {
         state.doctorSchedules = action.payload;
       })
@@ -143,14 +136,15 @@ export const {
   setSelectedWeek,
   setSelectedDate,
   setSelectedAppointment,
+  setShowBookingModal,
+  setShowDetailModal,
+  setShowRescheduleModal,
   clearError,
 } = appointmentSlice.actions;
 
 // Re-export thunks for backward compatibility
 export {
   fetchAppointments,
-  fetchDoctors,
-  fetchPatients,
   fetchDoctorSchedules,
   createAppointment,
   updateAppointment,

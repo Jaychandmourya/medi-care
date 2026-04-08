@@ -20,7 +20,8 @@ export interface InputProps {
   children?: React.ReactNode; // For select options
   value?: string | number;
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
-  onClick?: () => void
+  onClick?: () => void;
+  onFocus?: () => void;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -41,6 +42,7 @@ const Input: React.FC<InputProps> = ({
   value,
   onChange,
   onClick,
+  onFocus,
 }) => {
   const baseClasses = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm ${
     error ? 'border-red-500' : 'border-gray-300'
@@ -57,6 +59,7 @@ const Input: React.FC<InputProps> = ({
       value,
       onChange,
       onClick,
+      onFocus,
       ...registration,
     };
 

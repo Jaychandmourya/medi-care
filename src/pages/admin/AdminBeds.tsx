@@ -1,44 +1,64 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import type { RootState } from '@/app/store'
-import { fetchBeds,fetchWards,updateBedStatus, admitPatient, dischargePatient} from '@/features/bed/bedThunk'
-import {
-  setSelectedWard,
-  toggleSimulation,
-  simulateBedStatusChange,
-  initializeBeds
-} from '@/features/bed/bedSlice'
-import { initializeDatabase } from '@/services/bedAndWardServices'
-import BedGrid from '@/components/admin/bed/BedGrid'
-import BedDetailModal from '@/components/admin/bed/BedDetailModal'
-import WardSwitcher from '@/components/admin/bed/WardSwitcher'
-import BedAvailabilitySummary from '@/components/admin/bed/BedAvailabilitySummary'
-import SimulationControl from '@/components/admin/bed/SimulationControl'
+import { useEffect, useState, useCallback, Suspense, lazy } from 'react'
+
+// Import icons file
+import { LayoutGrid, Building2, BedDouble } from 'lucide-react'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
-import type { Bed, BedStatus } from '@/features/bed/bedSlice'
+
+// Import Types files
+import type { RootState, AppDispatch } from '@/app/store'
+import type { Bed, BedStatus } from '@/types/bed/bedType'
+type TabType = 'overview' | 'beds' | 'wards'
+
+// Import dispatch and selector for redux
+import { useSelector, useDispatch } from 'react-redux'
+
+// Import Services file
+import { initializeDatabase } from '@/services/bedAndWardServices'
+
+// Import Thunk file for redux
+import { fetchBeds, fetchWards, updateBedStatus, admitPatient, dischargePatient } from '@/features/bed/bedThunk'
+
+// Import Slice file for redux
+import { initializeBeds } from '@/features/bed/bedSlice'
+
+// Import Components
+import WardSwitcher from '@/components/admin/bed/tab/overview/WardSwitcher'
+
+// Lazy loaded components
+const BedManagement = lazy(() => import('@/components/admin/bed/tab/beds/BedManagement'))
+const WardManagement = lazy(() => import('@/components/admin/bed/tab/wards/WardManagement'))
+const BedDetailModal = lazy(() => import('@/components/admin/bed/BedDetailModal'))
+const BedGrid = lazy(() => import('@/components/admin/bed/tab/overview/BedGrid'))
+const BedAvailabilitySummary = lazy(() => import('@/components/admin/bed/tab/overview/BedAvailabilitySummary'))
 
 const AdminBeds = () => {
-  const dispatch = useDispatch()
-  const {
-    beds,
-    wards,
-    selectedWard,
-    loading,
-    error,
-    simulationEnabled
-  } = useSelector((state: RootState) => state.beds)
 
+  // Redux dispatch and selector
+  const dispatch = useDispatch<AppDispatch>()
+  const { beds, wards, loading, error } = useSelector((state: RootState) => state.beds)
+
+  // State management
+  const [activeTab, setActiveTab] = useState<TabType>('overview')
   const [selectedBed, setSelectedBed] = useState<Bed | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+  const [overviewWard, setOverviewWard] = useState('general')
 
-  // Initialize data
+  // Tab configuration static data
+  const tabs = [
+    { id: 'overview' as TabType, label: 'Overview', icon: LayoutGrid },
+    { id: 'beds' as TabType, label: 'Manage Beds', icon: BedDouble },
+    { id: 'wards' as TabType, label: 'Manage Wards', icon: Building2 },
+  ]
+
+  // Effect
   useEffect(() => {
     const initialize = async () => {
       try {
         await initializeDatabase()
-        dispatch(fetchBeds() as any)
-        dispatch(fetchWards() as any)
+        dispatch(fetchBeds())
+        dispatch(fetchWards())
         setIsInitialized(true)
       } catch (error) {
         console.error('Failed to initialize bed data:', error)
@@ -50,22 +70,7 @@ const AdminBeds = () => {
     initialize()
   }, [dispatch])
 
-  // Auto Simulation - Randomly changes 1-2 bed statuses every 45 seconds when simulation is ON
-  useEffect(() => {
-    let interval: number
-    if (simulationEnabled && isInitialized) {
-      interval = setInterval(() => {
-        dispatch(simulateBedStatusChange())
-      }, 45000) // 45 seconds
-    }
-
-    return () => {
-      if (interval) {
-        clearInterval(interval)
-      }
-    }
-  }, [simulationEnabled, dispatch, isInitialized])
-
+  // Methods
   const handleBedClick = useCallback((bed: Bed) => {
     setSelectedBed(bed)
   }, [])
@@ -74,40 +79,54 @@ const AdminBeds = () => {
     setSelectedBed(null)
   }, [])
 
-  const handleUpdateStatus = useCallback((bedId: string, status: BedStatus, notes?: string) => {
-     dispatch(updateBedStatus({ bedId, status, notes }) as any)
-  }, [dispatch])
-
-  const handleAdmitPatient = useCallback((bedId: string, patientId: string) => {
-    dispatch(admitPatient({ bedId, patientId }) as any)
-  }, [dispatch])
-
-  // Discharge Patient: Free a bed and record discharge time in IndexedDB
-  const handleDischargePatient = useCallback((bedId: string) => {
-    dispatch(dischargePatient(bedId) as any)
-  }, [dispatch])
-
   const handleWardChange = useCallback((wardId: string) => {
-    dispatch(setSelectedWard(wardId))
-  }, [dispatch])
-
-  const handleToggleSimulation = useCallback(() => {
-    dispatch(toggleSimulation())
-  }, [dispatch])
+    setOverviewWard(wardId)
+  }, [])
 
   const handleRetry = useCallback(() => {
-    dispatch(fetchBeds() as any)
-    dispatch(fetchWards() as any)
+    dispatch(fetchBeds())
+    dispatch(fetchWards())
   }, [dispatch])
 
-  const currentWardBeds = useMemo(() =>
-    beds.filter(bed => bed.ward === selectedWard),
-    [beds, selectedWard]
-  )
+  // Admit patient
+  const handleAdmitPatient = useCallback((bedId: string, patientId: string) => {
+    dispatch(admitPatient({ bedId, patientId }))
+      .unwrap()
+      .then(() => {
+        setSelectedBed(null)
+      })
+      .catch((error) => {
+        console.error('Failed to admit patient:', error)
+      })
+  }, [dispatch])
+
+  // Discharge bed
+  const handleDischargePatient = useCallback((bedId: string) => {
+    dispatch(dischargePatient(bedId))
+      .unwrap()
+      .then(() => {
+        setSelectedBed(null)
+      })
+      .catch((error) => {
+        console.error('Failed to discharge patient:', error)
+      })
+  }, [dispatch])
+
+  // Update bed status
+  const handleUpdateStatus = useCallback((bedId: string, status: BedStatus, notes?: string) => {
+    dispatch(updateBedStatus({ bedId, status, notes }))
+      .unwrap()
+      .then(() => {
+        setSelectedBed(null)
+      })
+      .catch((error) => {
+        console.error('Failed to update bed status:', error)
+      })
+  }, [dispatch])
 
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Initializing bed management system...</p>
@@ -118,16 +137,13 @@ const AdminBeds = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-screen bg-gray-50">
         <div className="text-center">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
             <p className="font-medium">Error loading bed data</p>
             <p className="text-sm">{error}</p>
           </div>
-          <Button
-            onClick={handleRetry}
-            variant="default"
-          >
+          <Button onClick={handleRetry} variant="default">
             Retry
           </Button>
         </div>
@@ -138,60 +154,93 @@ const AdminBeds = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white border-b">
-        <div className="px-4 py-6">
-          <Label className="text-2xl font-bold text-gray-800">Bed Management</Label>
-          <p className="text-gray-600 mt-1">Manage hospital beds and patient assignments</p>
+      <div className="bg-white border-b border-gray-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="py-6">
+            <h1 className="text-2xl font-bold text-gray-900">Bed & Ward Management</h1>
+            <p className="text-gray-500 mt-1">Manage hospital beds, wards, and patient assignments</p>
+          </div>
+
+          {/* Tabs */}
+          <div className="flex gap-1 border-b border-gray-200 -mb-px overflow-x-auto">
+            {tabs.map(tab => {
+              const Icon = tab.icon
+              const isActive = activeTab === tab.id
+              return (
+                <button
+                  key={tab.id}
+                  onClick={() => setActiveTab(tab.id)}
+                  className={`flex items-center cursor-pointer gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+                    isActive
+                      ? 'border-blue-600 text-blue-600'
+                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
+                  }`}
+                >
+                  <Icon className="w-5 h-5" />
+                  {tab.label}
+                </button>
+              )
+            })}
+          </div>
         </div>
       </div>
 
-      {/* Ward Switcher */}
-      <WardSwitcher
-        wards={wards}
-        selectedWard={selectedWard}
-        onWardChange={handleWardChange}
-      />
-
-      {/* Bed Availability Summary */}
-      <BedAvailabilitySummary
-        beds={beds}
-        selectedWard={selectedWard}
-      />
-
-      {/* Main Content */}
-      <div className="bg-white">
+      {/* Content */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
           </div>
-        ) : currentWardBeds.length === 0 ? (
-          <div className="text-center py-12">
-            <p className="text-gray-500">No beds found in this ward</p>
-          </div>
         ) : (
-          <BedGrid
-            beds={currentWardBeds}
-            onBedClick={handleBedClick}
-          />
-        )}
+            <>
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <div className="space-y-6">
+                  <Suspense fallback={<div className="flex justify-center py-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div></div>}>
+                    <BedAvailabilitySummary beds={beds} selectedWard={overviewWard} />
+                  </Suspense>
+                  <WardSwitcher
+                    wards={wards}
+                    selectedWard={overviewWard}
+                    onWardChange={handleWardChange}
+                  />
+                  <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+                    <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                      <BedGrid beds={beds.filter(b => b.ward === overviewWard).slice(0, 50)} onBedClick={handleBedClick} />
+                    </Suspense>
+                  </div>
+                </div>
+              )}
+
+              {/* Beds Tab */}
+              {activeTab === 'beds' && (
+                <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <BedManagement onBedClick={handleBedClick} />
+                </Suspense>
+              )}
+
+              {/* Wards Tab */}
+              {activeTab === 'wards' && (
+                <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+                  <WardManagement />
+                </Suspense>
+              )}
+            </>
+          )}
       </div>
 
       {/* Bed Detail Modal */}
       {selectedBed && (
-        <BedDetailModal
-          bed={selectedBed}
-          onClose={handleCloseModal}
-          onUpdateStatus={handleUpdateStatus}
-          onAdmitPatient={handleAdmitPatient}
-          onDischargePatient={handleDischargePatient}
-        />
+        <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+          <BedDetailModal
+            bed={selectedBed}
+            onClose={handleCloseModal}
+            onUpdateStatus={handleUpdateStatus}
+            onAdmitPatient={handleAdmitPatient}
+            onDischargePatient={handleDischargePatient}
+          />
+        </Suspense>
       )}
-
-      {/* Simulation Control */}
-      <SimulationControl
-        isEnabled={simulationEnabled}
-        onToggle={handleToggleSimulation}
-      />
     </div>
   )
 }

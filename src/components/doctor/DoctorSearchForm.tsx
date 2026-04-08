@@ -16,7 +16,7 @@ interface DoctorSearchFormProps {
     taxonomy?: string
     city?: string
     state?: string
-    county?: string
+    country?: string
     contact?: string
   }) => void
   initialValues?: {
@@ -24,7 +24,7 @@ interface DoctorSearchFormProps {
     lastName?: string
     city?: string
     state?: string
-    county?: string
+    country?: string
     contact?: string
   }
 }
@@ -54,7 +54,7 @@ export default function DoctorSearchForm({ onSearch, initialValues }: DoctorSear
       email: '',
       city: initialValues?.city || '',
       state: initialValues?.state || '',
-      county: initialValues?.county || '',
+      country: initialValues?.country || '',
       postalCode: '',
       address: '',
       credential: '',
@@ -70,7 +70,7 @@ export default function DoctorSearchForm({ onSearch, initialValues }: DoctorSear
       setValue('lastName', initialValues.lastName || '')
       setValue('city', initialValues.city || '')
       setValue('state', initialValues.state || '')
-      setValue('county', initialValues.county || '')
+      setValue('country', initialValues.country || '')
       setValue('contact', initialValues.contact || '')
     }
   }, [initialValues, setValue])
@@ -106,7 +106,7 @@ export default function DoctorSearchForm({ onSearch, initialValues }: DoctorSear
         specialty: data.specialty?.trim(),
         city: data.city?.trim(),
         state: data.state?.trim(),
-        county: data.county?.trim(),
+        country: data.country?.trim(),
         contact: data.contact?.trim(),
         address: (data.city && data.state) ? `${data.city.trim()}, ${data.state.trim()}` : undefined,
         phone: data.phone?.trim(),
@@ -312,15 +312,15 @@ export default function DoctorSearchForm({ onSearch, initialValues }: DoctorSear
               County
             </label>
             <input
-              {...register('county')}
+              {...register('country')}
               type="text"
               className={`w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent ${
-                errors.county ? 'border-red-500' : 'border-gray-300'
+                errors.country ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Enter county"
+              placeholder="Enter country"
             />
-            {errors.county && (
-              <p className="mt-1 text-sm text-red-600">{errors.county.message}</p>
+            {errors.country && (
+              <p className="mt-1 text-sm text-red-600">{errors.country.message}</p>
             )}
           </div>
 

@@ -1,12 +1,18 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { X } from 'lucide-react'
+import { X, ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import { type LocalDoctor } from '@/features/doctor/doctorSlice'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
+import { useDispatch, useSelector } from 'react-redux'
+import { type AppDispatch, type RootState } from '@/app/store'
+import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
+import { type DoctorSchedule } from '@/features/db/dexie'
 import Input from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
+import DoctorSchedule from './DoctorSchedule'
+import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {
   doctor: LocalDoctor
@@ -14,10 +20,30 @@ interface DoctorEditFormProps {
   onCancel: () => void
 }
 
+type Step = 'doctor-info' | 'schedule'
+
+interface ScheduleStepData {
+  workingDays: number[]
+  startTime: string
+  endTime: string
+  slotDuration: '15' | '20' | '30'
+  lunchBreakStart?: string
+  lunchBreakEnd?: string
+}
+
 export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditFormProps) {
+
   const [saving, setSaving] = useState(false)
+  const [editData, setEditData] = useState<DoctorEditFormProps>(null)
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false)
+  const [currentStep, setCurrentStep] = useState<Step>('doctor-info')
+  const [existingSchedule, setExistingSchedule] = useState<DoctorSchedule | null>(null)
+  const [loadingSchedule, setLoadingSchedule] = useState(false)
+  const [addingSchedule, setAddingSchedule] = useState(false)
   const specialtyRef = useRef<HTMLDivElement>(null)
+  const dispatch = useDispatch<AppDispatch>()
+
+  const { schedules } = useSelector((state: RootState) => state.doctorSchedule)
 
   const {
     register,
@@ -37,7 +63,7 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
       address: doctor.address || '',
       city: doctor.city || '',
       state: doctor.state || '',
-      county: doctor.country || '',
+      country: doctor.country || '',
       postalCode: doctor.postalCode || '',
       contact: doctor.contact || '',
       email: doctor.email || '',
@@ -46,6 +72,8 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
   })
 
   const watchedValues = watch()
+
+
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -73,24 +101,115 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
     return COMMON_TAXONOMIES
   }, [watchedValues.specialty])
 
+
+  const loadExistingSchedule = async () => {
+      if (!doctor.id) return
+      try {
+        await dispatch(fetchDoctorSchedules())
+        const schedule = schedules.find(s => s.doctorId === doctor.id)
+        if (schedule) {
+          setExistingSchedule(schedule)
+        } else {
+          setExistingSchedule(null)
+        }
+      } catch (error) {
+        toast.error('Failed to load doctor schedule')
+      }
+    }
+
+  const handleNextStep = async () => {
+    if (currentStep === 'doctor-info') {
+      try {
+        const isValid = await handleSubmit(async (data) => {
+          // Then move to schedule step
+          setEditData(data)
+          setCurrentStep('schedule')
+          loadExistingSchedule()
+        })()
+      } catch (error) {
+        console.error('Validation or save failed:', error)
+        toast.error('Failed to save doctor information')
+      }
+    }
+  }
+
+  const handlePreviousStep = () => {
+    if (currentStep === 'schedule') {
+      setCurrentStep('doctor-info')
+    }
+  }
+
   const handleSave = async (data: DoctorFormData) => {
     console.log('Save data:', data)
     setSaving(true)
     try {
-      await onSave(data)
     } catch (error) {
-      console.error('Failed to update doctor:', error)
-      alert('Failed to update doctor')
+      toast.error('Failed to update doctor')
     } finally {
       setSaving(false)
     }
   }
 
+  // Helper functions for DoctorSchedule component
+  const clearCurrentDoctorData = () => {
+    // This function is called by DoctorSchedule when clearing doctor data
+    // In this context, we don't need to do anything since the doctor is fixed
+  }
+
+  const handleNavigateToAddDoctor = async() => {
+    // Navigate back to doctor info step
+    await onSave(editData)
+    // setCurrentStep('doctor-info')
+  }
+
+  const renderStepIndicator = () => {
+    const steps = [
+      { key: 'doctor-info', label: 'Doctor Information', icon: User },
+      { key: 'schedule', label: 'Schedule', icon: Clock }
+    ]
+
+    return (
+      <div className="flex items-center justify-center mb-8">
+        <div className="flex items-center space-x-4">
+          {steps.map((step, index) => {
+            const Icon = step.icon
+            const isActive = currentStep === step.key
+            const isCompleted = currentStep === 'schedule' || (currentStep === 'doctor-info' && index === 0)
+
+            return (
+              <div key={step.key} className="flex items-center">
+                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 ${
+                  isActive
+                    ? 'bg-blue-600 border-blue-600 text-white'
+                    : isCompleted
+                    ? 'bg-green-600 border-green-600 text-white'
+                    : 'bg-gray-100 border-gray-300 text-gray-500'
+                }`}>
+                  <Icon className="w-5 h-5" />
+                </div>
+                <span className={`ml-2 text-sm font-medium ${
+                  isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                }`}>
+                  {step.label}
+                </span>
+                {index < steps.length - 1 && (
+                  <div className={`mx-4 w-8 h-0.5 ${
+                    isCompleted ? 'bg-green-600' : 'bg-gray-300'
+                  }`} />
+                )}
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Doctor</h2>
+          <h2 className="text-xl font-semibold text-gray-900">Edit Doctor Information</h2>
           <Button
             variant="ghost"
             size="icon"
@@ -100,8 +219,12 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
           </Button>
         </div>
 
-        <form onSubmit={handleSubmit(handleSave)} className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="p-6">
+          {renderStepIndicator()}
+
+          {currentStep === 'doctor-info' && (
+            <form onSubmit={handleSubmit(handleSave)}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
 
             {/* First Name */}
             <Input
@@ -230,13 +353,13 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
               placeholder="e.g., CA, NY"
             />
 
-            {/* County */}
+            {/* country */}
             <Input
-              id="county"
-              label="County"
-              registration={register('county')}
-              error={errors.county}
-              placeholder="Enter county"
+              id="country"
+              label="Country"
+              registration={register('country')}
+              error={errors.country}
+              placeholder="Enter country"
             />
 
             {/* Postal Code */}
@@ -260,8 +383,8 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
             </div>
           </div>
 
-          {/* Action Buttons */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          {/* Action Buttons for Doctor Info Step */}
+          <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-200">
             <Button
               type="button"
               variant="secondary"
@@ -270,19 +393,54 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
               Cancel
             </Button>
             <Button
-              type="submit"
-              loading={saving}
+              type="button"
+              onClick={handleNextStep}
               disabled={saving}
-              onClick={() => {
-                const formData = watchedValues
-                console.log('Click me', formData)
-                handleSave(formData)
-              }}
+              className="flex items-center gap-2"
             >
-              {saving ? 'Saving...' : 'Save Changes'}
+              Next: Schedule
+              <ChevronRight className="w-4 h-4" />
             </Button>
           </div>
-        </form>
+            </form>
+          )}
+
+          {currentStep === 'schedule' && (
+            <div>
+              {loadingSchedule ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                  <span className="ml-3 text-gray-600">Loading schedule data...</span>
+                </div>
+              ) : (
+                <div>
+                  <DoctorSchedule
+                    lastAddedDoctor={doctor}
+                    doctors={[doctor]}
+                    addingSchedule={addingSchedule}
+                    setAddingSchedule={setAddingSchedule}
+                    clearCurrentDoctorData={clearCurrentDoctorData}
+                    onNavigateToAddDoctor={handleNavigateToAddDoctor}
+                    existingSchedule={existingSchedule}
+                  />
+
+                  {/* Navigation buttons for schedule step */}
+                  <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-gray-200">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={handlePreviousStep}
+                      className="flex items-center gap-2"
+                    >
+                      <ChevronLeft className="w-4 h-4" />
+                      Back to Doctor Info
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
     </div>
   )

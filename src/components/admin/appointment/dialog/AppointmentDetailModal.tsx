@@ -1,21 +1,34 @@
 import { useState, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
+
+// Import icons file
 import { X, User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { updateAppointment } from '@/features/appointment/appointmentThunk';
-import type { Appointment, Patient, Doctor } from '@/features/db/dexie';
+
+// Import UI components
 import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 import { Button } from '@/components/ui/Button';
 import { Label } from '@/components/ui/Label';
+
+// Import Types files
+import type { RootState } from "@/app/store";
+import type { Appointment } from '@/types/appointment/appointmentType'
+import type { Patient } from '@/types/patients/patientType'
+import type { Doctor } from '@/types/doctors/doctorType'
+
+// Import dispatch and selector for redux
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+
+// Import Thunk file for redux
+import { updateAppointment } from '@/features/appointment/appointmentThunk';
 
 const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleRescheduleModal }: { showDetailModal: boolean, closeShowDetailModal: () => void, handleRescheduleModal: () => void }) => {
   // Redux dispatch
   const dispatch = useAppDispatch();
 
   // Redux selectors
-  const { selectedAppointment, patients, doctors } = useAppSelector(
-    (state) => state.appointments
-  );
+  const { selectedAppointment } = useAppSelector((state) => state.appointments);
+  const patients = useAppSelector((state: RootState) => state.patients.list);
+  const { localDoctors } = useAppSelector((state: RootState) => state.doctors)
 
   // Confirmation dialog state
   const [confirmationDialog, setConfirmationDialog] = useState({
@@ -58,8 +71,8 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
 
   // Helper function to get doctor data
   const getDoctor = useCallback((doctorId: string): Doctor | undefined => {
-    return doctors.find(d => d.id === doctorId);
-  }, [doctors]);
+    return localDoctors.find(d => d.id === doctorId);
+  }, [localDoctors]);
 
   // Helper function to get status color
   const getStatusColor = useCallback((status: Appointment['status']) => {

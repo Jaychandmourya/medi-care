@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react'
-import type { Bed } from '@/features/bed/bedSlice'
 import { BedDouble, User, Clock, AlertTriangle, Wrench } from 'lucide-react'
+
+import type { Bed } from '@/types/bed/bedType'
+
 import { getPatientNamesForBeds } from '@/utils/patientUtils'
 
 interface BedGridProps {
@@ -23,8 +25,10 @@ const statusIcons = {
 }
 
 const BedGrid: React.FC<BedGridProps> = React.memo(({ beds, onBedClick }) => {
+
   const [patientNames, setPatientNames] = useState<Map<string, string>>(new Map())
 
+  // Effect
   useEffect(() => {
     const fetchPatientNames = async () => {
       const names = await getPatientNamesForBeds(beds)

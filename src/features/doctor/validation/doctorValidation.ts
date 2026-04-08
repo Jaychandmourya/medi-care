@@ -3,10 +3,6 @@ import { z } from 'zod'
 // Doctor form validation schema
 export const doctorFormSchema = z.object({
   id: z.string().optional(),
-  npi: z.string()
-    .min(1, 'NPI is required')
-    .regex(/^\d{10}$/, 'NPI must be exactly 10 digits'),
-
   firstName: z.string()
     .min(1, 'First name is required')
     .max(50, 'First name must be less than 50 characters')
@@ -51,7 +47,7 @@ export const doctorFormSchema = z.object({
     .regex(/^[a-zA-Z]{2}$/, 'State must contain exactly 2 letters')
     .optional(),
 
-  county: z.string()
+  country: z.string()
     .max(50, 'County must be less than 50 characters')
     .regex(/^[a-zA-Z\s'-]+$/, 'County can only contain letters, spaces, hyphens and apostrophes')
     .optional(),

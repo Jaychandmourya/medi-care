@@ -60,16 +60,30 @@ export default function AlertsPanel({ alerts }: Props) {
 
   const formatTime = (time: string) => {
     try {
+      if (!time) return 'Unknown time';
+
       const date = new Date(time);
+
+      // Check if date is invalid
+      if (isNaN(date.getTime())) {
+        // If it's a relative time string like "2 min ago", return it as is
+        if (time.includes('ago') || time.includes('min') || time.includes('hour') || time.includes('day')) {
+          return time;
+        }
+        return 'Unknown time';
+      }
+
       const now = new Date();
       const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
 
+      if (diffInMinutes < 0) return 'Just now';
       if (diffInMinutes < 1) return 'Just now';
       if (diffInMinutes < 60) return `${diffInMinutes}m ago`;
       if (diffInMinutes < 1440) return `${Math.floor(diffInMinutes / 60)}h ago`;
       return `${Math.floor(diffInMinutes / 1440)}d ago`;
-    } catch {
-      return time;
+    } catch (error) {
+      console.error('Error formatting time:', error);
+      return 'Unknown time';
     }
   };
 
@@ -143,7 +157,7 @@ export default function AlertsPanel({ alerts }: Props) {
               </div>
 
               {/* Expanded content */}
-              {expandedAlert === alert.id && (
+              {/* {expandedAlert === alert.id && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="flex space-x-2">
                     <button className="flex-1 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">
@@ -154,20 +168,20 @@ export default function AlertsPanel({ alerts }: Props) {
                     </button>
                   </div>
                 </div>
-              )}
+              )} */}
             </div>
           ))
         )}
       </div>
 
       {/* Footer */}
-      {alerts.length > 0 && (
+      {/* {alerts.length > 0 && (
         <div className="px-6 py-3 bg-gray-50 border-t border-gray-100">
           <button className="w-full text-center text-sm text-blue-600 hover:text-blue-800 font-medium transition-colors">
             View All Alerts →
           </button>
         </div>
-      )}
+      )} */}
     </div>
   );
 }

@@ -1,11 +1,11 @@
-import { db, type Patient } from '../features/db/dexie';
-import type { PatientFormData } from '../lib/patientValidation';
+import { db } from '../features/db/dexie';
+import type { Patient } from '@/types/patients/patientType'
+import type { PatientFormData } from '../validation-schema/patientValidation';
 
 // Ensure database is ready
 export const initializeDatabase = async (): Promise<void> => {
   try {
     await db.open();
-    console.log('✅ Database opened successfully');
   } catch (error) {
     console.error('❌ Failed to open database:', error);
     throw error;

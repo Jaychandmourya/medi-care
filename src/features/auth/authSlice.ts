@@ -17,6 +17,7 @@ interface LoginPayload {
   name: string
   id: number
   avatar: string
+  doctorId?: string // Optional doctor ID for doctor role
 }
 
 const authSlice = createSlice({
@@ -24,7 +25,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     login: (state, action: PayloadAction<LoginPayload>) => {
-      const { role, name, id, avatar } = action.payload
+      const { role, name, id, avatar, doctorId } = action.payload
       console.log("role111", role)
 
       const userData: User = {
@@ -37,11 +38,21 @@ const authSlice = createSlice({
 
       state.user = userData
       localStorage.setItem("user", JSON.stringify(userData))
+
+      // Store doctor-specific information in localStorage
+      if (role === 'doctor' && doctorId) {
+        localStorage.setItem("doctorInfo", JSON.stringify({
+          doctorId,
+          doctorName: name,
+          loginTime: new Date().toISOString()
+        }))
+      }
     },
 
     logout: (state) => {
       state.user = null
       localStorage.removeItem("user")
+      localStorage.removeItem("doctorInfo") // Clear doctor info on logout
     },
   },
 })

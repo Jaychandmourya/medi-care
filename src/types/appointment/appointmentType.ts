@@ -1,5 +1,4 @@
-import type { Appointment, Patient } from '@/features/db/dexie';
-
+import type { Patient } from '@/types/patients/patientType'
 export interface RoleColors {
   primary: string;
   secondary: string;
@@ -19,4 +18,19 @@ export interface WeeklyCalendarProps {
   onSetSelectedAppointment: (appointment: Appointment) => void;
   onShowDetailModal: () => void;
   roleColors?: RoleColors;
+}
+
+export interface Appointment {
+  id: string;
+  patientId: string;
+  doctorId: string;
+  department: string;
+  date: string;
+  slot: string;
+  duration: number;
+  status: 'scheduled' | 'confirmed' | 'in_progress' | 'completed' | 'cancelled' | 'no_show';
+  reason: string;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
 }

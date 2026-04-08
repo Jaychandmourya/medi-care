@@ -1,16 +1,36 @@
-import { useEffect, useRef } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { advanceQueue, skipToken, requeueToken, toggleSimulation, decrementTimer, resetTimer, updateWaitTimes } from '@/features/opd/opdSlice'
-import type { AppDispatch, RootState } from '@/app/store'
+import { useEffect, useRef, useMemo, useCallback } from 'react'
+
+// Import icons file
 import { Play, Pause, SkipForward, RotateCcw, Clock } from 'lucide-react'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
 
+// Import Types files
+import type { AppDispatch, RootState } from '@/app/store'
+
+// Import dispatch and selector for redux
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import Slice file for redux
+import { advanceQueue, skipToken, requeueToken, toggleSimulation, decrementTimer, resetTimer, updateWaitTimes } from '@/features/opd/opdSlice'
+
 const QueueControlPanel = () => {
+
   const dispatch = useDispatch<AppDispatch>()
-  const { queue, currentToken, simulationRunning, countdownTimer } = useSelector((state: RootState) => state.opd)
-  const { user } = useSelector((state: RootState) => state.auth)
+
+  // Redux selector - combine into single selector to reduce re-renders
+  const { queue, currentToken, simulationRunning, countdownTimer } = useSelector((state: RootState) => ({
+    queue: state.opd.queue,
+    currentToken: state.opd.currentToken,
+    simulationRunning: state.opd.simulationRunning,
+    countdownTimer: state.opd.countdownTimer
+  }))
+
+  // Refs
   const intervalRef = useRef<number | null>(null)
 
+  // Effects
   useEffect(() => {
     let countdownInterval: number | null = null
     let advanceInterval: number | null = null
@@ -47,14 +67,13 @@ const QueueControlPanel = () => {
   // Auto-stop simulation when no more tokens
   useEffect(() => {
     if (simulationRunning) {
-      const waitingTokens = queue.filter(token => token.status === 'waiting')
-      const inProgressTokens = queue.filter(token => token.status === 'in-progress')
-
-      if (waitingTokens.length === 0 && inProgressTokens.length === 0) {
+      const hasWaiting = queue.some(token => token.status === 'waiting')
+      const hasInProgress = queue.some(token => token.status === 'in-progress')
+      if (!hasWaiting && !hasInProgress) {
         dispatch(toggleSimulation())
       }
     }
-  }, [queue, simulationRunning, dispatch])
+  }, [simulationRunning, queue, dispatch])
 
   // Update wait times every minute
   useEffect(() => {
@@ -65,26 +84,35 @@ const QueueControlPanel = () => {
     return () => clearInterval(waitTimeInterval)
   }, [dispatch])
 
-  const currentTokenData = queue.find(token => token.tokenId === currentToken)
-  const skippedTokens = queue.filter(token => token.status === 'skipped')
+  // Computed values to prevent recalculation on every render
+  const currentTokenData = useMemo(() =>
+    queue.find(token => token.tokenId === currentToken),
+    [queue, currentToken]
+  )
 
-  const handleAdvance = () => {
+  const skippedTokens = useMemo(() =>
+    queue.filter(token => token.status === 'skipped'),
+    [queue]
+  )
+
+  // Handlers to prevent unnecessary function recreation
+  const handleAdvance = useCallback(() => {
     dispatch(advanceQueue())
-  }
+  }, [dispatch])
 
-  const handleSkip = () => {
+  const handleSkip = useCallback(() => {
     if (currentToken) {
       dispatch(skipToken(currentToken))
     }
-  }
+  }, [dispatch, currentToken])
 
-  const handleRequeue = (tokenId: number) => {
+  const handleRequeue = useCallback((tokenId: number) => {
     dispatch(requeueToken(tokenId))
-  }
+  }, [dispatch])
 
-  const toggleSimulationHandler = () => {
+  const toggleSimulationHandler = useCallback(() => {
     dispatch(toggleSimulation())
-  }
+  }, [dispatch])
 
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
@@ -100,8 +128,6 @@ const QueueControlPanel = () => {
           <Button
             onClick={toggleSimulationHandler}
             variant={simulationRunning ? 'destructive' : 'default'}
-            className="flex items-center gap-2"
-            customColor={!simulationRunning && user?.role === 'receptionist' ? 'bg-purple-600 hover:bg-purple-700 text-white hover:shadow-lg transform hover:scale-105 focus:ring-purple-500' : undefined}
           >
             {simulationRunning ? (
               <>

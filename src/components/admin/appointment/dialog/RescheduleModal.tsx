@@ -1,5 +1,6 @@
 import { useEffect, useCallback, useMemo } from 'react';
 import { useForm, Controller } from 'react-hook-form';
+import type { RootState } from "@/app/store";
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Calendar, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
@@ -19,10 +20,8 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
   const dispatch = useAppDispatch();
 
   //  Redux selectors
-  const { selectedAppointment, appointments, doctors, availableSlots, loading } = useAppSelector(
-    (state) => state.appointments
-  );
-
+  const { selectedAppointment, appointments, availableSlots, loading } = useAppSelector((state: RootState) => state.appointments);
+  const { localDoctors } = useAppSelector((state: RootState) => state.doctors)
   // Form control
   const {
     control,
@@ -117,7 +116,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
   }, [watch, selectedAppointment?.date, selectedAppointment?.slot]);
 
   // Find the doctor for the selected appointment
-  const doctor = useMemo(() => doctors.find(d => d.id === selectedAppointment?.doctorId), [doctors, selectedAppointment?.doctorId]);
+  const doctor = useMemo(() => localDoctors.find(d => d.id === selectedAppointment?.doctorId), [localDoctors, selectedAppointment?.doctorId]);
 
   // Generate time slot options
   const timeSlotOptions = useMemo(() => {

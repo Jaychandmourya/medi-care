@@ -1,18 +1,33 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
-import { useAppDispatch, useAppSelector } from "@/app/hooks"
-import { getAllPatients, deletePatient } from "@/features/patient/patientThunk";
-import type { RootState } from "@/app/store";
-import AddPatientDialog from "./AddEditPatientDialog";
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react";
+import toast from "react-hot-toast";
+
+// Import icons file
+import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+
+// Import UI components
 import DeleteDialog from "@/components/ui/dialog/DeleteDialog";
-import PatientDetailsDialog from "./PatientDetailsDialog";
 import { Button } from "@/components/ui/Button";
 import { Label } from "@/components/ui/Label";
 import Input from "@/components/ui/Input";
-import { Plus, Search, Filter, Phone, Edit, Trash2, ChevronLeft, ChevronRight, MoreVertical, Eye } from "lucide-react";
 import DatePicker from "@/components/ui/DatePicker";
-import toast from "react-hot-toast";
+import ThreeDotMenu from "@/components/ui/ThreeDotMenu";
+
+// Import Types files
+import type { RootState } from "@/app/store";
+import type { Patient } from '@/types/patients/patientType'
+
+// Import utils file
 import { ROLE_THEME } from "@/utils/theme";
-import { type PatientFormData } from "@/lib/patientValidation";
+
+// Import dispatch and selector for redux
+import { useAppDispatch, useAppSelector } from "@/app/hooks"
+
+// Import Thunk file for redux
+import { getAllPatients, deletePatient } from "@/features/patient/patientThunk";
+
+// Lazy loaded components
+const AddPatientDialog = lazy(() => import('@/components/admin/patient/dialog/AddEditPatientDialog'));
+const PatientDetailsDialog = lazy(() => import('@/components/admin/patient/dialog/PatientDetailsDialog'));
 
 export default function PatientList() {
   // Redux dispatch and selector
@@ -27,30 +42,9 @@ export default function PatientList() {
   const [isOpenDialog, setIsOpenDialog] = useState<boolean>(false);
   const [isOpenDelete, setIsOpenDelete] = useState<boolean>(false);
   const [isOpenViewDialog, setIsOpenViewDialog] = useState<boolean>(false);
-  const [selectedPatient, setSelectedPatient] = useState<{
-    id?: string;
-    name: string;
-    phone: string;
-    gender: "Male" | "Female" | "Other" | string;
-    bloodGroup: "A+" | "A-" | "B+" | "B-" | "AB+" | "AB-" | "O+" | "O-" | string;
-    dob: string;
-    patientId?: string;
-    email?: string;
-    address?: string;
-    allergies?: string;
-    conditions?: string;
-    surgeries?: string;
-    medications?: string;
-    contactName?: string;
-    emergencyPhone?: string;
-    relationship?: string;
-    photo?: string;
-    createdAt?: string;
-    updatedAt?: string;
-  } | null>(null);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [search, setSearch] = useState<string>("");
   const [page, setPage] = useState<number>(1);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
 
   // Filter states
   const [genderFilter, setGenderFilter] = useState<string>("");
@@ -114,7 +108,7 @@ export default function PatientList() {
     });
   }, [patients, search, genderFilter, bloodGroupFilter, ageRange, registrationDateRange, calculateAge]);
 
-  const perPage = 5;
+  const perPage = 10;
 
   // Pagination Filter
   const paginated = useMemo(() => {
@@ -122,36 +116,29 @@ export default function PatientList() {
   }, [filtered, page]);
 
   //  Edit and open edit patients dialog
-  const handleEdit = useCallback((patient: typeof selectedPatient) => {
+  const handleEdit = useCallback((patient: Patient) => {
     if (patient) {
       setSelectedPatient(patient);
       setIsOpenDialog(true);
-      setActiveDropdown(null);
     }
   }, []);
 
   // Open delete confirmation dialog
-  const handleDelete = useCallback((patient: typeof selectedPatient) => {
+  const handleDelete = useCallback((patient: Patient) => {
     if (patient) {
       setSelectedPatient(patient);
       setIsOpenDelete(true);
-      setActiveDropdown(null);
     }
   }, []);
 
   // Open View detail Dialog
-  const handleView = useCallback((patient: typeof selectedPatient) => {
+  const handleView = useCallback((patient: Patient) => {
     if (patient) {
       setSelectedPatient(patient);
       setIsOpenViewDialog(true);
-      setActiveDropdown(null);
     }
   }, []);
 
-  //  Toggle open filter section
-  const toggleDropdown = useCallback((patientId: string) => {
-    setActiveDropdown(activeDropdown === patientId ? null : patientId);
-  }, [activeDropdown]);
 
   // Confirmation delete patient data
   const confirmDelete = useCallback(() => {
@@ -283,7 +270,7 @@ export default function PatientList() {
 
               {/* Age Range Filter */}
               <div>
-                <Label>Age Range</Label>
+                <Label className="mb-1.5">Age Range</Label>
                 <div className="flex gap-2">
                   <Input
                     type="number"
@@ -304,7 +291,7 @@ export default function PatientList() {
 
               {/* Registration Date Range Filter */}
               <div>
-                <Label>Registration Date</Label>
+                <Label className="mb-1.5">Registration Date</Label>
                 <div className="flex gap-2">
                   <DatePicker
                     value={registrationDateRange.start}
@@ -325,119 +312,118 @@ export default function PatientList() {
         </div>
 
         {/* Responsive Table */}
-        <div className="bg-white rounded-2xl shadow-lg overflow-hidden bg-opacity-95">
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[1000px]">
-              <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
-                <tr>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Patient ID</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Name</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Phone</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Gender</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Blood Group</th>
-                  <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">Age</th>
-                  <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">Actions</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-100">
-                {paginated.map((p) => (
-                  <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm font-mono text-blue-600 font-semibold">{p.patientId}</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
-                          {p.photo ? (
-                            <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
-                          ) : (
-                            <span>{p.name.charAt(0).toUpperCase()}</span>
-                          )}
-                        </div>
-                        <div className="ml-3">
-                          <div className="text-sm font-semibold text-gray-900">{p.name}</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="flex items-center text-sm text-gray-700">
-                        <Phone className="w-4 h-4 mr-2 text-gray-400" />
-                        {p.phone}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                        {p.gender}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="px-3 py-1 inline-flex text-xs leading-5 font-semibold rounded-full bg-red-100 text-red-800">
-                        {p.bloodGroup}
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="text-sm text-gray-700">{calculateAge(p.dob)} years</span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-center">
-                      <div className="relative">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleDropdown(p.id)}
-                          className="text-gray-600 hover:text-gray-800 p-2"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-
-                        {activeDropdown === p.id && (
-                          <>
-                            {/* Backdrop to close dropdown when clicking outside */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setActiveDropdown(null)}
-                            />
-                            {/* Dropdown menu */}
-                            <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-20 animate-in slide-in-from-right-2 duration-200">
-                              <div className="py-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleView(p)}
-                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
-                                >
-                                  <Eye className="w-4 h-4 mr-3 text-gray-400" />
-                                  View Details
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(p)}
-                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
-                                >
-                                  <Edit className="w-4 h-4 mr-3 text-blue-400" />
-                                  Edit Patient
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(p)}
-                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mx-1"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-3 text-red-400" />
-                                  Delete Patient
-                                </Button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {filtered.length === 0 ? (
+          <div className="bg-white rounded-2xl shadow-lg p-12 backdrop-blur-sm bg-opacity-95 text-center">
+            <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
+              <Search className="w-8 h-8 text-gray-400" />
+            </div>
+            <h3 className="text-xl font-semibold text-gray-900 mb-2">
+              {search ? 'No patients found' : 'No patients in system'}
+            </h3>
+            <p className="text-gray-600">
+              {search
+                ? 'Try adjusting your search terms or filters'
+                : 'Add patients to get started'
+              }
+            </p>
           </div>
-        </div>
+        ) : (
+          <div className="bg-white rounded-2xl shadow-lg overflow-hidden bg-opacity-95">
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1000px]">
+                <thead className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-gray-200">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Patient
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Phone
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Gender
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Blood Group
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Age
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
+                      Actions
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-100">
+                  {paginated.map((p) => (
+                    p.id && (
+                    <tr key={p.id} className="hover:bg-gray-50 transition-colors duration-150">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
+                            {p.photo ? (
+                              <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <span>{p.name.charAt(0).toUpperCase()}</span>
+                            )}
+                          </div>
+                          <div className="ml-3">
+                            <div className="text-sm font-semibold text-gray-900">
+                              {p.name}
+                            </div>
+                            <div className="text-xs text-gray-500 font-mono">
+                              {p.patientId}
+                            </div>
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{p.phone}</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {p.gender}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                          {p.bloodGroup}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-700">{calculateAge(p.dob)} years</div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <ThreeDotMenu
+                          items={[
+                            {
+                              label: 'View',
+                              onClick: () => handleView(p),
+                              icon: <Eye className="w-4 h-4" />,
+                              className: 'text-blue-600 hover:text-blue-900'
+                            },
+                            {
+                              label: 'Edit',
+                              onClick: () => handleEdit(p),
+                              icon: <Edit className="w-4 h-4" />,
+                              className: 'text-green-600 hover:text-green-900'
+                            },
+                            {
+                              label: 'Delete',
+                              onClick: () => handleDelete(p),
+                              icon: <Trash2 className="w-4 h-4" />,
+                              className: 'text-red-600 hover:text-red-900'
+                            }
+                          ]}
+                        />
+                      </td>
+                    </tr>
+                    )
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Pagination */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
@@ -472,15 +458,17 @@ export default function PatientList() {
         </div>
 
         {/* Add Patient Dialog */}
-        <AddPatientDialog
-          isOpen={isOpenDialog}
-          onClose={() => {
-            setIsOpenDialog(false);
-            setSelectedPatient(null);
-          }}
-          editData={selectedPatient as unknown as Partial<PatientFormData> || undefined}
-          titleClass={themeColors.text}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <AddPatientDialog
+            isOpen={isOpenDialog}
+            onClose={() => {
+              setIsOpenDialog(false);
+              setSelectedPatient(null);
+            }}
+            editData={selectedPatient as unknown as Partial<Patient> || undefined}
+            titleClass={themeColors.text}
+          />
+        </Suspense>
 
         {/* Delete Confirmation Dialog */}
         <DeleteDialog
@@ -496,14 +484,16 @@ export default function PatientList() {
         />
 
         {/* Patients View Dialog */}
-        <PatientDetailsDialog
-          isOpen={isOpenViewDialog}
-          onClose={() => setIsOpenViewDialog(false)}
-          selectedPatient={selectedPatient as unknown as any}
-          calculateAge={calculateAge}
-          titleClass={themeColors.text}
-          headerClass={themeColors.header}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <PatientDetailsDialog
+            isOpen={isOpenViewDialog}
+            onClose={() => { setIsOpenViewDialog(false); setSelectedPatient(null) }}
+            selectedPatient={selectedPatient}
+            calculateAge={calculateAge}
+            titleClass={themeColors.text}
+            headerClass={themeColors.header}
+          />
+        </Suspense>
       </div>
     </div>
   );

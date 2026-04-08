@@ -1,8 +1,9 @@
-import { type LocalDoctor } from '../features/doctor/doctorSlice'
-import { db, type Doctor } from '../features/db/dexie'
 
-// Re-export LocalDoctor for use in other modules
-export type { LocalDoctor } from '../features/doctor/doctorSlice'
+import { db } from '../features/db/dexie'
+
+// import types file
+import type { LocalDoctor, Doctor } from '@/types/doctors/doctorType'
+
 
 // Database operations using MediCareDB
 export const doctorDBOperations = {
@@ -12,6 +13,7 @@ export const doctorDBOperations = {
     return doctors.map(doctor => ({
       id: doctor.id,
       npi: doctor.id, // Using doctor ID as NPI for compatibility
+      name: doctor.name,
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       email: doctor.email,
@@ -19,7 +21,7 @@ export const doctorDBOperations = {
       department: doctor.department || 'General Medicine',
       city: doctor.city,
       state: doctor.state,
-      country: doctor.country, // Map country to county for compatibility
+      country: doctor.country, // Map country to country for compatibility
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       contact: doctor.contact,
       postalCode: doctor.postalCode || '',
@@ -68,7 +70,7 @@ export const doctorDBOperations = {
     }
     if (updates.city !== undefined) updateData.city = updates.city
     if (updates.state !== undefined) updateData.state = updates.state
-    if (updates.county !== undefined) updateData.country = updates.county
+    if (updates.country !== undefined) updateData.country = updates.country
     if (updates.contact !== undefined) updateData.contact = updates.contact
     if(updates.email !== undefined) updateData.email = updates.email
     return await db.doctors.update(id, updateData)
@@ -127,7 +129,7 @@ export const doctorDBOperations = {
       city: doctor.city,
       email: doctor.email,
       state: doctor.state,
-      county: doctor.country,
+      country: doctor.country,
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,
@@ -136,6 +138,17 @@ export const doctorDBOperations = {
       gender: undefined,
       addedAt: doctor.createdAt
     }
+  },
+
+  // Check if doctor exists by first and last name
+  doctorExists: async (firstName: string, lastName: string): Promise<boolean> => {
+    const allDoctors = await db.doctors.toArray()
+    return allDoctors.some(doctor => {
+      const doctorFirstName = doctor.name.split(' ')[0] || ''
+      const doctorLastName = doctor.name.split(' ').slice(1).join(' ') || ''
+      return doctorFirstName.toLowerCase() === firstName.toLowerCase() &&
+             doctorLastName.toLowerCase() === lastName.toLowerCase()
+    })
   },
 
   // Search local doctors
@@ -160,7 +173,7 @@ export const doctorDBOperations = {
       city: doctor.city,
       state: doctor.state,
       email: doctor.email,
-      county: doctor.country,
+      country: doctor.country,
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,

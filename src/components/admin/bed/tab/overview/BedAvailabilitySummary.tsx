@@ -1,5 +1,5 @@
 import React from 'react'
-import type { Bed } from '@/features/bed/bedSlice'
+import type{ Bed } from '@/types/bed/bedType'
 import { BedDouble, User, Clock, Wrench, BarChart3 } from 'lucide-react'
 
 interface BedAvailabilitySummaryProps {
@@ -11,6 +11,7 @@ const BedAvailabilitySummary: React.FC<BedAvailabilitySummaryProps> = ({
   beds,
   selectedWard
 }) => {
+
   const currentWardBeds = beds.filter(bed => bed.ward === selectedWard)
 
   const statusCounts = {
@@ -63,6 +64,7 @@ const BedAvailabilitySummary: React.FC<BedAvailabilitySummaryProps> = ({
           </div>
         </div>
 
+        {/* Summary Cards */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
           {summaryItems.map((item) => {
             const Icon = item.icon
@@ -86,6 +88,7 @@ const BedAvailabilitySummary: React.FC<BedAvailabilitySummaryProps> = ({
           })}
         </div>
 
+        {/* Total Beds */}
         <div className="mt-4 pt-3 border-t">
           <div className="flex items-center gap-4 text-base">
             <span className="text-gray-700 ">Total Beds in Ward:</span>

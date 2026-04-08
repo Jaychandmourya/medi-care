@@ -1,32 +1,48 @@
 import { useState, useMemo, useCallback, useEffect } from "react";
+import toast from "react-hot-toast"
+
+// Import UI components
+import { Button } from "@/components/ui/Button";
+
+// Import form, validation and zod files
 import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { patientSchema, type PatientFormData, stepSchemas } from "@/lib/patientValidation";
-import { useAppDispatch, useAppSelector } from "../../../app/hooks"
+
+// Import validation schemas files
+import { patientSchema, stepSchemas } from "@/validation-schema/patientValidation";
+
+// Import Types file
+import type { Patient } from "@/types/patients/patientType";
+
+// Import utils file
+import { getRoleColors } from "@/utils/roleColors";
+
+// Import dispatch and selector for redux
+import { useAppDispatch, useAppSelector } from "@/app/hooks"
+
+// Import Thunk file for redux
 import { addPatient, updatePatient } from "@/features/patient/patientThunk"
-import toast from "react-hot-toast"
-import { Button } from "@/components/ui/Button";
-import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+
+// Import components
 import StepPersonal from "./step-components/StepPersonal";
 import StepMedical from "./step-components/StepMedical";
 import StepEmergency from "./step-components/StepEmergency";
 import StepReview from "./step-components/StepReview";
-import { getRoleColors } from "@/utils/roleColors";
 
-export default function PatientFormWizard({ defaultData, onClose, onSafeCloseReady }: {
-  defaultData?: Partial<PatientFormData>;
+export default function PatientFormWizard({ defaultData, onClose, onSafeCloseReady, openCloseConfirmation }: {
+  defaultData?: Partial<Patient>;
   onClose: () => void;
   onSafeCloseReady: (handleSafeClose: () => void) => void;
+  openCloseConfirmation: () => void;
 }) {
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [showCloseConfirmation, setShowCloseConfirmation] = useState(false);
   const dispatch = useAppDispatch();
   const userRole = useAppSelector((state) => state.auth.user?.role);
   const roleColors = getRoleColors(userRole || 'admin');
 
-  const methods = useForm<PatientFormData>({
+  const methods = useForm<Patient>({
     resolver: zodResolver(patientSchema),
     defaultValues: defaultData || {
       name: "",
@@ -58,7 +74,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   const hasStepErrors = () => {
     const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
     const currentStepFields = Object.keys(currentStepSchema?.shape || {});
-    return currentStepFields.some(field => errors[field as keyof PatientFormData]);
+    return currentStepFields.some(field => errors[field as keyof Patient]);
   };
 
   // Check if there are any unsaved changes
@@ -70,22 +86,11 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   // Handle safe close with confirmation
   const handleSafeClose = useCallback(() => {
     if (step > 1 && checkUnsavedChanges()) {
-      setShowCloseConfirmation(true);
+      openCloseConfirmation()
     } else {
       onClose();
     }
   }, [step, checkUnsavedChanges, onClose]);
-
-  //  Handle Confirm Close dialog
-  const handleConfirmClose = useCallback(() => {
-    setShowCloseConfirmation(false);
-    onClose();
-  }, [onClose]);
-
-  // Handle close confirm close dialog
-  const handleCancelClose = useCallback(() => {
-    setShowCloseConfirmation(false);
-  }, []);
 
   // Pass the safe close handler to parent
   useEffect(() => {
@@ -105,7 +110,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
     const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
     const fieldsToValidate = Object.keys(currentStepSchema?.shape || {});
 
-    const valid = await trigger(fieldsToValidate as (keyof PatientFormData)[]);
+    const valid = await trigger(fieldsToValidate as (keyof Patient)[]);
 
     if (!valid) {
       return;
@@ -119,7 +124,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   const handleBack = useCallback(() => setStep(prev => prev - 1), []);
 
   //  Submit all data in database
-  const onSubmit = useCallback(async (data: PatientFormData) => {
+  const onSubmit = useCallback(async (data: Patient) => {
     setIsSubmitting(true);
     // Show loading toast
     const loadingToast = toast.loading(data.id ? 'Updating patient...' : 'Adding patient...');
@@ -245,18 +250,6 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
         )}
       </div>
       </form>
-
-      {/* Close Confirmation Dialog */}
-      <ConfirmationDialog
-        isOpen={showCloseConfirmation}
-        title="Unsaved Changes"
-        message="You have unsaved changes. Are you sure you want to close? All entered data will be lost."
-        confirmText="Close"
-        cancelText="Cancel"
-        type="warning"
-        onConfirm={handleConfirmClose}
-        onCancel={handleCancelClose}
-      />
     </FormProvider>
   );
 }

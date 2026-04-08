@@ -12,7 +12,9 @@ import {
   type Medicine
 } from '@/features/prescription/prescriptionSlice'
 import { getAllPatients } from '@/features/patient/patientThunk'
+import { fetchAppointments } from '@/features/appointment/appointmentThunk'
 import type { AppDispatch, RootState } from '@/app/store'
+import type { Appointment } from '@/features/db/dexie'
 import AddMedicineDialog from './dialog/AddMedicineDialog'
 import Input from '@/components/ui/Input'
 import DatePicker from '@/components/ui/DatePicker'
@@ -43,6 +45,8 @@ const PrescriptionBuilder = () => {
   const dispatch = useDispatch<AppDispatch>()
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
   const patients = useSelector((state: RootState) => state.patients.list)
+  const appointments = useSelector((state: RootState) => state.appointments.appointments)
+  const { user } = useSelector((state: RootState) => state.auth)
 
   const [showMedicineForm, setShowMedicineForm] = useState(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
@@ -55,6 +59,11 @@ const PrescriptionBuilder = () => {
 
   useEffect(() => {
     dispatch(getAllPatients())
+    // Fetch appointments for the current month
+    const now = new Date()
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+    const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    dispatch(fetchAppointments({ startDate: startOfMonth, endDate: endOfMonth }))
   }, [dispatch])
 
   const {
@@ -75,9 +84,45 @@ const PrescriptionBuilder = () => {
     }
   })
 
+  // Get current doctor's ID from localStorage
+  const getCurrentDoctorId = useCallback(() => {
+    if (user?.role === 'doctor') {
+      const doctorInfo = localStorage.getItem('doctorInfo')
+      if (doctorInfo) {
+        const info = JSON.parse(doctorInfo)
+        return info.doctorId
+      }
+    }
+    return null
+  }, [user])
+
   const activePatients = useMemo(() => {
+    // Admin role: show all active patients
+    if (user?.role === 'admin') {
+      return patients.filter(p => p.isActive)
+    }
+
+    // Doctor role: show only patients who have appointments with the current doctor
+    if (user?.role === 'doctor') {
+      const currentDoctorId = getCurrentDoctorId()
+
+      // If no doctor ID found, show all active patients as fallback
+      if (!currentDoctorId) {
+        return patients.filter(p => p.isActive)
+      }
+
+      // Filter patients who have appointments with the current doctor
+      const doctorPatientIds = appointments
+        .filter((apt: Appointment) => apt.doctorId === currentDoctorId)
+        .map((apt: Appointment) => apt.patientId)
+      console.log('doctorPatientIds',patients.filter(p => p.isActive && doctorPatientIds.includes(p.id!)))
+
+      return patients.filter(p => p.isActive && doctorPatientIds.includes(p.id!))
+    }
+
+    // Default/other roles: show all active patients
     return patients.filter(p => p.isActive)
-  }, [patients])
+  }, [patients, appointments, getCurrentDoctorId, user])
 
   const watchedFollowUpDate = watch('followUpDate')
   const watchedPatientId = watch('patientId')
@@ -121,12 +166,16 @@ const PrescriptionBuilder = () => {
     // This ensures each saved prescription has a unique identifier
     const newPrescriptionId = generateId();
 
+    // Get current doctor's information
+    const currentDoctorId = getCurrentDoctorId();
+    const doctorName = user?.name || 'Dr. Smith';
+
     const prescription = {
       id: newPrescriptionId, // Always generate new ID for saved prescriptions
       ...data,
       patientName: patientName, // Dynamic patient name from selection
-      doctorId: 'doc1',
-      doctorName: 'Dr. Smith',
+      doctorId: currentDoctorId || 'doc1', // Use current doctor's ID or fallback
+      doctorName: doctorName, // Use current doctor's name
       medicines: existingMedicines, // Preserve existing medicines
       createdAt: currentPrescription?.createdAt || new Date().toISOString(), // Keep original creation date or use now
       updatedAt: new Date().toISOString(), // Add update timestamp
@@ -148,7 +197,7 @@ const PrescriptionBuilder = () => {
 
     // Reset the form
     resetPrescriptionForm()
-  }, [currentPrescription, patients, generateId, dispatch, resetPrescriptionForm])
+  }, [currentPrescription, patients, generateId, dispatch, resetPrescriptionForm, getCurrentDoctorId, user?.name])
 
 
   const handleEditMedicine = useCallback((medicine: Medicine) => {

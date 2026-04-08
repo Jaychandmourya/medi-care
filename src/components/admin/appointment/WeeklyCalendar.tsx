@@ -1,11 +1,10 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import { format, startOfWeek, addDays, addMinutes, parse, isBefore, isAfter } from 'date-fns';
 import { Clock } from 'lucide-react';
 import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
-import type { Appointment } from '@/features/db/dexie';
-import type{ WeeklyCalendarProps, RoleColors } from '@/types/appointment/appointmentType';
+import type{ WeeklyCalendarProps, Appointment } from '@/types/appointment/appointmentType';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
@@ -21,11 +20,19 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   roleColors
 }) => {
 
-  // State management
+  // Veritable
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
   const [hoveredSlot, setHoveredSlot] = useState<{ date: string; time: string; appointmentId: string } | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ date: string; time: string } | null>(null);
+
+  // Sync currentWeek with Redux selectedWeek
+  useEffect(() => {
+    if (onSetSelectedWeek) {
+      // Initialize Redux state with current week if not already set
+      onSetSelectedWeek(currentWeek.toISOString());
+    }
+  }, [currentWeek, onSetSelectedWeek]); // Include dependencies
 
   // Computed values
   const weekDays = useMemo(() =>
@@ -33,6 +40,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
     [currentWeek]
   );
 
+  // Methods
   // Event handlers
   const handleDragStart = useCallback((e: React.DragEvent, appointment: Appointment) => {
     setDraggedAppointment(appointment);
@@ -156,7 +164,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   }, [onSetSelectedWeek]);
 
   return (
-    <div className={`bg-white rounded-lg shadow-lg overflow-hidden ${roleColors ? roleColors.calendar : ''}`}>
+    <div className={`bg-white rounded-lg shadow-lg overflow-hidden relative transition-opacity duration-300 ${roleColors ? roleColors.calendar : ''}`}>
       {/* Calendar Header */}
       <CalendarHeader
         currentWeek={currentWeek}
@@ -177,7 +185,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
           {/* Time Slots */}
           <div className="max-h-150 overflow-y-auto">
             {timeSlots.map((time, timeIndex) => (
-              <div key={time} className={`grid grid-cols-8 border-b border-gray-200 ${
+              <div key={time} className={`grid grid-cols-8 border-b border-gray-200 transition-all duration-200 ${
                 timeIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'
               }`}>
                 {/* Time Column */}
@@ -219,12 +227,15 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
         </div>
       </div>
 
-      {/* Loading State */}
-      {loading && (
-        <div className="absolute inset-0 bg-white bg-opacity-75 flex items-center justify-center">
-          <div className="text-blue-600">Loading appointments...</div>
+      {/* Loading State - Improved with backdrop blur and smooth transition */}
+      <div className={`absolute inset-0 bg-white/90 backdrop-blur-sm flex items-center justify-center transition-opacity duration-300 ${
+        loading ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+      }`}>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto mb-3"></div>
+          <p className="text-gray-600 text-sm">Loading appointments...</p>
         </div>
-      )}
+      </div>
     </div>
   );
 });

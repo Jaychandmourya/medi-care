@@ -145,7 +145,7 @@ export default function DoctorViewModal({
                       {doctor.city && doctor.state && (
                         <>{doctor.city}, {doctor.state} {doctor.postalCode}<br /></>
                       )}
-                      {doctor.county && <>{doctor.county}</>}
+                      {doctor.country && <>{doctor.country}</>}
                     </p>
                   </div>
                 </div>

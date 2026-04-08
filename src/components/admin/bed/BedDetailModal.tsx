@@ -1,18 +1,33 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
-import type { Bed, BedStatus } from '@/features/bed/bedSlice'
+
+// Import icons file
 import { X, User, Calendar, Clock, FileText, Save, UserPlus, LogOut, Plus, ChevronDown } from 'lucide-react'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/Label'
 import Input from '@/components/ui/Input'
-import { useAppDispatch, useAppSelector } from '@/app/hooks'
-import { getAllPatients } from '@/features/patient/patientThunk'
+
+// Import Types files
 import type { RootState } from '@/app/store'
-import type { PatientFormData } from '@/lib/patientValidation'
-import AddPatientDialog from '@/components/admin/patient/AddEditPatientDialog'
+import type { PatientFormData } from '@/validation-schema/patientValidation'
+import type { Bed, BedStatus } from '@/types/bed/bedType'
+
+// Import form control, validation and zod
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 
+// Import dispatch and selector for redux
+import { useAppDispatch, useAppSelector } from '@/app/hooks'
+
+// Import Thunk file for redux
+import { getAllPatients } from '@/features/patient/patientThunk'
+
+// Lazy load AddPatientDialog
+const AddPatientDialog = React.lazy(() => import('@/components/admin/patient/dialog/AddEditPatientDialog'))
+
+// Interface
 interface BedDetailModalProps {
   bed: Bed | null
   onClose: () => void
@@ -21,6 +36,7 @@ interface BedDetailModalProps {
   onDischargePatient: (bedId: string) => void
 }
 
+// Static data
 const bedStatusOptions: { value: BedStatus; label: string; color: string }[] = [
   { value: 'available', label: 'Available', color: 'bg-green-100 text-green-800' },
   { value: 'occupied', label: 'Occupied', color: 'bg-red-100 text-red-800' },
@@ -53,14 +69,18 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   onAdmitPatient,
   onDischargePatient
 }) => {
+
+  // Dispatch and selector
   const dispatch = useAppDispatch()
   const patients = useAppSelector((state: RootState) => state.patients.list)
   const beds = useAppSelector((state: RootState) => state.beds.beds)
 
+  // State
   const [selectedPatient, setSelectedPatient] = useState<PatientFormData | null>(null)
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
   const [showAddPatientDialog, setShowAddPatientDialog] = useState(false)
 
+  // Form control
   const {
     register,
     handleSubmit,
@@ -76,10 +96,15 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
     },
     mode: 'onSubmit'
   })
-
   const watchedPatientSearch = watch('patientSearch')
   const watchedStatus = watch('status')
 
+  // Effect
+  useEffect(() => {
+    dispatch(getAllPatients())
+  }, [dispatch])
+
+  // Callbacks
   // Check if patient is already admitted to another bed
   const isPatientAlreadyAdmitted = useCallback((patientIdToCheck: string): Bed | null => {
     return beds.find(existingBed =>
@@ -89,11 +114,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
     ) || null
   }, [bed?.bedId, beds])
 
-  useEffect(() => {
-    dispatch(getAllPatients())
-  }, [dispatch])
-
-  // Check if patient is already admitted to another bed
+  // Filter patients based on search and availability
   const filteredPatients = useMemo(() => patients.filter(patient => {
     const isAlreadyAdmitted = beds.some(existingBed =>
       existingBed.patientId === (patient.patientId || patient.id) &&
@@ -133,6 +154,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
     [bed?.status]
   )
 
+  // Handle patient selection
   const handlePatientSelect = useCallback((patient: PatientFormData) => {
     setSelectedPatient(patient)
     setValue('patientSearch', patient.name || '')
@@ -149,6 +171,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
     onClose()
   }, [bed, selectedPatient, onUpdateStatus, onAdmitPatient, onClose])
 
+  // Handle patient admission
   const handleAdmitPatient = useCallback(() => {
     if (!selectedPatient || !bed) {
       return
@@ -307,8 +330,8 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
               icon={FileText}
             />
           </div>
-          {/* Patient Actions */}
-          {((bed?.status === 'available') && (watchedStatus === 'available' || watchedStatus === 'occupied')) && (
+            {/* Patient Actions */}
+          {((bed?.status === 'available') || (watchedStatus === 'available' || watchedStatus === 'occupied')) && (
               <div className="space-y-3">
               <div className='flex justify-between items-center'>
                 <Label className="block text-sm font-medium text-gray-700">
@@ -331,7 +354,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                         type="text"
                         placeholder="Search patient by name, ID, or phone..."
                         value={selectedPatient ? `${selectedPatient.name}` : watchedPatientSearch}
-                        onChange={(e: React.ChangeEvent<HTMLInputElement>) => handlePatientSearchChange(e.target.value)}
+                        onChange={(e) => handlePatientSearchChange(e.target.value)}
                         onFocus={() => setShowPatientDropdown(true)}
                         onClick={() => setShowPatientDropdown(true)}
                         error={errors.patientSearch}
@@ -428,7 +451,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                                             <span className="bg-red-100 text-red-700 px-2 py-1 rounded-full font-medium">{patient.bloodGroup}</span>
                                           </div>
                                           <div className="text-xs text-green-600 font-medium">
-                                            ✓ Available
+                                            Available
                                           </div>
                                         </div>
                                       </div>
@@ -478,7 +501,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                                               <span className="bg-gray-200 px-2 py-1 rounded-full">{patient.bloodGroup}</span>
                                             </div>
                                             <div className="text-xs text-red-600 font-medium">
-                                              × Occupied
+                                              Occupied
                                             </div>
                                           </div>
                                         </div>
@@ -563,10 +586,12 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
       </div>
 
       {/* Add Patient Dialog */}
-      <AddPatientDialog
-        isOpen={showAddPatientDialog}
-        onClose={() => setShowAddPatientDialog(false)}
-      />
+      <React.Suspense fallback={null}>
+        <AddPatientDialog
+          isOpen={showAddPatientDialog}
+          onClose={() => setShowAddPatientDialog(false)}
+        />
+      </React.Suspense>
     </div>
   )
 }

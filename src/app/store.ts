@@ -7,6 +7,8 @@ import bedReducer from "@/features/bed/bedSlice"
 import prescriptionReducer from "@/features/prescription/prescriptionSlice"
 import doctorReducer from "@/features/doctor/doctorSlice"
 import reportsReducer from "@/features/reports/reportsSlice"
+import doctorScheduleReducer from "@/features/doctorSchedule/doctorScheduleSlice"
+import vitalsReducer from "@/features/vital/VitalSlice"
 
 export const store = configureStore({
   reducer: {
@@ -18,6 +20,8 @@ export const store = configureStore({
     prescriptions: prescriptionReducer,
     doctors: doctorReducer,
     reports: reportsReducer,
+    doctorSchedule: doctorScheduleReducer,
+    vitals: vitalsReducer,
   },
 })
 

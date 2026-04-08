@@ -3,6 +3,7 @@ import type { RootState } from '@/app/store'
 import { BarChart3, Clock, Users, TrendingUp, Activity } from 'lucide-react'
 
 const QueueAnalytics = () => {
+
   const { queue, servedToday } = useSelector((state: RootState) => state.opd)
 
   // Calculate analytics

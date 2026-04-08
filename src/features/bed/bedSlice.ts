@@ -1,25 +1,19 @@
 import { createSlice, type PayloadAction } from '@reduxjs/toolkit'
-import { fetchBeds, fetchWards, updateBedStatus, admitPatient, dischargePatient } from './bedThunk'
+import {
+  fetchBeds,
+  fetchWards,
+  updateBedStatus,
+  admitPatient,
+  dischargePatient,
+  createBed,
+  updateBed,
+  deleteBed,
+  createWard,
+  updateWard,
+  deleteWard
+} from './bedThunk'
 
-export type BedStatus = 'available' | 'occupied' | 'reserved' | 'maintenance'
-
-export interface Bed {
-  bedId: string
-  ward: string
-  status: BedStatus
-  patientId?: string
-  patientName?: string
-  admittedAt?: string
-  notes?: string
-}
-
-export interface Ward {
-  wardId: string
-  name: string
-  totalBeds: number
-  floor: string
-}
-
+import type{ Bed, Ward, BedStatus } from '@/types/bed/bedType'
 interface BedState {
   beds: Bed[]
   wards: Ward[]
@@ -112,8 +106,51 @@ const bedSlice = createSlice({
         state.error = action.error.message || 'Failed to fetch beds'
       })
       // Fetch wards
+      .addCase(fetchWards.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
       .addCase(fetchWards.fulfilled, (state, action) => {
+        state.loading = false
         state.wards = action.payload
+      })
+      .addCase(fetchWards.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to fetch wards'
+      })
+      // Create bed
+      .addCase(createBed.fulfilled, (state, action) => {
+        state.beds.push(action.payload)
+      })
+      // Update bed
+      .addCase(updateBed.fulfilled, (state, action) => {
+        const bed = state.beds.find(b => b.bedId === action.payload.bedId)
+        if (bed) {
+          Object.assign(bed, action.payload)
+        }
+      })
+      // Delete bed
+      .addCase(deleteBed.fulfilled, (state, action) => {
+        state.beds = state.beds.filter(b => b.bedId !== action.payload)
+      })
+      // Create ward
+      .addCase(createWard.fulfilled, (state, action) => {
+        state.wards.push(action.payload)
+      })
+      // Update ward
+      .addCase(updateWard.fulfilled, (state, action) => {
+        const ward = state.wards.find(w => w.wardId === action.payload.wardId)
+        if (ward) {
+          Object.assign(ward, action.payload)
+        }
+      })
+      // Delete ward
+      .addCase(deleteWard.fulfilled, (state, action) => {
+        state.wards = state.wards.filter(w => w.wardId !== action.payload)
+        state.beds = state.beds.filter(b => b.ward !== action.payload)
+        if (state.selectedWard === action.payload) {
+          state.selectedWard = state.wards[0]?.wardId || ''
+        }
       })
       // Update bed status
       .addCase(updateBedStatus.fulfilled, (state, action) => {

@@ -15,7 +15,6 @@ interface AutocompleteDoctor {
   specialty?: string
   fullName: string
   gender: string
-  sex?: string
   address?: string
   address2?: string
   postalCode?: string

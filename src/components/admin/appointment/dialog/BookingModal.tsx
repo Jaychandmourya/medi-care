@@ -1,22 +1,38 @@
 import React from 'react';
 import { useEffect, useCallback, useMemo } from 'react';
-import { useForm, Controller } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
+
+// Import icons file
+import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
+
+// Import UI components
 import { Button } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import DatePicker from '@/components/ui/DatePicker';
 import { Label } from '@/components/ui/Label';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
-import { createAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
-import { fetchPatients } from '@/features/appointment/appointmentThunk';
-import { fetchDoctors } from '@/features/appointment/appointmentThunk';
-import { fetchDoctorSchedules } from '@/features/appointment/appointmentThunk';
-import type { Appointment, Doctor, Patient } from '@/features/db/dexie';
+
+// Import form controller, zod, and validation
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+
+// Import validation schema file
 import { bookingSchema } from '@/validation-schema/appointmentSchema'
-import type { RoleColors } from '@/types/appointment/appointmentType';
+
+// Import Types files
+import type { RootState } from "@/app/store";
+import type { Appointment, RoleColors } from '@/types/appointment/appointmentType';
+import type { LocalDoctor } from '@/types/doctors/doctorType'
+
+// Import dispatch and selector for redux
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+
+// Import Thunk file for redux
+import { createAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
+import { getAllPatients } from "@/features/patient/patientThunk";
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
+import { fetchDoctorSchedules } from '@/features/appointment/appointmentThunk';
+
 
 type BookingFormData = z.infer<typeof bookingSchema>;
 
@@ -25,12 +41,15 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
   closeBookingModel: () => void,
   roleColors?: RoleColors
 }) => {
+
   // Redux dispatch
   const dispatch = useAppDispatch();
+
   // Redux selectors
-  const { doctors, patients, availableSlots, loading, appointments } = useAppSelector(
-    (state) => state.appointments
-  );
+  const { availableSlots, loading, appointments } = useAppSelector((state: RootState) => state.appointments);
+  const patients = useAppSelector((state: RootState) => state.patients.list);
+  const { localDoctors } = useAppSelector((state: RootState) => state.doctors)
+
   // Control form
   const {
     control,
@@ -65,26 +84,22 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
     ? checkSlotConflict(watchedDoctorId, watchedDate, watchedSlot)
     : null;
 
-  // Debug available slots
-  useEffect(() => {
-    console.log('🔄 Available slots updated:', availableSlots);
-  }, [availableSlots]);
-
+  // Use effect hook
   // Call fetchPatients and fetchDoctors
   useEffect(() => {
-    dispatch(fetchPatients());
-    dispatch(fetchDoctors());
+    dispatch(getAllPatients());
+    dispatch(fetchLocalDoctors());
     dispatch(fetchDoctorSchedules());
   }, [dispatch]);
 
   useEffect(() => {
     if (watchedDoctorId && watchedDate) {
       const date = new Date(watchedDate);
-      console.log('🕐 BookingModal: Generating time slots for doctor:', watchedDoctorId, 'on date:', date);
       dispatch(generateTimeSlots({ doctorId: watchedDoctorId, date }));
     }
   }, [watchedDoctorId, watchedDate, dispatch]);
 
+  // Methods
    // Create new appointment with toast
   const onSubmit = useCallback((data: BookingFormData) => {
     toast.promise(
@@ -112,13 +127,13 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
 
   //  Fetch departments list
   const departments = useMemo(() => {
-    return [...new Set(doctors.map((doctor: Doctor) => doctor.department))];
-  }, [doctors]);
+    return [...new Set(localDoctors.map((doctor: LocalDoctor) => doctor.department))];
+  }, [localDoctors]);
 
   // Fetch data departments wise doctor list
   const getDoctorsByDepartment = useCallback((department: string) => {
-    return doctors.filter((doctor: Doctor) => doctor.department === department);
-  }, [doctors]);
+    return localDoctors.filter((doctor: LocalDoctor) => doctor.department === department);
+  }, [localDoctors]);
 
   // Get role-based header class
   const getHeaderClass = () => {
@@ -195,7 +210,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                 {...field}
               >
                 <option value="">Select a patient</option>
-                {patients.map((patient: Patient) => (
+                {patients.map((patient) => (
                   <option key={patient.id} value={patient.id} className='hover: cursor-pointer'>
                     {patient.name}
                   </option>
@@ -244,9 +259,9 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                   {...field}
                 >
                   <option value="">Select a doctor</option>
-                  {getDoctorsByDepartment(watchedDepartment).map((doctor: Doctor) => (
+                  {getDoctorsByDepartment(watchedDepartment).map((doctor: LocalDoctor) => (
                     <option key={doctor.id} value={doctor.id}>
-                      Dr. {doctor.name} - {doctor.specialization}
+                      Dr. {doctor.firstName} {doctor.lastName} - {doctor.specialty}
                     </option>
                   ))}
                 </Input>
