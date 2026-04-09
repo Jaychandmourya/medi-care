@@ -1,15 +1,27 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Mail, Building } from 'lucide-react'
-import { type AppDispatch, type RootState } from '@/app/store'
-import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor } from '@/features/doctor/doctorThunk'
-import { type LocalDoctor } from '@/features/doctor/doctorSlice'
-import DoctorEditForm from './DoctorEditForm'
-import DoctorViewModal from './DoctorViewModal'
-import { type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
-import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
-import { Button } from '@/components/ui/Button'
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
 import toast from 'react-hot-toast'
+
+// Import icons file
+import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Mail, Building } from 'lucide-react'
+
+// Import UI components
+import { Button } from '@/components/ui/Button'
+
+// Import Types files
+import { type AppDispatch, type RootState } from '@/app/store'
+import type { LocalDoctor } from '@/types/doctors/doctorType'
+import { type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
+
+// Import dispatch and selector for redux
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import Thunk file for redux
+import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor } from '@/features/doctor/doctorThunk'
+
+// Lazy loaded components
+const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorEditFormDialog'))
+const DoctorViewModal = lazy(() => import('@/components/doctor/dialog/DoctorViewModal'))
+const DeleteDialog = lazy(() => import('@/components/ui/dialog/DeleteDialog'))
 
 export default function InternalDoctorList() {
   const dispatch = useDispatch<AppDispatch>()
@@ -352,30 +364,37 @@ export default function InternalDoctorList() {
 
         {/* Edit Doctor Modal */}
         {editingDoctor && (
-          <DoctorEditForm
-            doctor={editingDoctor}
-            onCancel={handleCancelEdit}
-            onSave={handleSaveEdit}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <DoctorEditFormDialog
+              doctor={editingDoctor}
+              onCancel={handleCancelEdit}
+              onSave={handleSaveEdit}
+            />
+          </Suspense>
         )}
 
         {/* View Doctor Modal */}
         {viewingDoctor && (
-          <DoctorViewModal
-            doctor={viewingDoctor}
-            isOpen={!!viewingDoctor}
-            onClose={handleCloseViewModal}
-          />
+          <Suspense fallback={<div>Loading...</div>}>
+            <DoctorViewModal
+              doctor={viewingDoctor}
+              isOpen={!!viewingDoctor}
+              onClose={handleCloseViewModal}
+            />
+          </Suspense>
         )}
 
         {/* Delete Confirmation Dialog */}
-        <DeleteDialog
-          isOpen={deleteDialog.isOpen}
-          onClose={handleCloseDeleteDialog}
-          onConfirm={handleConfirmDelete}
-          title="Delete Doctor"
-          message={`Are you sure you want to delete ${deleteDialog.doctorName}? This action cannot be undone.`}
-        />
+        <Suspense fallback={<div>Loading...</div>}>
+          <DeleteDialog
+            isOpenDelete={deleteDialog.isOpen}
+            onClose={handleCloseDeleteDialog}
+            onConfirm={handleConfirmDelete}
+            deleteTitle="Delete Doctor"
+            description={`Are you sure you want to delete ${deleteDialog.doctorName}? This action cannot be undone.`}
+            itemName={deleteDialog.doctorName}
+          />
+        </Suspense>
       </div>
     </div>
   )

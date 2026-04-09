@@ -1,7 +1,7 @@
 import React from 'react';
 import { format } from 'date-fns';
 import { useAppSelector } from '@/app/hooks';
-import type { Appointment, Doctor } from '@/features/db/dexie';
+import type{ Appointment } from '@/types/appointment/appointmentType'
 
 interface DailyPrintViewProps {
   doctorId: string;

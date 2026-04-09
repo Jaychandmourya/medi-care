@@ -1,27 +1,49 @@
 import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
-import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/features/prescription/prescriptionSlice'
-import { getAllPatients } from '@/features/patient/patientThunk'
-import type { AppDispatch, RootState } from '@/app/store'
-import type { Prescription } from '@/features/prescription/prescriptionSlice'
-import type { Appointment } from '@/features/db/dexie'
-import Input from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
 import toast from 'react-hot-toast'
 
+// Import icons file
+import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
+
+// Import Types files
+import type { AppDispatch, RootState } from '@/app/store'
+import type { Appointment } from '@/features/db/dexie'
+import type { Prescription } from '@/types/prescription/prescriptionType'
+
+// Import UI components
+import Input from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+
+// Import dispatch and selector for redux
+import { useSelector, useDispatch } from 'react-redux'
+
+// Import Thunk file for redux
+import { getAllPatients } from '@/features/patient/patientThunk'
+
+// Import Slice file for redux
+import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/features/prescription/prescriptionSlice'
+
+// Import Dialog components
+import PrescriptionDetailsDialog from '@/components/prescription/dialog/PrescriptionDetailsDialog'
+import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+
 const PrescriptionHistory = () => {
+
+  // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
+
+  // Redux selector
   const { prescriptionHistory, historyLoading } = useSelector((state: RootState) => state.prescriptions)
   const { user } = useSelector((state: RootState) => state.auth)
   const appointments = useSelector((state: RootState) => state.appointments.appointments)
   const patients = useSelector((state: RootState) => state.patients.list)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [selectedPatient, setSelectedPatient] = useState('')
-  const [selectedStatus, setSelectedStatus] = useState('')
+
+  // State
+  const [showDetailsModal, setShowDetailsModal] = useState<boolean>(false)
+  const [showDeleteModal, setShowDeleteModal] = useState<boolean>(false)
+  const [searchTerm, setSearchTerm] = useState<string>('')
+  const [selectedPatient, setSelectedPatient] =  useState<string>('')
+  const [selectedStatus, setSelectedStatus] = useState<string>('')
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
-  const [showDetailsModal, setShowDetailsModal] = useState(false)
-  const [showDeleteModal, setShowDeleteModal] = useState(false)
   const [prescriptionToDelete, setPrescriptionToDelete] = useState<Prescription | null>(null)
 
   // Get current doctor's ID from localStorage
@@ -36,6 +58,7 @@ const PrescriptionHistory = () => {
     return null
   }, [user])
 
+  // Effect
   // Load prescription history and patients on component mount
   useEffect(() => {
     dispatch(loadPrescriptionHistory())
@@ -47,20 +70,15 @@ const PrescriptionHistory = () => {
     const currentDoctorId = getCurrentDoctorId()
 
     if (!currentDoctorId || user?.role !== 'doctor') {
-      // If not a doctor or no doctor ID, show all prescriptions
       return prescriptionHistory
     }
-
-    // Filter prescriptions created by the current doctor
     return prescriptionHistory.filter(p => p.doctorId === currentDoctorId)
   }, [prescriptionHistory, getCurrentDoctorId, user])
 
-  // Get unique patients from current doctor's appointments using patients table
   // This ensures both the patient dropdown and history show the same patient list
   const uniquePatients = useMemo(() => {
     const currentDoctorId = getCurrentDoctorId()
     if (!currentDoctorId || user?.role !== 'doctor') {
-      // If not a doctor or no doctor ID, show all patients from patients table
       return patients.map(patient => ({
         id: patient.patientId,
         name: patient.name
@@ -84,7 +102,7 @@ const PrescriptionHistory = () => {
           name: patient?.name || 'Unknown Patient'
         }
       })
-      .filter(patient => patient.name !== 'Unknown Patient') // Remove patients not found in database
+      .filter(patient => patient.name !== 'Unknown Patient')
   }, [patients, getCurrentDoctorId, user, appointments])
 
   // Filter and sort prescriptions
@@ -96,13 +114,10 @@ const PrescriptionHistory = () => {
                               prescription.doctorName.toLowerCase().includes(searchTerm.toLowerCase())
 
         const matchesPatient = !selectedPatient || prescription.patientId === selectedPatient
-        console.log('matchesPatient', prescription)
         const matchesStatus = !selectedStatus || prescription.status === selectedStatus
-
         return matchesSearch && matchesPatient && matchesStatus
       })
       .sort((a, b) => {
-        // Sort by date and time in descending order (most recent first)
         const dateA = new Date(a.createdAt).getTime()
         const dateB = new Date(b.createdAt).getTime()
         return dateB - dateA
@@ -111,7 +126,6 @@ const PrescriptionHistory = () => {
 
   // Group prescriptions by date (sorted by date descending)
   const sortedGroupedPrescriptions = useMemo(() => {
-    // Group prescriptions by date
     const groupedPrescriptions = filteredPrescriptions.reduce((groups, prescription) => {
       const date = new Date(prescription.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
@@ -474,219 +488,26 @@ const PrescriptionHistory = () => {
       </div>
 
       {/* Prescription Details Modal */}
-      {showDetailsModal && selectedPrescription && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200">
-              <h2 className="text-xl font-semibold text-gray-900">Prescription Details</h2>
-              <Button
-                variant="ghost"
-                onClick={() => {
-                  setShowDetailsModal(false)
-                  setSelectedPrescription(null)
-                }}
-                className="text-gray-400 hover:text-gray-600 text-2xl leading-none p-0 h-auto"
-              >
-                &times;
-              </Button>
-            </div>
-
-            <div className="p-6">
-              {/* Prescription Header */}
-              <div className="text-center mb-6">
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">MEDICAL PRESCRIPTION</h1>
-                <p className="text-gray-600">Dr. {selectedPrescription.doctorName} - General Practitioner</p>
-                <div className="flex justify-center gap-6 mt-4 text-sm text-gray-500">
-                  <span>ID: {selectedPrescription.id}</span>
-                  <span>Status: <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(selectedPrescription.status)}`}>{selectedPrescription.status}</span></span>
-                </div>
-              </div>
-
-              {/* Patient Information */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Patient Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Name:</strong> {selectedPrescription.patientName}</p>
-                    <p><strong>Patient ID:</strong> {selectedPrescription.patientId}</p>
-                    <p><strong>Date:</strong> {new Date(selectedPrescription.createdAt).toLocaleDateString()}</p>
-                    {selectedPrescription.followUpDate && (
-                      <p><strong>Follow-up:</strong> {new Date(selectedPrescription.followUpDate).toLocaleDateString()}</p>
-                    )}
-                  </div>
-                </div>
-
-                <div className="bg-gray-50 rounded-lg p-4">
-                  <h3 className="font-semibold text-gray-900 mb-3">Doctor Information</h3>
-                  <div className="space-y-2 text-sm">
-                    <p><strong>Name:</strong> {selectedPrescription.doctorName}</p>
-                    <p><strong>ID:</strong> {selectedPrescription.doctorId}</p>
-                    <p><strong>License:</strong> MD123456</p>
-                    <p><strong>Phone:</strong> (555) 123-4567</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Diagnosis */}
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Diagnosis</h3>
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                  <p className="text-gray-800">{selectedPrescription.diagnosis}</p>
-                </div>
-              </div>
-
-              {/* Medicines */}
-              <div className="mb-6">
-                <h3 className="font-semibold text-gray-900 mb-3">Medicines ({selectedPrescription.medicines.length})</h3>
-                <div className="space-y-3">
-                  {selectedPrescription.medicines.map((medicine, index) => (
-                    <div key={medicine.id} className="border-l-4 border-blue-500 bg-gray-50 rounded-lg p-4">
-                      <div className="flex justify-between items-start">
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">{index + 1}. {medicine.name}</h4>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="font-medium text-gray-600">Dosage:</span>
-                              <p className="text-gray-800">{medicine.dosage}</p>
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">Frequency:</span>
-                              <p className="text-gray-800">{medicine.frequency}</p>
-                            </div>
-                            <div>
-                              <span className="font-medium text-gray-600">Duration:</span>
-                              <p className="text-gray-800">{medicine.duration}</p>
-                            </div>
-                          </div>
-                          {medicine.instructions && (
-                            <div className="mt-3 pt-3 border-t border-gray-200">
-                              <span className="font-medium text-gray-600 text-sm">Instructions:</span>
-                              <p className="text-gray-800 text-sm mt-1">{medicine.instructions}</p>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* General Notes */}
-              {selectedPrescription.generalNotes && (
-                <div className="mb-6">
-                  <h3 className="font-semibold text-gray-900 mb-3">General Notes</h3>
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-                    <p className="text-gray-800 text-sm">{selectedPrescription.generalNotes}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Footer */}
-              <div className="border-t border-gray-200 pt-4">
-                <div className="flex justify-between items-center text-sm text-gray-500">
-                  <span>Created: {new Date(selectedPrescription.createdAt).toLocaleString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit',
-                    second: '2-digit',
-                    hour12: true,
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric'
-                  })}</span>
-                  {selectedPrescription.updatedAt && (
-                    <span>Updated: {new Date(selectedPrescription.updatedAt).toLocaleString('en-US', {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                      second: '2-digit',
-                      hour12: true,
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric'
-                    })}</span>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3 justify-end p-6 border-t border-gray-200">
-              <Button
-                onClick={() => handleDownloadPrescription(selectedPrescription)}
-                className="flex items-center gap-2"
-              >
-                <Download className="h-4 w-4" />
-                Download PDF
-              </Button>
-              <Button
-                variant="outline"
-                onClick={() => {
-                  setShowDetailsModal(false)
-                  setSelectedPrescription(null)
-                }}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <PrescriptionDetailsDialog
+        prescription={selectedPrescription}
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false)
+          setSelectedPrescription(null)
+        }}
+        onDownload={handleDownloadPrescription}
+        getStatusColor={getStatusColor}
+      />
 
       {/* Delete Confirmation Modal */}
-      {showDeleteModal && prescriptionToDelete && (
-        <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md">
-            <div className="text-center mb-4">
-              <div className="mx-auto w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mb-4">
-                <Trash2 className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Prescription</h3>
-              <p className="text-gray-600 mb-6">
-                Are you sure you want to delete this prescription for <strong>{prescriptionToDelete?.patientName || 'Unknown Patient'}</strong>?
-                <br />
-                <span className="text-sm text-gray-500">This action cannot be undone.</span>
-              </p>
-            </div>
-
-            <div className="bg-gray-50 rounded-lg p-4 mb-6">
-              <div className="space-y-3 text-sm">
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Patient:</span>
-                  <span className="font-medium">{prescriptionToDelete?.patientName || 'Unknown'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Date:</span>
-                  <span className="font-medium">{prescriptionToDelete?.createdAt ? new Date(prescriptionToDelete.createdAt).toLocaleDateString() : 'Unknown'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Diagnosis:</span>
-                  <span className="font-medium truncate max-w-xs">{prescriptionToDelete?.diagnosis || 'Not specified'}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-600">Medicines:</span>
-                  <span className="font-medium">{prescriptionToDelete?.medicines?.length || 0} items</span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex gap-3 justify-end">
-              <Button
-                variant="outline"
-                onClick={cancelDelete}
-              >
-                Cancel
-              </Button>
-              <Button
-                variant="destructive"
-                onClick={confirmDeletePrescription}
-                className="flex items-center gap-2"
-              >
-                <Trash2 className="h-4 w-4" />
-                Delete Prescription
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
+      <DeleteDialog
+        isOpenDelete={showDeleteModal}
+        onClose={cancelDelete}
+        onConfirm={confirmDeletePrescription}
+        deleteTitle="Delete Prescription"
+        itemName={prescriptionToDelete?.patientName || 'Unknown Patient'}
+        description={`Are you sure you want to delete this prescription for ${prescriptionToDelete?.patientName || 'Unknown Patient'}? This action cannot be undone.`}
+      />
     </div>
   )
 }

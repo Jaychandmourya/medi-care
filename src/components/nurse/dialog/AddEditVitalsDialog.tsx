@@ -1,22 +1,27 @@
-import { useState } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { X } from 'lucide-react';
-import type { Vitals, VitalsFormData, Patient } from '../../types/vitals/vitalsType';
-import { VitalsService } from '../../services/vitalsService';
-import { Button } from '../../components/ui/Button';
-import Input from '../../components/ui/Input';
+import { useState, useMemo, useCallback } from 'react';
 import toast from 'react-hot-toast';
 
-const vitalsSchema = z.object({
-  patientId: z.string().min(1, 'Please select a patient'),
-  bp: z.string().regex(/^\d{2,3}\/\d{2,3}$/, 'Format: 120/80'),
-  pulse: z.string().regex(/^\d+$/, 'Must be a number').min(1).max(200),
-  temp: z.string().regex(/^\d+\.?\d*$/, 'Must be a valid temperature'),
-  spo2: z.string().regex(/^\d+$/, 'Must be a number').min(1).max(100)
-});
+// Import icons file
+import { X } from 'lucide-react';
 
+// Import UI components
+import { Button } from '@/components/ui/Button';
+import Input from '@/components/ui/Input';
+
+// Import Schema file
+import { vitalsSchema } from '@/validation-schema/vitalsSchema'
+
+// Import Types files
+import type { Vitals, VitalsFormData, Patient } from '@/types/vitals/vitalsType';
+
+// Import form, validation and zod
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+
+// Import service
+import { VitalsService } from '@/services/vitalsService';
+
+// Type
 type VitalsFormProps = {
   vitals?: Vitals;
   patients: Patient[];
@@ -26,9 +31,12 @@ type VitalsFormProps = {
 };
 
 export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, onCancel }: VitalsFormProps) => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // State
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
   const isEditing = !!vitals;
 
+  // Form control
   const {
     register,
     handleSubmit,
@@ -45,12 +53,13 @@ export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, on
     } : {}
   });
 
-  const onFormSubmit = async (data: VitalsFormData) => {
+  // Memoize form submission handler to prevent recreation on every render
+  const onFormSubmit = useCallback(async (data: VitalsFormData) => {
     setIsSubmitting(true);
     try {
       let result: Vitals;
       if (isEditing) {
-        result = await VitalsService.updateVitals(vitals.id, data);
+        result = await VitalsService.updateVitals(vitals!.id, data);
         toast.success('Vitals updated successfully');
       } else {
         result = await VitalsService.addVitals(data);
@@ -64,12 +73,13 @@ export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, on
     } finally {
       setIsSubmitting(false);
     }
-  };
+  }, [isEditing, vitals, onSubmit, reset]);
 
-  // Filter out patients who already have vitals recorded (only for new entries)
-  const availablePatients = isEditing
-    ? patients
-    : patients.filter(patient => !existingVitals.some(vital => vital.patientId === patient.id));
+  // Memoize available patients calculation to avoid filtering on every render
+  const availablePatients = useMemo(() => {
+    if (isEditing) return patients;
+    return patients.filter(patient => !existingVitals.some(vital => vital.patientId === patient.id));
+  }, [isEditing, patients, existingVitals]);
 
   return (
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">

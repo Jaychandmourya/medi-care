@@ -1,6 +1,6 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
-import { VitalsService } from '../../services/vitalsService';
-import type { Vitals, VitalsFormData, Patient as VitalsPatient } from '../../types/vitals/vitalsType';
+import { VitalsService } from '@/services/vitalsService';
+import type { Vitals, VitalsFormData, Patient as VitalsPatient } from '@/types/vitals/vitalsType';
 
 // Async thunks for vitals operations
 export const fetchPatients = createAsyncThunk<VitalsPatient[]>(

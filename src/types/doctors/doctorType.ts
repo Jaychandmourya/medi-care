@@ -1,3 +1,4 @@
+import type { NPIResult } from '@/types/doctors/NpiType'
 export interface Doctor {
   id: string;
   name: string;
@@ -63,3 +64,27 @@ export interface DoctorState {
   resultCount: number
   activeTab: 'search' | 'internal'
 }
+
+export interface AutocompleteDoctor {
+  npi?: string
+  firstName?: string
+  lastName: string
+  middleName?: string
+  credential?: string
+  city?: string
+  state?: string
+  country?: string
+  contact?: string
+  specialty?: string
+  fullName: string
+  gender: string
+  address?: string
+  address2?: string
+  postalCode?: string
+  enumerationDate?: string
+  lastUpdated?: string
+  status?: string
+  taxonomyCode?: string
+}
+
+

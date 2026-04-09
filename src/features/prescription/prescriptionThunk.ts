@@ -1,44 +1,5 @@
 import { createAsyncThunk } from '@reduxjs/toolkit'
-
-// Types (re-export for convenience)
-export interface Drug {
-  id: string
-  genericName: string
-  brandName: string
-  drugClass: string
-  purpose?: string
-  warnings?: string[]
-  dosage?: string
-  adverseReactions?: string[]
-  manufacturer?: string
-  isRecalled?: boolean
-  recallInfo?: Record<string, unknown> | null
-}
-
-export interface Medicine {
-  id: string
-  name: string
-  dosage: string
-  frequency: string
-  duration: string
-  instructions: string
-  drug?: Drug
-}
-
-export interface Prescription {
-  id: string
-  patientId: string
-  patientName: string
-  doctorId: string
-  doctorName: string
-  diagnosis: string
-  medicines: Medicine[]
-  generalNotes: string
-  followUpDate: string
-  createdAt: string
-  updatedAt?: string
-  status: 'active' | 'completed' | 'cancelled'
-}
+import type { Prescription } from '@/types/prescription/prescriptionType'
 
 // Mock data functions
 const getMockRecallData = (drugName: string) => {
@@ -71,8 +32,6 @@ export const searchDrugs = createAsyncThunk(
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`✅ Drug search successful for: ${query}`);
-        console.log('API Response:', data); // Debug log
 
         // Safe data mapping with null checks
         return data.results?.map((item: Record<string, unknown>) => {
@@ -122,8 +81,6 @@ export const checkDrugRecall = createAsyncThunk(
 
       if (recallResponse.ok) {
         const recallResults = await recallResponse.json();
-        console.log(`✅ Drug recall check successful for: ${drugName}`);
-        console.log('Recall API Response:', recallResults);
 
         // Check if there are any active recalls
         const activeRecalls = recallResults.results?.filter((recall: Record<string, unknown>) => {
@@ -149,7 +106,6 @@ export const checkDrugRecall = createAsyncThunk(
       let adverseEvents = [];
       if (adverseResponse.ok) {
         const adverseData = await adverseResponse.json();
-        console.log(`✅ Adverse events search successful for: ${drugName}`);
 
         adverseEvents = adverseData.results?.map((item: Record<string, unknown>) => {
           const patient = item.patient as Record<string, unknown> || {};
@@ -196,7 +152,6 @@ export const savePrescriptionToHistory = createAsyncThunk(
       // Save to localStorage
       localStorage.setItem('prescriptionHistory', JSON.stringify(updatedHistory));
 
-      console.log('✅ Prescription saved to history:', prescription.id);
       return prescription;
     } catch (error) {
       console.error('Error saving prescription to history:', error);
@@ -210,7 +165,6 @@ export const loadPrescriptionHistory = createAsyncThunk(
   async () => {
     try {
       const history = JSON.parse(localStorage.getItem('prescriptionHistory') || '[]');
-      console.log(`✅ Loaded ${history.length} prescriptions from history`);
       return history;
     } catch (error) {
       console.error('Error loading prescription history:', error);

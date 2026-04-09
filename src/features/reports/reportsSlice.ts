@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
+import { reportsServices } from '@/services/reportsServices'
 
 // Types
 export interface OPDTrendData {
@@ -69,16 +70,8 @@ export const fetchOPDTrend = createAsyncThunk(
   'reports/fetchOPDTrend',
   async (_, { rejectWithValue }) => {
     try {
-      // Simulate fetching from IndexedDB or API
-      const last30Days = Array.from({ length: 30 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (29 - i))
-        return {
-          date: date.toISOString().split('T')[0],
-          patients: Math.floor(Math.random() * 50) + 20, // 20-70 patients per day
-        }
-      })
-      return last30Days
+      const data = await reportsServices.fetchOPDTrend()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch OPD trend data')
     }
@@ -89,15 +82,8 @@ export const fetchBedOccupancy = createAsyncThunk(
   'reports/fetchBedOccupancy',
   async (_, { rejectWithValue }) => {
     try {
-      const last30Days = Array.from({ length: 30 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (29 - i))
-        return {
-          date: date.toISOString().split('T')[0],
-          occupancyRate: Math.floor(Math.random() * 40) + 50, // 50-90% occupancy
-        }
-      })
-      return last30Days
+      const data = await reportsServices.fetchBedOccupancy()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch bed occupancy data')
     }
@@ -108,22 +94,8 @@ export const fetchDepartmentDistribution = createAsyncThunk(
   'reports/fetchDepartmentDistribution',
   async (_, { rejectWithValue }) => {
     try {
-      const departments = [
-        { name: 'Cardiology', count: 150 },
-        { name: 'Neurology', count: 120 },
-        { name: 'Orthopedics', count: 180 },
-        { name: 'Pediatrics', count: 200 },
-        { name: 'General Medicine', count: 250 },
-        { name: 'Emergency', count: 100 },
-      ]
-
-      const total = departments.reduce((sum, dept) => sum + dept.count, 0)
-
-      return departments.map(dept => ({
-        department: dept.name,
-        count: dept.count,
-        percentage: Math.round((dept.count / total) * 100),
-      }))
+      const data = await reportsServices.fetchDepartmentDistribution()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch department distribution data')
     }
@@ -134,22 +106,8 @@ export const fetchAppointmentStatus = createAsyncThunk(
   'reports/fetchAppointmentStatus',
   async (_, { rejectWithValue }) => {
     try {
-      const last7Days = Array.from({ length: 7 }, (_, i) => {
-        const date = new Date()
-        date.setDate(date.getDate() - (6 - i))
-        return {
-          date: date.toISOString().split('T')[0],
-          'Completed': Math.floor(Math.random() * 30) + 20,
-          'Cancelled': Math.floor(Math.random() * 10) + 5,
-          'No-Show': Math.floor(Math.random() * 8) + 2,
-        }
-      })
-
-      return last7Days.flatMap(day => [
-        { status: 'Completed' as const, count: day['Completed'], date: day.date },
-        { status: 'Cancelled' as const, count: day['Cancelled'], date: day.date },
-        { status: 'No-Show' as const, count: day['No-Show'], date: day.date },
-      ])
+      const data = await reportsServices.fetchAppointmentStatus()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch appointment status data')
     }
@@ -160,20 +118,8 @@ export const fetchDoctorWorkload = createAsyncThunk(
   'reports/fetchDoctorWorkload',
   async (_, { rejectWithValue }) => {
     try {
-      const doctors = [
-        { name: 'Dr. Smith', department: 'Cardiology', appointments: 45 },
-        { name: 'Dr. Johnson', department: 'Neurology', appointments: 38 },
-        { name: 'Dr. Williams', department: 'Orthopedics', appointments: 52 },
-        { name: 'Dr. Brown', department: 'Pediatrics', appointments: 61 },
-        { name: 'Dr. Davis', department: 'General Medicine', appointments: 73 },
-        { name: 'Dr. Miller', department: 'Emergency', appointments: 29 },
-      ]
-
-      return doctors.map(doctor => ({
-        doctorName: doctor.name,
-        appointments: doctor.appointments,
-        department: doctor.department,
-      }))
+      const data = await reportsServices.fetchDoctorWorkload()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch doctor workload data')
     }
@@ -184,19 +130,8 @@ export const fetchRevenue = createAsyncThunk(
   'reports/fetchRevenue',
   async (_, { rejectWithValue }) => {
     try {
-      const departments = [
-        { name: 'Cardiology', revenue: 250000 },
-        { name: 'Neurology', revenue: 180000 },
-        { name: 'Orthopedics', revenue: 320000 },
-        { name: 'Pediatrics', revenue: 150000 },
-        { name: 'General Medicine', revenue: 280000 },
-        { name: 'Emergency', revenue: 200000 },
-      ]
-
-      return departments.map(dept => ({
-        department: dept.name,
-        revenue: dept.revenue,
-      }))
+      const data = await reportsServices.fetchRevenue()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch revenue data')
     }
@@ -207,20 +142,8 @@ export const fetchDrugRecalls = createAsyncThunk(
   'reports/fetchDrugRecalls',
   async (_, { rejectWithValue }) => {
     try {
-      // Simulate OpenFDA API call
-      const mockData = [
-        { drugClass: 'Antibiotics', recallCount: 12 },
-        { drugClass: 'Pain Relievers', recallCount: 8 },
-        { drugClass: 'Cardiovascular', recallCount: 15 },
-        { drugClass: 'Diabetes', recallCount: 6 },
-        { drugClass: 'Mental Health', recallCount: 9 },
-      ]
-
-      return mockData.map(item => ({
-        drugClass: item.drugClass,
-        recallCount: item.recallCount,
-        lastUpdated: new Date().toISOString(),
-      }))
+      const data = await reportsServices.fetchDrugRecalls()
+      return data
     } catch {
       return rejectWithValue('Failed to fetch drug recall data')
     }

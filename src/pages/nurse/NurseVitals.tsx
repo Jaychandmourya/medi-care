@@ -1,21 +1,34 @@
-import { useState, useEffect } from 'react';
-import { VitalsTable } from '../../components/nurse/VitalsTable';
-import { VitalsForm } from '../../components/nurse/VitalsForm';
-import { VitalsService } from '../../services/vitalsService';
-import type { Vitals, Patient } from '../../types/vitals/vitalsType';
+import { useState, useEffect, Suspense, lazy } from 'react';
 import toast from 'react-hot-toast';
 
+// Import type file
+import type { Vitals, Patient } from '@/types/vitals/vitalsType';
+
+// Import service file
+import { VitalsService } from '@/services/vitalsService';
+
+// Lazy load components
+const VitalsTable = lazy(() => import('@/components/nurse/VitalsTable').then(m => ({ default: m.VitalsTable })));
+const AddEditVitalsDialog = lazy(() => import('@/components/nurse/dialog/AddEditVitalsDialog').then(m => ({ default: m.VitalsForm })));
+
+
+
 const NurseVitals = () => {
+
+  // State
+  const [showForm, setShowForm] = useState<boolean>(false);
+  const [loading, setLoading] = useState<boolean>(true);
+
   const [vitals, setVitals] = useState<Vitals[]>([]);
   const [patients, setPatients] = useState<Patient[]>([]);
-  const [showForm, setShowForm] = useState(false);
   const [editingVitals, setEditingVitals] = useState<Vitals | undefined>();
-  const [loading, setLoading] = useState(true);
 
+  // Effect
   useEffect(() => {
     loadData();
   }, []);
 
+  // Method
   const loadData = async () => {
     try {
       setLoading(true);
@@ -116,9 +129,9 @@ const NurseVitals = () => {
                   {vitals.filter(v => {
                     const bp = v.bp.split('/');
                     return parseInt(bp[0]) <= 140 && parseInt(bp[1]) <= 90 &&
-                           v.pulse >= 60 && v.pulse <= 100 &&
-                           v.temp <= 100.4 &&
-                           v.spo2 >= 95;
+                          v.pulse >= 60 && v.pulse <= 100 &&
+                          v.temp <= 100.4 &&
+                          v.spo2 >= 95;
                   }).length}
                 </p>
               </div>
@@ -138,9 +151,9 @@ const NurseVitals = () => {
                   {vitals.filter(v => {
                     const bp = v.bp.split('/');
                     return parseInt(bp[0]) > 140 || parseInt(bp[1]) > 90 ||
-                           v.pulse < 60 || v.pulse > 100 ||
-                           v.temp > 100.4 ||
-                           v.spo2 < 95;
+                          v.pulse < 60 || v.pulse > 100 ||
+                          v.temp > 100.4 ||
+                          v.spo2 < 95;
                   }).length}
                 </p>
               </div>
@@ -162,22 +175,33 @@ const NurseVitals = () => {
           </div>
         </div>
 
-        <VitalsTable
-          vitals={vitals}
-          patients={patients}
-          onEdit={handleEditVitals}
-          onDelete={handleDeleteVitals}
-          onAdd={handleAddVitals}
-        />
+        <Suspense fallback={
+          <div className="bg-white rounded-lg shadow p-8">
+            <div className="flex items-center justify-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mr-3"></div>
+              <span className="text-gray-600">Loading table...</span>
+            </div>
+          </div>
+        }>
+          <VitalsTable
+            vitals={vitals}
+            patients={patients}
+            onEdit={handleEditVitals}
+            onDelete={handleDeleteVitals}
+            onAdd={handleAddVitals}
+          />
+        </Suspense>
 
         {showForm && (
-          <VitalsForm
-            vitals={editingVitals}
-            patients={patients}
-            existingVitals={vitals}
-            onSubmit={handleFormSubmit}
-            onCancel={handleFormCancel}
-          />
+          <Suspense fallback={<div className="text-center py-8">Loading form...</div>}>
+            <AddEditVitalsDialog
+              vitals={editingVitals}
+              patients={patients}
+              existingVitals={vitals}
+              onSubmit={handleFormSubmit}
+              onCancel={handleFormCancel}
+            />
+          </Suspense>
         )}
       </div>
     </div>

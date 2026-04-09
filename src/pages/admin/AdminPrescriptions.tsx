@@ -1,15 +1,28 @@
-import { useState } from 'react'
-import { useSelector } from 'react-redux'
-import { FileText, History, Plus, Eye } from 'lucide-react'
+import { useState, Suspense, lazy } from 'react'
+
+// Import icons file
+import { History, Plus, Eye } from 'lucide-react'
+
+// Import Types files
 import type { RootState } from '@/app/store'
-import PrescriptionBuilder from '@/components/prescription/PrescriptionBuilder'
-import PrescriptionPDFView from '@/components/prescription/PrescriptionPDFView'
-import PrescriptionHistory from '@/components/prescription/PrescriptionHistory'
+
+// Import dispatch and selector for redux
+import { useSelector } from 'react-redux'
+
+// Lazy load prescription components
+const PrescriptionBuilder = lazy(() => import('@/components/prescription/PrescriptionBuilder'))
+const PrescriptionPDFView = lazy(() => import('@/components/prescription/PrescriptionPDFView'))
+const PrescriptionHistory = lazy(() => import('@/components/prescription/PrescriptionHistory'))
 
 const AdminPrescriptions = () => {
+
+   // Redux selector
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
+
+  // State management
   const [activeView, setActiveView] = useState<'builder' | 'history' | 'preview'>('builder')
 
+  // Methods
   const handleViewChange = (view: 'builder' | 'history' | 'preview') => {
     setActiveView(view)
   }
@@ -66,43 +79,21 @@ const AdminPrescriptions = () => {
 
         {/* Content Area */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-          {activeView === 'builder' && <PrescriptionBuilder />}
-          {activeView === 'history' && <PrescriptionHistory />}
-          {activeView === 'preview' && <PrescriptionPDFView />}
-        </div>
-
-        {/* Features Info */}
-        <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-          <h2 className="text-lg font-semibold text-blue-900 mb-4 flex items-center gap-2">
-            <FileText className="h-5 w-5" />
-            OpenFDA Integration Features
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-sm text-blue-800">
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Real-time drug search with autocomplete suggestions</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Drug recall alerts and safety information</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Detailed drug information including dosage and warnings</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Adverse reactions data from FDA events</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Printable prescription PDFs with professional layout</span>
-            </div>
-            <div className="flex items-start gap-2">
-              <span className="text-blue-600 mt-1">•</span>
-              <span>Complete prescription history with filtering options</span>
-            </div>
-          </div>
+          {activeView === 'builder' && (
+            <Suspense fallback={<div className="text-center py-8">Loading prescription builder...</div>}>
+              <PrescriptionBuilder />
+            </Suspense>
+          )}
+          {activeView === 'history' && (
+            <Suspense fallback={<div className="text-center py-8">Loading prescription history...</div>}>
+              <PrescriptionHistory />
+            </Suspense>
+          )}
+          {activeView === 'preview' && (
+            <Suspense fallback={<div className="text-center py-8">Loading PDF preview...</div>}>
+              <PrescriptionPDFView />
+            </Suspense>
+          )}
         </div>
       </div>
     </div>

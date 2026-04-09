@@ -1,33 +1,43 @@
-import { useDispatch, useSelector } from 'react-redux'
+import { useEffect } from 'react'
+import toast from 'react-hot-toast'
+
+// Import icons file
+import { X } from 'lucide-react'
+
+// Import Types files
+import type { AppDispatch, RootState } from '@/app/store'
+import type { Medicine } from '@/types/prescription/prescriptionType'
+
+// Import UI components
+import Input from '@/components/ui/Input'
+import { Button } from '@/components/ui/Button'
+
+// Import form, validation and zod
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { useEffect } from 'react'
-import { X } from 'lucide-react'
-import toast from 'react-hot-toast'
+
+// Import dispatch and selector for redux
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import Slice for redux
 import {
   setSelectedDrug,
   addMedicine,
   updateMedicine,
   setCurrentPrescription,
-  type Medicine
 } from '@/features/prescription/prescriptionSlice'
-import type { AppDispatch, RootState } from '@/app/store'
-import Input from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+
+// Import components
 import DrugSearch from '../DrugSearch'
 import DrugInfoPanel from '../DrugInfoPanel'
 
-const medicineSchema = z.object({
-  name: z.string().min(2, 'Medicine name must be at least 2 characters').max(100, 'Medicine name must be less than 100 characters'),
-  dosage: z.string().min(1, 'Dosage is required').max(50, 'Dosage must be less than 50 characters'),
-  frequency: z.string().min(2, 'Frequency must be at least 2 characters').max(50, 'Frequency must be less than 50 characters'),
-  duration: z.string().min(1, 'Duration is required').max(50, 'Duration must be less than 50 characters'),
-  instructions: z.string().max(200, 'Instructions must be less than 200 characters').optional(),
-})
+// Schema file
+import { medicineSchema } from '@/validation-schema/prescriptionSchema'
 
 type MedicineFormData = z.infer<typeof medicineSchema>
 
+// Interface
 interface AddMedicineDialogProps {
   showMedicineForm: boolean
   editingMedicine: Medicine | null
@@ -48,11 +58,15 @@ interface AddMedicineDialogProps {
 }
 
 const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, currentPrescription }: AddMedicineDialogProps) => {
+
+  // Dispatch and selector
   const dispatch = useDispatch<AppDispatch>()
   const { selectedDrug } = useSelector((state: RootState) => state.prescriptions)
 
+  // Generate ID
   const generateId = () => crypto.randomUUID()
 
+  // Form hooks
   const {
     register: registerMedicine,
     handleSubmit: handleMedicineSubmit,
@@ -73,7 +87,6 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
   // Auto-fill all form fields when editing a medicine
   useEffect(() => {
     if (editingMedicine) {
-      // Set all form values from the editing medicine
       setMedicineValue('name', editingMedicine.name)
       setMedicineValue('dosage', editingMedicine.dosage)
       setMedicineValue('frequency', editingMedicine.frequency)

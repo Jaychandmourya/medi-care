@@ -6,22 +6,9 @@ import {
   loadPrescriptionHistory,
   deletePrescriptionFromHistory,
   getDrugAdverseEvents,
-  type Drug,
-  type Medicine,
-  type Prescription
 } from './prescriptionThunk'
 
-interface PrescriptionState {
-  prescriptions: Prescription[]
-  currentPrescription: Prescription | null
-  prescriptionHistory: Prescription[]
-  drugSearchResults: Drug[]
-  selectedDrug: Drug | null
-  loading: boolean
-  error: string | null
-  searchLoading: boolean
-  historyLoading: boolean
-}
+import type { Drug, Medicine, Prescription, PrescriptionState } from '@/types/prescription/prescriptionType'
 
 const initialState: PrescriptionState = {
   prescriptions: [],
@@ -74,6 +61,7 @@ const prescriptionSlice = createSlice({
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
       // Search drugs
@@ -104,7 +92,6 @@ const prescriptionSlice = createSlice({
       })
       .addCase(savePrescriptionToHistory.fulfilled, (state, action) => {
         state.historyLoading = false;
-        // Add to history if not already there
         if (!state.prescriptionHistory.find(p => p.id === action.payload.id)) {
           state.prescriptionHistory.unshift(action.payload);
         }
@@ -141,8 +128,7 @@ export const {
   clearError,
 } = prescriptionSlice.actions;
 
-// Re-export types and thunks for convenience
-export type { Drug, Medicine, Prescription } from './prescriptionThunk';
+
 export {
   searchDrugs,
   checkDrugRecall,

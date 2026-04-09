@@ -21,7 +21,7 @@ const Header = ({ setIsOpen }: any) => {
   }, []);
 
   return (
-    <header className="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm">
+    <header className="h-16 bg-white border-b flex items-center justify-between px-6 shadow-sm print:hidden">
 
       {/* Left */}
       <div className="flex items-center gap-4">

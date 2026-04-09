@@ -1,15 +1,20 @@
+import { useCallback, useEffect } from 'react'
+import toast from 'react-hot-toast'
+
+import { Button } from '@/components/ui/Button'
+
+import { type AppDispatch } from '@/app/store'
+import { type DoctorSchedule } from '@/features/db/dexie'
+import { doctorScheduleSchema, type DoctorScheduleFormData, DAYS_OF_WEEK, SLOT_DURATIONS, TIME_SLOTS } from '@/features/doctorSchedule/doctorScheduleValidation'
+
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { useState, useCallback, useEffect } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
-import toast from 'react-hot-toast'
-import { Button } from '@/components/ui/Button'
-import { type AppDispatch, type RootState } from '@/app/store'
-import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
-import { addDoctorSchedule, updateDoctorSchedule } from '@/features/doctorSchedule/doctorScheduleSlice'
-import { doctorScheduleSchema, type DoctorScheduleFormData, DAYS_OF_WEEK, SLOT_DURATIONS, TIME_SLOTS } from '@/features/doctorSchedule/doctorScheduleValidation'
-import { type DoctorSchedule } from '@/features/db/dexie'
 
+import { useDispatch } from 'react-redux'
+
+import { addDoctorSchedule, updateDoctorSchedule } from '@/features/doctorSchedule/doctorScheduleSlice'
+
+// Interface
 interface DoctorScheduleProps {
   lastAddedDoctor: any
   doctors: any[]
@@ -29,8 +34,11 @@ const DoctorSchedule = ({
   onNavigateToAddDoctor,
   existingSchedule
 }: DoctorScheduleProps) => {
+
+  // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
 
+  // Form control
   const {
     register: registerSchedule,
     handleSubmit: handleScheduleSubmit,
@@ -48,12 +56,9 @@ const DoctorSchedule = ({
     }
   })
 
-  console.log('dasdsadadadsasdsadasd', lastAddedDoctor)
-  console.log('111111111bnbnbnbnb1111', doctors)
-   console.log('addingSchedule111111', addingSchedule)
-
   const watchedScheduleValues = watchSchedule()
 
+  // useEffect
   // Set doctorId when doctor data is available
   useEffect(() => {
     const doctorId = lastAddedDoctor ? lastAddedDoctor.id : doctors.length > 0 ? doctors[0].id : ''
@@ -74,6 +79,7 @@ const DoctorSchedule = ({
     }
   }, [existingSchedule, setScheduleValue])
 
+  // Methods
   const handleAddSchedule = useCallback(async (data: DoctorScheduleFormData) => {
     setAddingSchedule(true)
     try {
@@ -93,7 +99,6 @@ const DoctorSchedule = ({
         })).unwrap()
         toast.success('Doctor schedule updated successfully!')
       } else {
-        // Add new schedule
         await dispatch(addDoctorSchedule({
           doctorId: data.doctorId,
           workingDays: data.workingDays,

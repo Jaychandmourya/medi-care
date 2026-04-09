@@ -1,15 +1,10 @@
 import { useState } from 'react'
 import { z } from 'zod'
-import type { Bed, BedStatus } from '@/types/bed/bedType'
+import type { Bed, BedStatus, BedFormData } from '@/types/bed/bedType'
 import { Button } from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
 
-interface BedFormData {
-  ward: string
-  status: BedStatus
-  notes?: string
-}
-
+// Interface
 interface AddEditBedDialogProps {
   isOpen: boolean
   onClose: () => void
@@ -28,6 +23,7 @@ const bedFormSchema = z.object({
 })
 
 const getInitialFormData = (editingBed: Bed | null, wards: Array<{ wardId: string; name: string }>): BedFormData => {
+
   if (editingBed) {
     return {
       ward: editingBed.ward,

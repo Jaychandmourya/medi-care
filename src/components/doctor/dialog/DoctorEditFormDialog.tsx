@@ -11,7 +11,7 @@ import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSl
 import { type DoctorSchedule } from '@/features/db/dexie'
 import Input from '@/components/ui/Input'
 import { Button } from '@/components/ui/Button'
-import DoctorSchedule from './DoctorSchedule'
+import DoctorSchedule from '../DoctorSchedule'
 import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {

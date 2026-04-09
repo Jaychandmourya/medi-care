@@ -26,13 +26,6 @@ export interface NPIBasic {
   status?: string
 }
 
-export interface NPIResult {
-  basic?: NPIBasic
-  addresses?: NPIAddress[]
-  taxonomies?: NPITaxonomy[]
-  country?: string
-}
-
 export interface NPISearchResponse {
   result_count?: number
   results?: NPIResult[]
@@ -43,4 +36,30 @@ export interface NPISearchResponse {
     field?: string
     number?: number
   }>
+}
+
+export interface NPIResult {
+  basic: {
+    npi: string
+    first_name: string
+    last_name: string
+    middle_name?: string
+    credential?: string
+    gender?: string
+    status?: string
+  }
+  addresses?: Array<{
+    address_1?: string
+    address_2?: string
+    city?: string
+    state?: string
+    postal_code?: string
+    telephone_number?: string
+  }>
+  taxonomies?: Array<{
+    code?: string
+    desc?: string
+    primary?: boolean
+  }>
+  country?: string
 }

@@ -4,13 +4,19 @@ import { Search, Pill, Loader2 } from 'lucide-react'
 import { setSelectedDrug, searchDrugs } from '@/features/prescription/prescriptionSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Drug } from '@/features/prescription/prescriptionSlice'
+import Input from '@/components/ui/Input'
 
 const DrugSearch = () => {
+
+  // Dispatch and selector
   const dispatch = useDispatch<AppDispatch>()
   const { drugSearchResults, searchLoading, error } = useSelector((state: RootState) => state.prescriptions)
-  const [searchQuery, setSearchQuery] = useState('')
-  const [debouncedQuery, setDebouncedQuery] = useState('')
-  const [showDropdown, setShowDropdown] = useState(false)
+
+  // State
+  const [showDropdown, setShowDropdown] = useState<boolean>(false)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [debouncedQuery, setDebouncedQuery] = useState<string>('')
+
 
   // Debounce search query to avoid excessive API calls
   useEffect(() => {
@@ -32,32 +38,31 @@ const DrugSearch = () => {
     }
   }, [debouncedQuery, dispatch])
 
-  // Memoize showResults to prevent unnecessary recalculations
+  // ShowResults to prevent unnecessary recalculations
   const showResults = useMemo(() => {
     return searchQuery.trim() && drugSearchResults.length > 0 && showDropdown
   }, [searchQuery, drugSearchResults.length, showDropdown])
 
-  // Memoize drug selection handler to prevent function recreation
+  // Drug selection handler to prevent function recreation
   const handleDrugSelect = useCallback((drug: Drug) => {
-    console.log('Selected drug:', drug)
     dispatch(setSelectedDrug(drug))
     setSearchQuery(`${drug.brandName} (${drug.genericName})`)
     setShowDropdown(false)
   }, [dispatch])
 
-  // Memoize clear search handler
+  // Clear search handler
   const handleClearSearch = useCallback(() => {
     setSearchQuery('')
     dispatch(setSelectedDrug(null))
     setShowDropdown(false)
   }, [dispatch])
 
-  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setSearchQuery(e.target.value)
     setShowDropdown(true)
   }, [])
 
-  // Memoize search results list to prevent unnecessary re-renders
+  // Search results list to prevent unnecessary re-renders
   const searchResultsList = useMemo(() => {
     return drugSearchResults.map((drug) => (
       <button
@@ -93,21 +98,19 @@ const DrugSearch = () => {
   return (
     <div className="relative">
       <div className="relative">
-        <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-          <Search className="h-5 w-5 text-gray-400" />
-        </div>
-        <input
+        <Input
           type="text"
           value={searchQuery}
           onChange={handleInputChange}
           onFocus={() => setShowDropdown(true)}
           placeholder="Search for medicines by brand or generic name..."
-          className="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all duration-200"
+          icon={Search}
+          className="pr-10"
         />
         {searchQuery && (
           <button
             onClick={handleClearSearch}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center top-7"
           >
             {searchLoading ? (
               <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />

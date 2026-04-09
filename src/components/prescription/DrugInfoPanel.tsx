@@ -1,17 +1,27 @@
 import { useEffect, useRef, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
 import { Info, AlertTriangle, CheckCircle, X } from 'lucide-react'
+
+import type { AppDispatch, RootState } from '@/app/store'
+
+import { useDispatch, useSelector } from 'react-redux'
 import {
   setSelectedDrug,
   checkDrugRecall
 } from '@/features/prescription/prescriptionSlice'
-import type { AppDispatch, RootState } from '@/app/store'
+
 
 const DrugInfoPanel = () => {
+
+  // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
+
+ // Redux selector
   const { selectedDrug } = useSelector((state: RootState) => state.prescriptions)
+
+  // Refs
   const lastFetchedDrugRef = useRef<string | null>(null)
 
+  // Effect
   useEffect(() => {
     if (selectedDrug && selectedDrug.brandName !== lastFetchedDrugRef.current) {
       lastFetchedDrugRef.current = selectedDrug.brandName
@@ -21,10 +31,10 @@ const DrugInfoPanel = () => {
 
   const handleClose = useCallback(() => {
     dispatch(setSelectedDrug(null))
-    lastFetchedDrugRef.current = null // Reset to allow re-fetching same drug later
+    lastFetchedDrugRef.current = null
   }, [dispatch])
 
-  // Memoize recall info display to avoid unnecessary re-computation
+  // Recall info display to avoid unnecessary re-computation
   const recallInfoDisplay = useMemo(() => {
     if (!selectedDrug?.recallInfo) return null
 
@@ -37,7 +47,7 @@ const DrugInfoPanel = () => {
     )
   }, [selectedDrug])
 
-  // Memoize adverse reactions display to avoid re-computation on every render
+  // Adverse reactions display to avoid re-computation on every render
   const adverseReactionsDisplay = useMemo(() => {
     if (!selectedDrug?.adverseReactions || selectedDrug.adverseReactions.length === 0) return null
 
@@ -66,7 +76,7 @@ const DrugInfoPanel = () => {
     )
   }, [selectedDrug])
 
-  // Memoize warnings display to avoid re-computation
+  // Warnings display to avoid re-computation
   const warningsDisplay = useMemo(() => {
     if (!selectedDrug?.warnings || selectedDrug.warnings.length === 0) return null
 

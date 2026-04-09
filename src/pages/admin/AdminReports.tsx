@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo, useCallback } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import {
   LineChart,
@@ -75,7 +75,7 @@ const AdminReports = () => {
     fetchAllData()
   }, [dispatch])
 
-  const handleRefresh = () => {
+  const handleRefresh = useCallback(() => {
     dispatch(clearError())
     const fetchAllData = async () => {
       try {
@@ -94,9 +94,9 @@ const AdminReports = () => {
     }
 
     fetchAllData()
-  }
+  }, [dispatch])
 
-  const handleExportCSV = (chartType: string) => {
+  const handleExportCSV = useCallback((chartType: string) => {
     let data: Record<string, unknown>[] = []
     let filename = ''
     let headers: string[] = []
@@ -167,19 +167,34 @@ const AdminReports = () => {
     if (data.length > 0) {
       exportToCSV(data, filename, headers)
     }
-  }
+  }, [opdTrend, bedOccupancy, departmentDistribution, appointmentStatus, doctorWorkload, revenue, drugRecalls])
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     printReport()
-  }
+  }, [])
 
-  // Calculate summary statistics
-  const totalPatients = opdTrend.reduce((sum, item) => sum + item.patients, 0)
-  const avgOccupancy = bedOccupancy.length > 0
-    ? Math.round(bedOccupancy.reduce((sum, item) => sum + item.occupancyRate, 0) / bedOccupancy.length)
-    : 0
-  const totalRevenue = revenue.reduce((sum, item) => sum + item.revenue, 0)
-  const totalRecalls = drugRecalls.reduce((sum, item) => sum + item.recallCount, 0)
+  // Calculate summary statistics with useMemo
+  const totalPatients = useMemo(() =>
+    opdTrend.reduce((sum, item) => sum + item.patients, 0),
+    [opdTrend]
+  )
+
+  const avgOccupancy = useMemo(() =>
+    bedOccupancy.length > 0
+      ? Math.round(bedOccupancy.reduce((sum, item) => sum + item.occupancyRate, 0) / bedOccupancy.length)
+      : 0,
+    [bedOccupancy]
+  )
+
+  const totalRevenue = useMemo(() =>
+    revenue.reduce((sum, item) => sum + item.revenue, 0),
+    [revenue]
+  )
+
+  const totalRecalls = useMemo(() =>
+    drugRecalls.reduce((sum, item) => sum + item.recallCount, 0),
+    [drugRecalls]
+  )
 
   if (loading && opdTrend.length === 0) {
     return (

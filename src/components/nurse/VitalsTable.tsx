@@ -1,10 +1,20 @@
+import { useState, useCallback, Suspense, lazy } from 'react';
 import { format } from 'date-fns';
+
+// Import icons file
 import { Edit2, Trash2, Plus, MoreVertical } from 'lucide-react';
-import { useState, useCallback } from 'react';
-import type { Vitals, Patient } from '../../types/vitals/vitalsType';
-import { Button } from '../ui/Button';
-import { getRoleColors } from '../../utils/roleColors';
-import DeleteDialog from '../ui/dialog/DeleteDialog';
+
+// Import UI components file
+import { Button } from '@/components/ui/Button';
+
+// Import utils file
+import { getRoleColors } from '@/utils/roleColors';
+
+// Import type file
+import type { Vitals, Patient } from '@/types/vitals/vitalsType';
+
+// Lazy load DeleteDialog
+const DeleteDialog = lazy(() => import('@/components/ui/dialog/DeleteDialog'));
 
 type VitalsTableProps = {
   vitals: Vitals[];
@@ -15,11 +25,15 @@ type VitalsTableProps = {
 };
 
 export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: VitalsTableProps) => {
+
   const nurseColors = getRoleColors('nurse');
+
+  // State
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [vitalToDelete, setVitalToDelete] = useState<string | null>(null);
 
+  // Methods
   const getPatientInfo = (patientId: string) => {
     const patient = patients.find(p => p.id === patientId);
     return patient ? `${patient.name} (${patient.age}y, ${patient.gender}) - Bed: ${patient.bedNumber}` : 'Unknown Patient';
@@ -230,14 +244,17 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
         </table>
       </div>
 
-      <DeleteDialog
-        isOpenDelete={deleteDialogOpen}
-        onClose={handleCloseDeleteDialog}
-        deleteTitle="Delete Vitals"
-        onConfirm={handleConfirmDelete}
-        description="Are you sure you want to delete these vitals? This action cannot be undone."
-        itemName="Vitals Record"
-      />
+      {/* Delete Confirmation dialog */}
+      <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading...</div>}>
+        <DeleteDialog
+          isOpenDelete={deleteDialogOpen}
+          onClose={handleCloseDeleteDialog}
+          deleteTitle="Delete Vitals"
+          onConfirm={handleConfirmDelete}
+          description="Are you sure you want to delete these vitals? This action cannot be undone."
+          itemName="Vitals Record"
+        />
+      </Suspense>
     </div>
   );
 };

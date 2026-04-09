@@ -1,22 +1,37 @@
-import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
+
+// Import UI components
+import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/Label'
+
+// Import Types files
 import type { RootState } from '@/app/store'
-import { fetchBeds,fetchWards,updateBedStatus, admitPatient, dischargePatient} from '@/features/bed/bedThunk'
+import type { Bed, BedStatus } from '@/types/bed/bedType'
+
+// Import dispatch and selector for redux
+import { useSelector, useDispatch } from 'react-redux'
+
+// Import Services
+import { initializeDatabase } from '@/services/bedAndWardServices'
+
+// Import Thunk file for redux
+import { fetchBeds, fetchWards, updateBedStatus, admitPatient, dischargePatient } from '@/features/bed/bedThunk'
+
+// Import Slice file for redux
 import {
   setSelectedWard,
   toggleSimulation,
   simulateBedStatusChange,
   initializeBeds
 } from '@/features/bed/bedSlice'
-import { initializeDatabase } from '@/services/bedAndWardServices'
-import BedGrid from '@/components/admin/bed/tab/overview/BedGrid'
-import BedDetailModal from '@/components/admin/bed/BedDetailModal'
-import WardSwitcher from '@/components/admin/bed/tab/overview/WardSwitcher'
-import BedAvailabilitySummary from '@/components/admin/bed/tab/overview/BedAvailabilitySummary'
-import SimulationControl from '@/components/admin/bed/SimulationControl'
-import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
-import type { Bed, BedStatus } from '@/features/bed/bedSlice'
+
+const WardSwitcher = lazy(() => import('@/components/admin/bed/tab/overview/WardSwitcher'))
+const BedGrid = lazy(() => import('@/components/admin/bed/tab/overview/BedGrid'))
+const BedDetailModal = lazy(() => import('@/components/admin/bed/BedDetailModal'))
+const BedAvailabilitySummary = lazy(() => import('@/components/admin/bed/tab/overview/BedAvailabilitySummary'))
+const SimulationControl = lazy(() => import('@/components/admin/bed/SimulationControl'))
+
+
 
 const NurseBeds = () => {
   const dispatch = useDispatch()
@@ -146,17 +161,21 @@ const NurseBeds = () => {
       </div>
 
       {/* Ward Switcher */}
-      <WardSwitcher
-        wards={wards}
-        selectedWard={selectedWard}
-        onWardChange={handleWardChange}
-      />
+      <Suspense fallback={<div className="py-4 text-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div></div>}>
+        <WardSwitcher
+          wards={wards}
+          selectedWard={selectedWard}
+          onWardChange={handleWardChange}
+        />
+      </Suspense>
 
       {/* Bed Availability Summary */}
-      <BedAvailabilitySummary
-        beds={beds}
-        selectedWard={selectedWard}
-      />
+      <Suspense fallback={<div className="py-4 text-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div></div>}>
+        <BedAvailabilitySummary
+          beds={beds}
+          selectedWard={selectedWard}
+        />
+      </Suspense>
 
       {/* Main Content */}
       <div className="bg-white">
@@ -169,29 +188,35 @@ const NurseBeds = () => {
             <p className="text-gray-500">No beds found in this ward</p>
           </div>
         ) : (
-          <BedGrid
-            beds={currentWardBeds}
-            onBedClick={handleBedClick}
-          />
+          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
+            <BedGrid
+              beds={currentWardBeds}
+              onBedClick={handleBedClick}
+            />
+          </Suspense>
         )}
       </div>
 
       {/* Bed Detail Modal */}
       {selectedBed && (
-        <BedDetailModal
-          bed={selectedBed}
-          onClose={handleCloseModal}
-          onUpdateStatus={handleUpdateStatus}
-          onAdmitPatient={handleAdmitPatient}
-          onDischargePatient={handleDischargePatient}
-        />
+        <Suspense fallback={<div className="p-4 text-center"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mx-auto"></div></div>}>
+          <BedDetailModal
+            bed={selectedBed}
+            onClose={handleCloseModal}
+            onUpdateStatus={handleUpdateStatus}
+            onAdmitPatient={handleAdmitPatient}
+            onDischargePatient={handleDischargePatient}
+          />
+        </Suspense>
       )}
 
       {/* Simulation Control */}
-      <SimulationControl
-        isEnabled={simulationEnabled}
-        onToggle={handleToggleSimulation}
-      />
+      <Suspense fallback={null}>
+        <SimulationControl
+          isEnabled={simulationEnabled}
+          onToggle={handleToggleSimulation}
+        />
+      </Suspense>
     </div>
   )
 };

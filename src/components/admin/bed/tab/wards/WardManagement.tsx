@@ -1,17 +1,28 @@
 import { useState, useCallback } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
-import type { RootState, AppDispatch } from '@/app/store'
-import { createWard, updateWard, deleteWard } from '@/features/bed/bedThunk'
-import type { Ward } from '@/features/bed/bedSlice'
-import { Button } from '@/components/ui/Button'
-import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+
+// Import icons file
 import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle } from 'lucide-react'
 
-interface WardFormData {
-  name: string
-  floor: string
-  totalBeds: number
-}
+// Import components
+import { Button } from '@/components/ui/Button'
+
+// Import types
+import type { RootState, AppDispatch } from '@/app/store'
+import type { Ward } from '@/types/bed/bedType'
+
+
+// Import redux
+import { useSelector, useDispatch } from 'react-redux'
+
+// Import thunks
+import { deleteWard } from '@/features/bed/bedThunk'
+
+// Import components
+import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+import AddEditWardDialog from './dialog/AddEditWardDialog'
+
+// Import toast
+import toast from 'react-hot-toast'
 
 interface WardManagementProps {
   onWardClick?: (ward: Ward) => void
@@ -27,11 +38,6 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [editingWard, setEditingWard] = useState<Ward | null>(null)
   const [wardToDelete, setWardToDelete] = useState<Ward | null>(null)
-  const [formData, setFormData] = useState<WardFormData>({
-    name: '',
-    floor: '',
-    totalBeds: 0
-  })
 
   const filteredWards = wards.filter(ward =>
     ward.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -49,14 +55,8 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const handleOpenModal = useCallback((ward?: Ward) => {
     if (ward) {
       setEditingWard(ward)
-      setFormData({
-        name: ward.name,
-        floor: ward.floor,
-        totalBeds: ward.totalBeds
-      })
     } else {
       setEditingWard(null)
-      setFormData({ name: '', floor: '', totalBeds: 10 })
     }
     setIsModalOpen(true)
   }, [])
@@ -64,32 +64,23 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const handleCloseModal = useCallback(() => {
     setIsModalOpen(false)
     setEditingWard(null)
-    setFormData({ name: '', floor: '', totalBeds: 10 })
   }, [])
 
-  const handleSubmit = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (editingWard) {
-      dispatch(updateWard({ wardId: editingWard.wardId, data: formData }))
-    } else {
-      dispatch(createWard({
-        name: formData.name,
-        floor: formData.floor,
-        totalBeds: formData.totalBeds
-      }))
-    }
-    handleCloseModal()
-  }, [dispatch, editingWard, formData, handleCloseModal])
 
   const handleDeleteClick = useCallback((ward: Ward) => {
     setWardToDelete(ward)
     setIsDeleteDialogOpen(true)
   }, [])
 
-  const handleConfirmDelete = useCallback(() => {
+  const handleConfirmDelete = useCallback(async () => {
     if (wardToDelete) {
-      dispatch(deleteWard(wardToDelete.wardId))
+      try {
+        await dispatch(deleteWard(wardToDelete.wardId)).unwrap()
+        toast.success(`Deleted ward successfully!`)
+      } catch (error) {
+        console.error('Error deleting ward:', error)
+        toast.error('Failed to delete ward. Please try again.')
+      }
     }
     setIsDeleteDialogOpen(false)
     setWardToDelete(null)
@@ -164,24 +155,28 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
                     </div>
                   </div>
                   <div className="flex gap-1">
-                    <button
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleOpenModal(ward)
                       }}
-                      className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      className="text-blue-600 hover:bg-blue-50"
                     >
                       <Edit2 className="w-4 h-4" />
-                    </button>
-                    <button
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleDeleteClick(ward)
                       }}
-                      className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      className="text-red-600 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
-                    </button>
+                    </Button>
                   </div>
                 </div>
 
@@ -252,69 +247,11 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
       </div>
 
       {/* Add/Edit Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
-            <div className="p-6 border-b border-gray-100">
-              <h3 className="text-xl font-semibold text-gray-900">
-                {editingWard ? 'Edit Ward' : 'Add New Ward'}
-              </h3>
-            </div>
-            <form onSubmit={handleSubmit} className="p-6 space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Ward Name</label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  placeholder="e.g., Cardiology Ward"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Floor</label>
-                <input
-                  type="text"
-                  value={formData.floor}
-                  onChange={(e) => setFormData({ ...formData, floor: e.target.value })}
-                  placeholder="e.g., 1, 2, Ground"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Total Beds Capacity</label>
-                <input
-                  type="number"
-                  value={formData.totalBeds}
-                  onChange={(e) => setFormData({ ...formData, totalBeds: parseInt(e.target.value) || 0 })}
-                  min="1"
-                  max="100"
-                  className="w-full px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  required
-                />
-                <p className="text-xs text-gray-500 mt-1">
-                  This is the target capacity. Actual beds can be added/removed separately.
-                </p>
-              </div>
-              <div className="flex gap-3 pt-4">
-                <Button
-                  type="button"
-                  onClick={handleCloseModal}
-                  variant="secondary"
-                  className="flex-1"
-                >
-                  Cancel
-                </Button>
-                <Button type="submit" className="flex-1">
-                  {editingWard ? 'Update' : 'Create'}
-                </Button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <AddEditWardDialog
+        isOpen={isModalOpen}
+        onClose={handleCloseModal}
+        editingWard={editingWard}
+      />
 
       {/* Delete Confirmation */}
       <DeleteDialog

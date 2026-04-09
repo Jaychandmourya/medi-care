@@ -1,38 +1,52 @@
 import { useEffect, useMemo } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+
+// Import route navigate
 import { useNavigate } from 'react-router-dom'
-import type { RootState } from '@/app/store'
-import type { AppDispatch } from '@/app/store'
-import { initializeBeds, setSelectedWard } from '@/features/bed/bedSlice'
-import { fetchVitals, fetchPatients } from '@/features/vital/VitalThunk'
-import type { BedStatus } from '@/features/bed/bedSlice'
-import type { Patient as VitalsPatient } from '@/types/vitals/vitalsType'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
+
+// Import Types files
+import type { RootState, AppDispatch } from '@/app/store'
+import type { BedStatus } from '@/types/bed/bedType'
+import type { Patient as VitalsPatient, BedStatusChange } from '@/types/vitals/vitalsType'
+
+// Import utils file
 import { getRoleColors } from '@/utils/roleColors'
 
-interface BedStatusChange {
-  id: string
-  bedId: string
-  oldStatus: BedStatus
-  newStatus: BedStatus
-  timestamp: Date
-  patientId?: string
-}
+// Import dispatch and selector for redux
+import { useSelector, useDispatch } from 'react-redux'
 
+// Import Thunk file for redux
+import { fetchVitals, fetchPatients } from '@/features/vital/VitalThunk'
+
+// Import Slice file for redux
+import { initializeBeds, setSelectedWard } from '@/features/bed/bedSlice'
+
+// Interface
 interface PendingVitalsPatient extends VitalsPatient {
-  lastVitalsTime?: Date | null
+  lastVitalsTime?: string
   statusReason?: string
 }
 
 const NurseDashboard = () => {
-  const dispatch = useDispatch<AppDispatch>()
+
+  // Router navigate
   const navigate = useNavigate()
+
+  // Redux dispatch
+  const dispatch = useDispatch<AppDispatch>()
+
+   // Redux selector
   const { beds, wards, selectedWard } = useSelector((state: RootState) => state.beds)
   const { patients, vitals } = useSelector((state: RootState) => state.vitals)
   const { user } = useSelector((state: RootState) => state.auth)
+
   const roleColors = getRoleColors(user?.role || 'nurse')
+
+  // Computed
+  // Use static dates for demo purposes to avoid impure function calls
   const recentChanges = useMemo<BedStatusChange[]>(() => {
-    // Use static dates for demo purposes to avoid impure function calls
     const now = new Date()
     return [
       {
@@ -59,6 +73,7 @@ const NurseDashboard = () => {
       }
     ]
   }, [])
+
   const pendingVitals = useMemo<PendingVitalsPatient[]>(() => {
     const now = new Date()
     const fourHoursAgo = new Date(now.getTime() - 4 * 60 * 60 * 1000)
@@ -84,8 +99,8 @@ const NurseDashboard = () => {
           needsVitals,
           lastVitalsTime: latestVitals ? latestVitals.recordedAt : undefined,
           statusReason: !latestVitals ? 'No vitals recorded' :
-                     new Date(latestVitals.recordedAt) < fourHoursAgo ? 'Vitals overdue' :
-                     'Vitals up to date'
+                    new Date(latestVitals.recordedAt).getTime() < fourHoursAgo.getTime() ? 'Vitals overdue' :
+                    'Vitals up to date'
         }
       })
       .filter(({ needsVitals }) => needsVitals)
@@ -97,6 +112,7 @@ const NurseDashboard = () => {
       .slice(0, 5) // Show max 5 pending vitals
   }, [patients, vitals])
 
+  // Effect
   useEffect(() => {
     dispatch(initializeBeds())
     dispatch(fetchVitals())

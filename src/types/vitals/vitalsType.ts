@@ -1,7 +1,8 @@
+import type { BedStatus } from '@/types/bed/bedType'
 export interface Vitals {
   id: string;
   patientId: string;
-  recordedAt: Date;
+  recordedAt: string;
   bp: string;
   pulse: number;
   temp: number;
@@ -23,3 +24,13 @@ export interface Patient {
   gender: string;
   bedNumber?: string;
 }
+
+export interface BedStatusChange {
+  id: string
+  bedId: string
+  oldStatus: BedStatus
+  newStatus: BedStatus
+  timestamp: Date
+  patientId?: string
+}
+

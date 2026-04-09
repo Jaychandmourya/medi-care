@@ -1,29 +1,9 @@
 import { useMemo, useCallback } from 'react'
 import { User, MapPin, Phone, Briefcase, Calendar, Clock, CheckCircle, AlertCircle, Hash, X, Plus } from 'lucide-react'
-import { Button } from '../ui/Button'
+import { Button } from '@/components/ui/Button'
+import type { AutocompleteDoctor } from '@/types/doctors/doctorType'
 
-interface AutocompleteDoctor {
-  npi: string
-  firstName: string
-  lastName: string
-  middleName?: string
-  credential?: string
-  city?: string
-  state?: string
-  country?: string
-  contact?: string
-  specialty?: string
-  fullName: string
-  gender: string
-  address?: string
-  address2?: string
-  postalCode?: string
-  enumerationDate?: string
-  lastUpdated?: string
-  status?: string
-  taxonomyCode?: string
-}
-
+// Interface
 interface DoctorDetailsModalProps {
   selectedDoctor: AutocompleteDoctor | null
   showDetailsModal: boolean
@@ -39,6 +19,7 @@ export default function DoctorDetailsModal({
   onAddToSystem,
   adding
 }: DoctorDetailsModalProps) {
+
   const formattedEnumerationDate = useMemo(() => {
     if (!selectedDoctor?.enumerationDate) return null
     return new Date(selectedDoctor.enumerationDate).toLocaleDateString('en-US', {

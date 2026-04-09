@@ -47,8 +47,19 @@ export const searchDoctors = createAsyncThunk(
     if (firstName && firstName.trim()) {
       params.append('first_name', firstName.trim())
     }
+    if (lastName && lastName.trim()) {
+      params.append('last_name', lastName.trim())
+    }
+    if (city && city.trim()) {
+      params.append('city', city.trim())
+    }
+    if (state && state.trim()) {
+      params.append('state', state.trim())
+    }
+    if (taxonomy && taxonomy.trim()) {
+      params.append('taxonomy', taxonomy.trim())
+    }
     // Always search for US country doctors
-    params.append('country', 'US')
     const url = `http://localhost:3001/api/npi?${params.toString()}`
     console.log('NPI API URL:11111111', url) // Debug log
 

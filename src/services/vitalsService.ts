@@ -1,8 +1,10 @@
-import type { Vitals, VitalsFormData, Patient as VitalsPatient } from '../types/vitals/vitalsType';
-import { patientService } from './patientServices';
-import { db } from '../features/db/dexie';
+import { db } from '@/features/db/dexie';
+import type { Vitals, VitalsFormData, Patient as VitalsPatient } from '@/types/vitals/vitalsType';
+import { patientService } from '@/services/patientServices';
+
 
 export class VitalsService {
+
   static async getPatients(): Promise<VitalsPatient[]> {
     try {
       const [dbPatients, beds] = await Promise.all([
@@ -48,7 +50,12 @@ export class VitalsService {
 
   static async getVitals(): Promise<Vitals[]> {
     try {
-      return await db.vitals.toArray();
+      const vitals = await db.vitals.toArray();
+      // Ensure recordedAt is serialized as ISO string for Redux
+      return vitals.map(v => ({
+        ...v,
+        recordedAt: typeof (v as any).recordedAt?.toISOString === 'function' ? (v as any).recordedAt.toISOString() : v.recordedAt
+      }));
     } catch (error) {
       console.error('Error fetching vitals:', error);
       return [];
@@ -57,7 +64,12 @@ export class VitalsService {
 
   static async getVitalsByPatientId(patientId: string): Promise<Vitals[]> {
     try {
-      return await db.vitals.where('patientId').equals(patientId).toArray();
+      const vitals = await db.vitals.where('patientId').equals(patientId).toArray();
+      // Ensure recordedAt is serialized as ISO string for Redux
+      return vitals.map(v => ({
+        ...v,
+        recordedAt: typeof (v as any).recordedAt?.toISOString === 'function' ? (v as any).recordedAt.toISOString() : v.recordedAt
+      }));
     } catch (error) {
       console.error('Error fetching vitals for patient:', error);
       return [];
@@ -66,10 +78,10 @@ export class VitalsService {
 
   static async addVitals(vitalsData: VitalsFormData): Promise<Vitals> {
     try {
-      const newVitals: Vitals = {
+      const newVitals = {
         id: Date.now().toString(),
         patientId: vitalsData.patientId,
-        recordedAt: new Date(),
+        recordedAt: new Date().toISOString(),
         bp: vitalsData.bp,
         pulse: parseInt(vitalsData.pulse),
         temp: parseFloat(vitalsData.temp),
@@ -97,7 +109,7 @@ export class VitalsService {
         pulse: vitalsData.pulse ? parseInt(vitalsData.pulse) : existingVitals.pulse,
         temp: vitalsData.temp ? parseFloat(vitalsData.temp) : existingVitals.temp,
         spo2: vitalsData.spo2 ? parseInt(vitalsData.spo2) : existingVitals.spo2,
-        recordedAt: new Date()
+        recordedAt: new Date().toISOString()
       };
 
       await db.vitals.update(id, updatedVitals);

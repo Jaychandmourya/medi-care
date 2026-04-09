@@ -19,7 +19,7 @@ const Sidebar = ({ isOpen, setIsOpen }: any) => {
         className={`
           fixed top-0 left-0 h-full w-64 bg-white shadow-lg z-50
           transform ${isOpen ? "translate-x-0" : "-translate-x-full"}
-          md:translate-x-0 transition-transform duration-300
+          md:translate-x-0 transition-transform duration-300 print:hidden
         `}
       >
         {/* Logo */}

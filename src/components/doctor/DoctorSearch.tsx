@@ -1,74 +1,270 @@
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useState, useEffect, useRef, useMemo, useCallback, Suspense, lazy } from 'react'
 import toast from 'react-hot-toast'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
 import Input from '@/components/ui/Input'
-import { type AppDispatch, type RootState } from '@/app/store'
-import { clearError } from '@/features/doctor/doctorSlice'
-import { fetchLocalDoctors, addLocalDoctor } from '@/features/doctor/doctorThunk'
-import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
-import { doctorDBOperations } from '@/services/doctorServices'
-import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
-import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
-import { appointmentServices } from '@/services/appointmentServices'
-import DoctorSchedule from './DoctorSchedule'
 
-interface DoctorSearchProps {
-  onSearch: (params: {
-    firstName?: string
-    lastName?: string
-    taxonomy?: string
-    city?: string
-    state?: string
-    country?: string
-    contact?: string
-  }) => void
-  initialValues?: {
-    firstName?: string
-    lastName?: string
-    city?: string
-    state?: string
-    country?: string
-    contact?: string
-    specialty?: string
-    postalCode?: string
-    address?: string
-    gender?: string
-    email?: string
-  }
-  onClear?: () => void
+// Import Types files
+import { type AppDispatch, type RootState } from '@/app/store'
+import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
+
+// Import form, validation and zod
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+
+// Import dispatch and selector for redux
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import Services
+import { doctorDBOperations } from '@/services/doctorServices'
+
+// Import Thunk file for redux
+import { fetchLocalDoctors, addLocalDoctor } from '@/features/doctor/doctorThunk'
+
+// Import Slice file for redux
+import { clearError } from '@/features/doctor/doctorSlice'
+import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
+import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
+
+// Lazy load components
+const DoctorSchedule = lazy(() => import('@/components/doctor/DoctorSchedule'))
+
+// Constants
+const STORAGE_KEYS = {
+  FORM_DATA: 'doctorFormData',
+  DOCTOR_DATA: 'currentDoctorData',
+  DOCTOR_ADDED: 'doctorAdded'
+} as const
+
+const DEPARTMENTS = [
+  'General Medicine',
+  'Cardiology',
+  'Orthopedics',
+  'Pediatrics',
+  'Dermatology'
+] as const
+
+// Sub-components
+interface SpecialtyDropdownProps {
+  filteredSpecialties: typeof COMMON_TAXONOMIES
+  onSelect: (taxonomy: typeof COMMON_TAXONOMIES[0]) => void
+  specialtyRef: React.RefObject<HTMLDivElement>
+  showDropdown: boolean
+  toggleDropdown: () => void
+  register: ReturnType<typeof useForm<DoctorFormData>>['register']
+  error?: { message?: string }
 }
 
-export default function DoctorSearch({ initialValues, onClear }: DoctorSearchProps) {
-  const dispatch = useDispatch<AppDispatch>()
-  const [adding, setAdding] = useState(false)
-  const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false)
-  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
-  const [addingSchedule, setAddingSchedule] = useState(false)
-  const [lastAddedDoctor, setLastAddedDoctor] = useState<any>(null)
-  const [doctorAdded, setDoctorAdded] = useState(false)
+function SpecialtyDropdown({
+  filteredSpecialties,
+  onSelect,
+  specialtyRef,
+  showDropdown,
+  toggleDropdown,
+  register,
+  error
+}: SpecialtyDropdownProps) {
+  return (
+    <div ref={specialtyRef} className="relative">
+      <Input
+        id="specialty"
+        label="Specialty"
+        placeholder="Enter specialty or select from dropdown"
+        registration={register('specialty')}
+        error={error}
+        onClick={toggleDropdown}
+      />
+      {showDropdown && filteredSpecialties.length > 0 && (
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
+          <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
+            <p className="text-xs text-gray-500">
+              {filteredSpecialties.length} specialties found. Click to select.
+            </p>
+          </div>
+          <div className="max-h-80 overflow-y-auto">
+            {filteredSpecialties.map((taxonomy, index) => (
+              <div
+                key={`${taxonomy.code}-${index}`}
+                className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer"
+                onClick={() => onSelect(taxonomy)}
+              >
+                <div className="flex flex-col">
+                  <span className="font-medium text-gray-900">{taxonomy.desc}</span>
+                  <span className="text-sm text-gray-500">{taxonomy.code}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
 
-  // Get doctors for schedule form
+interface Step {
+  id: number
+  title: string
+  subtitle: string
+}
+
+interface StepperProps {
+  steps: Step[]
+  currentStep: number
+  completedSteps: number[]
+  onStepClick: (step: number) => void
+}
+
+function Stepper({ steps, currentStep, completedSteps, onStepClick }: StepperProps) {
+  return (
+    <div className="flex items-center">
+      {steps.map((step, index) => (
+        <div key={step.id} className="flex items-center">
+          {index > 0 && (
+            <div className="w-12 h-0.5 bg-gray-300 mx-4">
+              <div className={`h-full transition-all duration-300 ${
+                currentStep >= step.id ? 'bg-blue-600' : 'bg-gray-300'
+              }`} />
+            </div>
+          )}
+          <StepButton
+            step={step}
+            isActive={currentStep === step.id}
+            isCompleted={completedSteps.includes(step.id)}
+            onClick={() => onStepClick(step.id)}
+          />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+interface StepButtonProps {
+  step: Step
+  isActive: boolean
+  isCompleted: boolean
+  onClick: () => void
+}
+
+function StepButton({ step, isActive, isCompleted, onClick }: StepButtonProps) {
+  if (isActive) {
+    return (
+      <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg">
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-white text-blue-600">
+          {step.id}
+        </div>
+        <div className="text-left">
+          <div className="font-medium">{step.title}</div>
+          <div className="text-xs opacity-75">{step.subtitle}</div>
+        </div>
+      </div>
+    )
+  }
+
+  if (isCompleted) {
+    return (
+      <button
+        type="button"
+        onClick={onClick}
+        className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-all duration-200"
+      >
+        <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-green-600 text-white">
+          ✓
+        </div>
+        <div className="text-left">
+          <div className="font-medium">{step.title}</div>
+          <div className="text-xs opacity-75">{step.subtitle}</div>
+        </div>
+      </button>
+    )
+  }
+
+  return (
+    <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-50 text-gray-400 cursor-not-allowed">
+      <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-400">
+        {step.id}
+      </div>
+      <div className="text-left">
+        <div className="font-medium">{step.title}</div>
+        <div className="text-xs opacity-75">{step.subtitle}</div>
+      </div>
+    </div>
+  )
+}
+
+const EMPTY_FORM_VALUES: DoctorFormData = {
+  firstName: '',
+  lastName: '',
+  department: 'General Medicine',
+  middleName: undefined,
+  credential: undefined,
+  specialty: undefined,
+  phone: undefined,
+  contact: undefined,
+  email: undefined,
+  city: undefined,
+  state: undefined,
+  postalCode: undefined,
+  address: undefined,
+  country: undefined,
+  gender: undefined,
+  addedAt: undefined
+}
+
+// Types
+interface DoctorData {
+  id: string
+  npi: string
+  firstName: string
+  lastName: string
+  middleName?: string
+  specialty?: string
+  department?: string
+  email?: string
+  city?: string
+  state?: string
+  country?: string
+  contact?: string
+  address?: string
+  gender?: string
+  postalCode?: string
+}
+
+interface DoctorSearchProps {
+  initialValues?: Partial<DoctorData>
+}
+
+export default function DoctorSearch({ initialValues }: DoctorSearchProps) {
+
+  // Redux dispatch
+  const dispatch = useDispatch<AppDispatch>()
+
+  // Redux Selector
   const { localDoctors: doctors } = useSelector((state: RootState) => state.doctors)
 
+  // Refs
+  const searchRef = useRef<HTMLDivElement>(null)
+  const specialtyRef = useRef<HTMLDivElement>(null)
+
+  // State
+  const [adding, setAdding] = useState<boolean>(false)
+  const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState<boolean>(false)
+  const [addingSchedule, setAddingSchedule] = useState<boolean>(false)
+  const [doctorAdded, setDoctorAdded] = useState<boolean>(false)
+
+  const [currentStep, setCurrentStep] = useState<1 | 2>(1)
+  const [lastAddedDoctor, setLastAddedDoctor] = useState<DoctorData | null>(null)
+
+
+  // Computed
   const defaultValues = useMemo(() => ({
-    firstName: initialValues?.firstName || '',
-    lastName: initialValues?.lastName || '',
-    middleName: '',
-    specialty: initialValues?.specialty || '',
-    department: 'General Medicine' as const,
-    contact: initialValues?.contact || '',
-    email: initialValues?.email || '',
-    city: initialValues?.city || '',
-    state: initialValues?.state || '',
-    postalCode: initialValues?.postalCode || '',
-    address: initialValues?.address || '',
-    country: initialValues?.country || '',
-    gender: (initialValues?.gender as 'M' | 'F' | 'O' | undefined) || undefined
+    ...EMPTY_FORM_VALUES,
+    ...Object.fromEntries(
+      Object.entries(initialValues || {}).filter(([, v]) => v !== undefined)
+    )
   }), [initialValues])
 
+  // Form control
   const {
     register,
     handleSubmit,
@@ -83,8 +279,7 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
 
   const watchedValues = watch()
   const specialtyValue = watchedValues.specialty
-  const searchRef = useRef<HTMLDivElement>(null)
-  const specialtyRef = useRef<HTMLDivElement>(null)
+
 
   const selectSpecialty = useCallback((taxonomy: typeof COMMON_TAXONOMIES[0]) => {
     setValue('specialty', taxonomy.desc)
@@ -95,6 +290,7 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
     setShowSpecialtyDropdown(prev => !prev)
   }, [])
 
+  // Effect
   useEffect(() => {
     if (initialValues) {
       setValue('firstName', initialValues.firstName || '')
@@ -110,7 +306,6 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
     }
   }, [initialValues, setValue])
 
-  // Load doctor schedules when component mounts or schedule step is active
   useEffect(() => {
     if (currentStep === 2) {
       dispatch(fetchLocalDoctors())
@@ -120,16 +315,12 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
 
   // Restore current doctor data on component mount (only for current session)
   useEffect(() => {
-    // Clear all session storage on page refresh to ensure temporary data only
-    sessionStorage.removeItem('doctorFormData')
-    sessionStorage.removeItem('currentDoctorData')
-    sessionStorage.removeItem('doctorAdded')
-
-    // Don't restore any data on component mount - start fresh
+    Object.values(STORAGE_KEYS).forEach(key => sessionStorage.removeItem(key))
     setLastAddedDoctor(null)
     setDoctorAdded(false)
   }, [])
 
+  // Methods
   const handleClickOutside = useCallback((event: MouseEvent) => {
     if (searchRef.current && !searchRef.current.contains(event.target as Node)) {
       setShowSpecialtyDropdown(false)
@@ -145,7 +336,6 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
   }, [handleClickOutside])
 
   const handleAddToSystem = useCallback(async (data: DoctorFormData) => {
-    // Enhanced validation
     if (!data.firstName?.trim()) {
       toast.error('First name is required')
       return
@@ -157,21 +347,16 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
 
     setAdding(true)
     try {
-      // Generate a unique NPI or use a placeholder
       const npi = `LOCAL-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-
-      // Enhanced duplicate check with more criteria
       const doctorExists = await doctorDBOperations.doctorExists(
         data.firstName?.trim() || '',
         data.lastName?.trim() || ''
       )
-
       if (doctorExists) {
         toast.error('A doctor with this name already exists in the system')
         return
       }
 
-      // Enhanced doctor data object with validation
       const doctorData = {
         npi: npi,
         firstName: data.firstName?.trim() || '',
@@ -192,20 +377,17 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
         status: 'active' as const
       }
 
-      // Add to database with enhanced error handling
       const result = await dispatch(addLocalDoctor(doctorData)).unwrap()
 
-      // Set the last added doctor with complete data
       setLastAddedDoctor(result)
-      setDoctorAdded(true) // Mark that doctor has been added
+      setDoctorAdded(true)
 
-      // Store current doctor data and flag for potential use (temporary)
-      sessionStorage.setItem('currentDoctorData', JSON.stringify(result))
-      sessionStorage.setItem('doctorAdded', 'true')
+      sessionStorage.setItem(STORAGE_KEYS.DOCTOR_DATA, JSON.stringify(result))
+      sessionStorage.setItem(STORAGE_KEYS.DOCTOR_ADDED, 'true')
 
       toast.success(`Dr. ${result.firstName} ${result.lastName} added successfully! Moving to schedule setup.`)
       reset()
-      setCurrentStep(2) // Move to schedule step after successful doctor addition
+      setCurrentStep(2)
     } catch (error) {
       console.error('Failed to add doctor:', error)
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
@@ -216,25 +398,9 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
   }, [dispatch, reset])
 
   const handleClear = useCallback(() => {
-    reset({
-      firstName: '',
-      lastName: '',
-      specialty: '',
-      department: 'General Medicine',
-      contact: '',
-      email: '',
-      city: '',
-      state: '',
-      postalCode: '',
-      address: '',
-      country: '',
-      gender: '' as '' | 'M' | 'F' | 'O'
-    })
+    reset(EMPTY_FORM_VALUES)
     dispatch(clearError())
-    // Clear stored data
-    sessionStorage.removeItem('doctorFormData')
-    sessionStorage.removeItem('currentDoctorData')
-    sessionStorage.removeItem('doctorAdded')
+    Object.values(STORAGE_KEYS).forEach(key => sessionStorage.removeItem(key))
     setLastAddedDoctor(null)
     setDoctorAdded(false)
   }, [reset, dispatch])
@@ -242,20 +408,17 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
   const clearCurrentDoctorData = useCallback(() => {
     setLastAddedDoctor(null)
     setDoctorAdded(false)
-    sessionStorage.removeItem('currentDoctorData')
-    sessionStorage.removeItem('doctorAdded')
+    sessionStorage.removeItem(STORAGE_KEYS.DOCTOR_DATA)
+    sessionStorage.removeItem(STORAGE_KEYS.DOCTOR_ADDED)
   }, [])
 
   const handleStepChange = useCallback((step: 1 | 2) => {
     if (step === 1) {
-      // Check sessionStorage for existing data when going to step 1
-      const doctorFormData = sessionStorage.getItem('doctorFormData')
-      const currentDoctorData = sessionStorage.getItem('currentDoctorData')
+      const doctorFormData = sessionStorage.getItem(STORAGE_KEYS.FORM_DATA)
+      const currentDoctorData = sessionStorage.getItem(STORAGE_KEYS.DOCTOR_DATA)
 
       if (doctorFormData || currentDoctorData) {
-        // Try to parse and use currentDoctorData first, then fallback to doctorFormData
         let dataToFill = null
-
         try {
           if (currentDoctorData) {
             dataToFill = JSON.parse(currentDoctorData)
@@ -268,8 +431,8 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
 
         // If we have valid data, fill the form and move to step 2
         if (dataToFill) {
-          // Map the data to form fields
-          const formData = {
+          const formData: DoctorFormData = {
+            ...EMPTY_FORM_VALUES,
             firstName: dataToFill.firstName || '',
             lastName: dataToFill.lastName || '',
             middleName: dataToFill.middleName || '',
@@ -282,7 +445,7 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
             postalCode: dataToFill.postalCode || '',
             address: dataToFill.address || '',
             country: dataToFill.country || '',
-            gender: (dataToFill.gender as 'M' | 'F' | 'O' | '') || ''
+            gender: ['M', 'F', 'O'].includes(dataToFill.gender) ? dataToFill.gender : undefined
           }
 
           // Fill the form with the data
@@ -293,46 +456,21 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
             setLastAddedDoctor(dataToFill)
             setDoctorAdded(true)
           }
-
-          // Move directly to Doctor Schedule step
           setCurrentStep(2)
           return
         }
       }
 
-      // If no data or invalid data, proceed with normal step 1 logic
       setLastAddedDoctor(null)
       setDoctorAdded(false)
 
-      // Clear all session storage first
-      sessionStorage.removeItem('doctorFormData')
-      sessionStorage.removeItem('currentDoctorData')
-      sessionStorage.removeItem('doctorAdded')
+      Object.values(STORAGE_KEYS).forEach(key => sessionStorage.removeItem(key))
 
-      // Reset form to default values with a slight delay to ensure it takes effect
-      setTimeout(() => {
-        reset({
-          firstName: '',
-          lastName: '',
-          middleName: '',
-          specialty: '',
-          department: 'General Medicine',
-          contact: '',
-          email: '',
-          city: '',
-          state: '',
-          postalCode: '',
-          address: '',
-          country: '',
-          gender: '' as '' | 'M' | 'F' | 'O'
-        })
-      }, 0)
+      setTimeout(() => reset(EMPTY_FORM_VALUES), 0)
     }
 
-    // Save current form data before switching steps (temporary)
     if (currentStep === 1 && step === 2) {
-      const currentFormData = watchedValues
-      sessionStorage.setItem('doctorFormData', JSON.stringify(currentFormData))
+      sessionStorage.setItem(STORAGE_KEYS.FORM_DATA, JSON.stringify(watchedValues))
     }
 
     setCurrentStep(step)
@@ -352,298 +490,85 @@ export default function DoctorSearch({ initialValues, onClear }: DoctorSearchPro
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
       {/* Stepper Navigation */}
       <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center">
-            {/* Step 1 */}
-            {currentStep === 1 ? (
-              <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-white text-blue-600">
-                  1
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Add Doctor</div>
-                  <div className="text-xs opacity-75">Enter doctor information</div>
-                </div>
-              </div>
-            ) : doctorAdded ? (
-              <button
-                type="button"
-                onClick={() => {
-                  handleStepChange(1)
-                }}
-                className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-all duration-200"
-              >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-green-600 text-white">
-                  ✓
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Add Doctor</div>
-                  <div className="text-xs opacity-75">Doctor added - Click to edit</div>
-                </div>
-              </button>
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  handleStepChange(1)
-                }}
-                className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-50 text-gray-400 hover:bg-gray-100 cursor-not-allowed transition-all duration-200"
-              >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-400">
-                  1
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Add Doctor</div>
-                  <div className="text-xs opacity-75">Click to start adding doctor</div>
-                </div>
-              </button>
-            )}
-
-            {/* Connector */}
-            <div className="w-12 h-0.5 bg-gray-300 mx-4">
-              <div className={`h-full transition-all duration-300 ${
-                currentStep === 2 ? 'bg-blue-600' : 'bg-gray-300'
-              }`} />
-            </div>
-
-            {/* Step 2 */}
-            {currentStep === 2 ? (
-              <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-blue-600 text-white shadow-lg">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-white text-blue-600">
-                  2
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Doctor Schedule</div>
-                  <div className="text-xs opacity-75">Set working hours</div>
-                </div>
-              </div>
-            ) : doctorAdded ? (
-              <button
-                type="button"
-                onClick={() => handleStepChange(2)}
-                className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-green-50 text-green-700 hover:bg-green-100 border border-green-200 transition-all duration-200"
-              >
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-green-600 text-white">
-                  ✓
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Doctor Schedule</div>
-                  <div className="text-xs opacity-75">Doctor added - Click to continue</div>
-                </div>
-              </button>
-            ) : (
-              <div className="flex items-center space-x-3 px-4 py-2 rounded-lg bg-gray-50 text-gray-400 cursor-not-allowed">
-                <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-semibold bg-gray-200 text-gray-400">
-                  2
-                </div>
-                <div className="text-left">
-                  <div className="font-medium">Doctor Schedule</div>
-                  <div className="text-xs opacity-75">Complete doctor setup first</div>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+        <Stepper
+          steps={[
+            { id: 1, title: 'Add Doctor', subtitle: currentStep === 1 ? 'Enter doctor information' : doctorAdded ? 'Doctor added - Click to edit' : 'Click to start adding doctor' },
+            { id: 2, title: 'Doctor Schedule', subtitle: currentStep === 2 ? 'Set working hours' : doctorAdded ? 'Doctor added - Click to continue' : 'Complete doctor setup first' }
+          ]}
+          currentStep={currentStep}
+          completedSteps={doctorAdded ? [1] : []}
+          onStepClick={(step) => handleStepChange(step as 1 | 2)}
+        />
       </div>
 
       {/* Step 1: Add Doctor Form */}
       {currentStep === 1 && (
-        <form onSubmit={handleSubmit(handleAddToSystem, (errors) => {
-          console.error('Form validation errors:', errors)
-          const errorMessages = Object.values(errors).map(err => err?.message).filter(Boolean).join(', ')
-        })}>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {/* First Name */}
-        <Input
-          id="firstName"
-          label="First Name"
-          placeholder="Enter first name"
-          registration={register('firstName')}
-          required
-          error={errors.firstName}
-        />
+        <form onSubmit={handleSubmit(handleAddToSystem, (errors) => console.error('Form validation errors:', errors))}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {/* Required Fields */}
+            <Input id="firstName" label="First Name" placeholder="Enter first name" registration={register('firstName')} required error={errors.firstName} />
+            <Input id="lastName" label="Last Name" placeholder="Enter last name" registration={register('lastName')} required error={errors.lastName} />
 
-        {/* Last Name */}
-        <Input
-          id="lastName"
-          label="Last Name"
-          placeholder="Enter last name"
-          registration={register('lastName')}
-          required
-          error={errors.lastName}
-        />
+            {/* Specialty Dropdown */}
+            <SpecialtyDropdown
+              filteredSpecialties={filteredSpecialties}
+              onSelect={selectSpecialty}
+              specialtyRef={specialtyRef}
+              showDropdown={showSpecialtyDropdown}
+              toggleDropdown={toggleSpecialtyDropdown}
+              register={register}
+              error={errors.specialty}
+            />
 
-        {/* Specialty */}
-        <div ref={specialtyRef} className="relative">
-          <Input
-            id="specialty"
-            label="Specialty"
-            placeholder="Enter specialty or select from dropdown"
-            registration={register('specialty')}
-            error={errors.specialty}
-            onClick={toggleSpecialtyDropdown}
-          />
+            {/* Department Select */}
+            <Input id="department" label="Department" required as="select" registration={register('department')} error={errors.department}>
+              <option value="">Select Department</option>
+              {DEPARTMENTS.map(dept => <option key={dept} value={dept}>{dept}</option>)}
+            </Input>
 
-          {/* Specialty Dropdown */}
-          {showSpecialtyDropdown && filteredSpecialties.length > 0 && (
-            <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-96 overflow-y-auto">
-              <div className="p-2 border-b border-gray-100 sticky top-0 bg-white">
-                <p className="text-xs text-gray-500">
-                  {filteredSpecialties.length} specialties found. Click to select.
-                </p>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {filteredSpecialties.map((taxonomy, index) => (
-                  <div
-                    key={`${taxonomy.code}-${index}`}
-                    className="p-3 hover:bg-gray-50 border-b border-gray-100 last:border-b-0 cursor-pointer"
-                    onClick={() => selectSpecialty(taxonomy)}
-                  >
-                    <div className="flex flex-col">
-                      <span className="font-medium text-gray-900">{taxonomy.desc}</span>
-                      <span className="text-sm text-gray-500">{taxonomy.code}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
+            {/* Contact Info */}
+            <Input id="contact" label="Contact" placeholder="Phone or email" registration={register('contact')} error={errors.contact} />
+            <Input id="email" label="Email" placeholder="Enter email address" registration={register('email')} error={errors.email} />
 
-        {/* Department */}
-        <Input
-          id="department"
-          label="Department"
-          required
-          as="select"
-          registration={register('department')}
-          error={errors.department}
-        >
-          <option value="">Select Department</option>
-          <option value="General Medicine">General Medicine</option>
-          <option value="Cardiology">Cardiology</option>
-          <option value="Orthopedics">Orthopedics</option>
-          <option value="Pediatrics">Pediatrics</option>
-          <option value="Dermatology">Dermatology</option>
-        </Input>
+            {/* Location Fields */}
+            <Input id="city" label="City" placeholder="Enter city" registration={register('city')} error={errors.city} />
+            <Input id="state" label="State" placeholder="Enter state" registration={register('state')} error={errors.state} />
+            <Input id="country" label="Country" placeholder="Enter country" registration={register('country')} error={errors.country} />
+            <Input id="postalCode" label="Postal Code" placeholder="Enter postal code" registration={register('postalCode')} error={errors.postalCode} />
 
-        {/* Contact */}
-        <Input
-          id="contact"
-          label="Contact"
-          placeholder="Phone or email"
-          registration={register('contact')}
-          error={errors.contact}
-        />
+            {/* Address & Gender */}
+            <Input id="address" label="Address" placeholder="Enter street address" registration={register('address')} error={errors.address} as="textarea" rows={3} />
+            <Input id="gender" label="Gender" as="select" registration={register('gender')} error={errors.gender}>
+              <option value="">Select gender</option>
+              <option value="M">Male</option>
+              <option value="F">Female</option>
+              <option value="O">Other</option>
+            </Input>
+          </div>
 
-        {/* Email */}
-        <Input
-          id="email"
-          label="Email"
-          placeholder="Enter email address"
-          registration={register('email')}
-          error={errors.email}
-        />
-
-        {/* City */}
-        <Input
-          id="city"
-          label="City"
-          placeholder="Enter city"
-          registration={register('city')}
-          error={errors.city}
-        />
-
-        {/* State */}
-        <Input
-          id="state"
-          label="State"
-          placeholder="Enter state"
-          registration={register('state')}
-          error={errors.state}
-        />
-
-        {/* country */}
-        <Input
-          id="country"
-          label="country"
-          placeholder="Enter country"
-          registration={register('country')}
-          error={errors.country}
-        />
-
-        {/* Postal Code */}
-        <Input
-          id="postalCode"
-          label="Postal Code"
-          placeholder="Enter postal code (e.g., 12345, 12345-6789, or 077537594)"
-          registration={register('postalCode')}
-          error={errors.postalCode}
-        />
-
-        {/* Address */}
-        <Input
-          id="address"
-          label="Address"
-          placeholder="Enter street address (e.g., 123 Main St, Apt 4B)"
-          registration={register('address')}
-          error={errors.address}
-          as="textarea"
-          rows={3}
-        />
-
-        {/* Gender */}
-        <div>
-          <label htmlFor="gender" className="block text-sm font-medium text-gray-700 mb-1">
-            Gender
-          </label>
-          <select
-            id="gender"
-            {...register('gender')}
-            className="w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm border-gray-300"
-          >
-            <option value="">Select gender</option>
-            <option value="M">Male</option>
-            <option value="F">Female</option>
-            <option value="O">Other</option>
-          </select>
-          {errors.gender && (
-            <p className="mt-1 text-sm text-red-600">{errors.gender.message}</p>
-          )}
-        </div>
-        </div>
-        <div className="flex flex-wrap gap-3 pt-4">
-          <Button
-            type="submit"
-            variant="outline"
-            loading={adding}
-            disabled={adding}
-            className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700 shadow-lg"
-          >
-            {adding ? 'Adding Doctor...' : 'Add Doctor'}
-          </Button>
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={handleClear}
-            className="px-8 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50"
-          >
-            Clear
-          </Button>
-        </div>
-      </form>
+          <div className="flex flex-wrap gap-3 pt-4">
+            <Button type="submit" variant="outline" loading={adding} disabled={adding} className="px-8 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-0 hover:from-blue-700 hover:to-indigo-700 shadow-lg">
+              {adding ? 'Adding Doctor...' : 'Add Doctor'}
+            </Button>
+            <Button type="button" variant="ghost" onClick={handleClear} className="px-8 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50">
+              Clear
+            </Button>
+          </div>
+        </form>
       )}
 
       {/* Step 2: Doctor Schedule Form */}
       {currentStep === 2 && (
-        <DoctorSchedule
-          lastAddedDoctor={lastAddedDoctor}
-          doctors={doctors}
-          addingSchedule={addingSchedule}
-          setAddingSchedule={setAddingSchedule}
-          clearCurrentDoctorData={clearCurrentDoctorData}
-          onNavigateToAddDoctor={() => handleStepChange(1)}
-        />
+        <Suspense fallback={<div className="p-8 text-center text-gray-500">Loading schedule component...</div>}>
+          <DoctorSchedule
+            lastAddedDoctor={lastAddedDoctor}
+            doctors={doctors}
+            addingSchedule={addingSchedule}
+            setAddingSchedule={setAddingSchedule}
+            clearCurrentDoctorData={clearCurrentDoctorData}
+            onNavigateToAddDoctor={() => handleStepChange(1)}
+          />
+        </Suspense>
       )}
     </div>
   )

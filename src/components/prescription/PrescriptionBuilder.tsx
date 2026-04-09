@@ -1,71 +1,79 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
-import { useDispatch, useSelector } from 'react-redux'
+import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react'
+import toast from 'react-hot-toast'
+
+// Import icons file
 import { Plus, Trash2, Save } from 'lucide-react'
+
+// Import Types files
+import type { AppDispatch, RootState } from '@/app/store'
+import type { Appointment } from '@/features/db/dexie'
+import type { Medicine } from '@/types/prescription/prescriptionType'
+
+// Import UI components
+import Input from '@/components/ui/Input'
+import DatePicker from '@/components/ui/DatePicker'
+import { Button } from '@/components/ui/Button'
+import { Label } from '@/components/ui/Label'
+
+// Import form control, validation and zod
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import toast from 'react-hot-toast'
+
+// Import dispatch and selector for redux
+import { useDispatch, useSelector } from 'react-redux'
+
+// Import Thunk file for redux
+import { getAllPatients } from '@/features/patient/patientThunk'
+import { fetchAppointments } from '@/features/appointment/appointmentThunk'
+
+//  Import Slice file for redux
 import {
   setCurrentPrescription,
   removeMedicine,
   savePrescriptionToHistory,
-  type Medicine
 } from '@/features/prescription/prescriptionSlice'
-import { getAllPatients } from '@/features/patient/patientThunk'
-import { fetchAppointments } from '@/features/appointment/appointmentThunk'
-import type { AppDispatch, RootState } from '@/app/store'
-import type { Appointment } from '@/features/db/dexie'
-import AddMedicineDialog from './dialog/AddMedicineDialog'
-import Input from '@/components/ui/Input'
-import DatePicker from '@/components/ui/DatePicker'
-import { Button } from '@/components/ui/Button'
-import { Label } from '../ui/Label'
 
-const prescriptionSchema = z.object({
-  patientId: z.string().min(1, 'Patient is required'),
-  diagnosis: z.string().min(10, 'Diagnosis must be at least 10 characters').max(500, 'Diagnosis must be less than 500 characters'),
-  generalNotes: z.string().max(1000, 'General notes must be less than 1000 characters').optional(),
-  followUpDate: z.string().min(1, 'Follow-up date is required'),
-}).refine((data) => {
-  if (data.followUpDate) {
-    const followUp = new Date(data.followUpDate)
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    return followUp >= today
-  }
-  return true
-}, {
-  message: 'Follow-up date cannot be in the past',
-  path: ['followUpDate']
-})
+//  Lazy loading components
+const AddMedicineDialog = lazy(() => import('./dialog/AddMedicineDialog'))
+
+// Schema
+import { prescriptionSchema } from '@/validation-schema/prescriptionSchema'
 
 type PrescriptionFormData = z.infer<typeof prescriptionSchema>
 
 const PrescriptionBuilder = () => {
+
+  // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
+
+  // Redux selector
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
   const patients = useSelector((state: RootState) => state.patients.list)
   const appointments = useSelector((state: RootState) => state.appointments.appointments)
   const { user } = useSelector((state: RootState) => state.auth)
 
-  const [showMedicineForm, setShowMedicineForm] = useState(false)
+  // State management
+  const [showMedicineForm, setShowMedicineForm] = useState<boolean>(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
-  const generateId = useCallback(() => {
-    // Generate a unique ID with prefix for better identification
-    const timestamp = Date.now().toString(36); // Base36 timestamp
-    const randomStr = crypto.randomUUID().replace(/-/g, '').substring(0, 8); // First 8 chars of UUID
-    return `RX_${timestamp}_${randomStr}`; // Format: RX_timestamp_randomString
-  }, [])
 
+  // Effect
   useEffect(() => {
     dispatch(getAllPatients())
-    // Fetch appointments for the current month
     const now = new Date()
     const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
     const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
     dispatch(fetchAppointments({ startDate: startOfMonth, endDate: endOfMonth }))
   }, [dispatch])
 
+   // Generate a unique ID with prefix for better identification
+  const generateId = useCallback(() => {
+    const timestamp = Date.now().toString(36); // Base36 timestamp
+    const randomStr = crypto.randomUUID().replace(/-/g, '').substring(0, 8); // First 8 chars of UUID
+    return `RX_${timestamp}_${randomStr}`; // Format: RX_timestamp_randomString
+  }, [])
+
+  // Form control
   const {
     register: registerPrescription,
     handleSubmit: handlePrescriptionSubmit,
@@ -127,6 +135,7 @@ const PrescriptionBuilder = () => {
   const watchedFollowUpDate = watch('followUpDate')
   const watchedPatientId = watch('patientId')
   const watchedDiagnosis = watch('diagnosis')
+
   // Create temporary prescription when form has data to enable medicine management
   const tempPrescription = useMemo(() => {
     if (!currentPrescription && (watchedPatientId || watchedDiagnosis)) {
@@ -147,6 +156,7 @@ const PrescriptionBuilder = () => {
     return null
   }, [watchedPatientId, watchedDiagnosis, watchedFollowUpDate, currentPrescription, patients])
 
+  // Effect
   useEffect(() => {
     if (tempPrescription) {
       dispatch(setCurrentPrescription(tempPrescription))
@@ -155,15 +165,10 @@ const PrescriptionBuilder = () => {
 
 
   const onPrescriptionSubmit = useCallback((data: PrescriptionFormData) => {
-    // Keep existing medicines if they exist
     const existingMedicines = currentPrescription?.medicines || [];
-
-    // Get patient from selected patient ID
     const selectedPatient = patients.find(p => p.patientId === data.patientId);
     const patientName = selectedPatient?.name || 'Unknown Patient';
 
-    // Always generate a new unique ID for saved prescriptions
-    // This ensures each saved prescription has a unique identifier
     const newPrescriptionId = generateId();
 
     // Get current doctor's information
@@ -171,14 +176,14 @@ const PrescriptionBuilder = () => {
     const doctorName = user?.name || 'Dr. Smith';
 
     const prescription = {
-      id: newPrescriptionId, // Always generate new ID for saved prescriptions
+      id: newPrescriptionId,
       ...data,
-      patientName: patientName, // Dynamic patient name from selection
-      doctorId: currentDoctorId || 'doc1', // Use current doctor's ID or fallback
-      doctorName: doctorName, // Use current doctor's name
-      medicines: existingMedicines, // Preserve existing medicines
-      createdAt: currentPrescription?.createdAt || new Date().toISOString(), // Keep original creation date or use now
-      updatedAt: new Date().toISOString(), // Add update timestamp
+      patientName: patientName,
+      doctorId: currentDoctorId || 'doc1',
+      doctorName: doctorName,
+      medicines: existingMedicines,
+      createdAt: currentPrescription?.createdAt || new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
       status: 'active' as const,
       generalNotes: data.generalNotes || '',
     }
@@ -198,6 +203,7 @@ const PrescriptionBuilder = () => {
     // Reset the form
     resetPrescriptionForm()
   }, [currentPrescription, patients, generateId, dispatch, resetPrescriptionForm, getCurrentDoctorId, user?.name])
+
 
 
   const handleEditMedicine = useCallback((medicine: Medicine) => {
@@ -408,12 +414,14 @@ const PrescriptionBuilder = () => {
       </div>
 
       {/* Medicine Form Modal */}
-      <AddMedicineDialog
-        showMedicineForm={showMedicineForm}
-        editingMedicine={editingMedicine}
-        onClose={handleCloseMedicineForm}
-        currentPrescription={currentPrescription}
-      />
+      <Suspense fallback={<div className="flex items-center justify-center p-8">Loading medicine form...</div>}>
+        <AddMedicineDialog
+          showMedicineForm={showMedicineForm}
+          editingMedicine={editingMedicine}
+          onClose={handleCloseMedicineForm}
+          currentPrescription={currentPrescription}
+        />
+      </Suspense>
     </div>
   )
 }

@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Vitals, Patient as VitalsPatient } from '../../types/vitals/vitalsType';
+import type { Vitals, Patient as VitalsPatient } from '@/types/vitals/vitalsType';
 import {
   fetchPatients,
   fetchVitals,

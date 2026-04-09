@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import { User, MapPin, Phone, Briefcase, Calendar, X } from 'lucide-react'
-import { Button } from '../ui/Button'
-import { type LocalDoctor } from '@/features/doctor/doctorSlice'
+import { Button } from '@/components/ui/Button'
+import type { LocalDoctor } from '@/types/doctors/doctorType'
 
 interface DoctorViewModalProps {
   doctor: LocalDoctor | null

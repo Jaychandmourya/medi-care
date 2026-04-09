@@ -14,3 +14,15 @@ export interface Bed {
   admittedAt?: string
   notes?: string
 }
+
+export interface BedFormData {
+  ward: string
+  status: BedStatus
+  notes?: string
+}
+
+export interface WardFormData {
+  name: string
+  floor: string
+  totalBeds: number
+}

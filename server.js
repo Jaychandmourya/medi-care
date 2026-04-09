@@ -80,12 +80,13 @@ app.get('/api/npi', async (req, res) => {
 
       // Generate mock doctors matching the search
       if (searchName.includes('joh')) {
+        const dynamicLastName = last_name ? last_name.toString().toUpperCase() : "SMITH"
         mockDoctors.push(
           {
             basic: {
               npi: "1111111111",
               first_name: "JOHN",
-              last_name: "SMITH",
+              last_name: dynamicLastName,
               credential: "MD",
               gender: "M",
               status: "A"
@@ -96,7 +97,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "BOSTON",
                 state: "MA",
                 postal_code: "02101",
-                telephone_number: "555-123-4567"
+                telephone_number: "555-123-4567",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -111,7 +113,7 @@ app.get('/api/npi', async (req, res) => {
             basic: {
               npi: "2222222222",
               first_name: "JOHN",
-              last_name: "DAVIS",
+              last_name: dynamicLastName,
               credential: "DO",
               gender: "M",
               status: "A"
@@ -122,7 +124,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "NEW YORK",
                 state: "NY",
                 postal_code: "10001",
-                telephone_number: "555-987-6543"
+                telephone_number: "555-987-6543",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -137,7 +140,7 @@ app.get('/api/npi', async (req, res) => {
             basic: {
               npi: "3333333333",
               first_name: "JOHANNA",
-              last_name: "WILSON",
+              last_name: dynamicLastName,
               credential: "MD",
               gender: "F",
               status: "A"
@@ -148,7 +151,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "CHICAGO",
                 state: "IL",
                 postal_code: "60601",
-                telephone_number: "555-555-1234"
+                telephone_number: "555-555-1234",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -163,7 +167,7 @@ app.get('/api/npi', async (req, res) => {
             basic: {
               npi: "4444444444",
               first_name: "JOHNNY",
-              last_name: "BROWN",
+              last_name: dynamicLastName,
               credential: "MD",
               gender: "M",
               status: "A"
@@ -174,7 +178,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "LOS ANGELES",
                 state: "CA",
                 postal_code: "90210",
-                telephone_number: "555-999-8765"
+                telephone_number: "555-999-8765",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -189,7 +194,7 @@ app.get('/api/npi', async (req, res) => {
             basic: {
               npi: "5555555555",
               first_name: "JOHNATHAN",
-              last_name: "MARTIN",
+              last_name: dynamicLastName,
               credential: "DO",
               gender: "M",
               status: "A"
@@ -200,7 +205,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "HOUSTON",
                 state: "TX",
                 postal_code: "77001",
-                telephone_number: "555-777-4321"
+                telephone_number: "555-777-4321",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -220,7 +226,7 @@ app.get('/api/npi', async (req, res) => {
             basic: {
               npi: "1234567890",
               first_name: first_name ? first_name.toString().toUpperCase() : "TEST",
-              last_name: "SMITH",
+              last_name: last_name ? last_name.toString().toUpperCase() : "SMITH",
               credential: "MD",
               gender: "M",
               status: "A"
@@ -231,7 +237,8 @@ app.get('/api/npi', async (req, res) => {
                 city: "BOSTON",
                 state: "MA",
                 postal_code: "02101",
-                telephone_number: "555-123-4567"
+                telephone_number: "555-123-4567",
+                country: "USA"
               }
             ],
             taxonomies: [
@@ -263,7 +270,8 @@ app.get('/api/npi', async (req, res) => {
               city: "BOSTON",
               state: "MA",
               postal_code: "02101",
-              telephone_number: "555-123-4567"
+              telephone_number: "555-123-4567",
+              country: "USA"
             }
           ],
           taxonomies: [
@@ -289,7 +297,8 @@ app.get('/api/npi', async (req, res) => {
               city: "NEW YORK",
               state: "NY",
               postal_code: "10001",
-              telephone_number: "555-987-6543"
+              telephone_number: "555-987-6543",
+              country: "USA"
             }
           ],
           taxonomies: [
@@ -315,7 +324,8 @@ app.get('/api/npi', async (req, res) => {
               city: "CHICAGO",
               state: "IL",
               postal_code: "60601",
-              telephone_number: "555-555-1234"
+              telephone_number: "555-555-1234",
+              country: "USA"
             }
           ],
           taxonomies: [
