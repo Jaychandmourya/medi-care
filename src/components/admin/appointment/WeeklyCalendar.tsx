@@ -24,6 +24,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   onSetSelectedDate,
   onSetSelectedAppointment,
   onShowDetailModal,
+  onPrint,
   roleColors
 }) => {
 
@@ -176,6 +177,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
         currentWeek={currentWeek}
         onNavigateWeek={navigateWeek}
         onGoToToday={goToToday}
+        onPrint={onPrint}
         roleColors={roleColors}
       />
 

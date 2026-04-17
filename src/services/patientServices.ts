@@ -1,6 +1,6 @@
 import { db } from '../features/db/dexie';
 import type { Patient } from '@/types/patients/patientType'
-import type { PatientFormData } from '../validation-schema/patientValidation';
+import type { PatientFormData } from '../schema/patientValidation';
 
 // Ensure database is ready
 export const initializeDatabase = async (): Promise<void> => {

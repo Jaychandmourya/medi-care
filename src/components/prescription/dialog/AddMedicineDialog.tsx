@@ -33,7 +33,7 @@ import DrugSearch from '../DrugSearch'
 import DrugInfoPanel from '../DrugInfoPanel'
 
 // Schema file
-import { medicineSchema } from '@/validation-schema/prescriptionSchema'
+import { medicineSchema } from '@/schema/prescriptionSchema'
 
 type MedicineFormData = z.infer<typeof medicineSchema>
 

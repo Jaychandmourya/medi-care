@@ -1,26 +1,13 @@
 import { X, Calendar, Mail, MapPin, User, Activity, Phone, FileText, Heart, CreditCard, Pill, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useAppDispatch } from "@/app/hooks";
+import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { fetchAppointmentsByPatientId } from "@/features/appointment/appointmentThunk";
 import { fetchVitalsByPatientId } from "@/features/vital/VitalThunk";
+import { loadPrescriptionHistory } from "@/features/prescription/prescriptionThunk";
 import type { PatientDetailsDialogProps } from '@/types/patients/patientType'
 import type { Appointment } from '@/types/appointment/appointmentType'
 import type { Vitals} from '@/types/vitals/vitalsType'
-
-
-interface Prescription {
-  id: string;
-  patientId: string;
-  doctorName: string;
-  date: string;
-  medications: {
-    name: string;
-    dosage: string;
-    frequency: string;
-    duration: string;
-  }[];
-  notes?: string;
-}
+import type { Prescription, Medicine } from '@/types/prescription/prescriptionType'
 
 interface BillingRecord {
   id: string;
@@ -45,7 +32,11 @@ const PatientDetailsDialog = ({
   const dispatch = useAppDispatch();
   const [patientAppointments, setPatientAppointments] = useState<Appointment[]>([]);
   const [patientVitals, setPatientVitals] = useState<Vitals[]>([]);
+  const [patientPrescriptions, setPatientPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(false);
+
+  // Get prescription history from Redux store
+  const prescriptionHistory = useAppSelector((state) => state.prescriptions?.prescriptionHistory || []);
 
   // Fetch patient-specific data when dialog opens or patient changes
   useEffect(() => {
@@ -57,7 +48,8 @@ const PatientDetailsDialog = ({
         try {
           const [appointmentsData, vitalsData] = await Promise.all([
             dispatch(fetchAppointmentsByPatientId(patientId)).unwrap(),
-            dispatch(fetchVitalsByPatientId(patientId)).unwrap()
+            dispatch(fetchVitalsByPatientId(patientId)).unwrap(),
+            dispatch(loadPrescriptionHistory()).unwrap()
           ]);
           console.log('patientId', patientId)
           console.log('appointmentsData', appointmentsData)
@@ -73,6 +65,18 @@ const PatientDetailsDialog = ({
       fetchData();
     }
   }, [isOpen, selectedPatient, dispatch]);
+
+  // Filter prescriptions by patient ID whenever prescriptionHistory or selectedPatient changes
+  useEffect(() => {
+    if (selectedPatient && prescriptionHistory.length > 0) {
+      const filtered = prescriptionHistory.filter(
+        (prescription: Prescription) => prescription.patientId === selectedPatient.patientId
+      );
+      setPatientPrescriptions(filtered);
+    } else {
+      setPatientPrescriptions([]);
+    }
+  }, [prescriptionHistory, selectedPatient]);
 
   if (!isOpen || !selectedPatient) return null;
 
@@ -90,29 +94,8 @@ const PatientDetailsDialog = ({
   // Use real vitals data or fallback to empty array
   const displayVitals = patientVitals;
 
-  const mockPrescriptions: Prescription[] = [
-    {
-      id: '1',
-      patientId: selectedPatient.id,
-      doctorName: 'Dr. Smith',
-      date: '2024-01-15',
-      medications: [
-        { name: 'Amoxicillin', dosage: '500mg', frequency: '3 times daily', duration: '7 days' },
-        { name: 'Paracetamol', dosage: '650mg', frequency: 'as needed', duration: '30 days' }
-      ],
-      notes: 'Take with food'
-    },
-    {
-      id: '2',
-      patientId: selectedPatient.id,
-      doctorName: 'Dr. Johnson',
-      date: '2024-02-10',
-      medications: [
-        { name: 'Lisinopril', dosage: '10mg', frequency: 'once daily', duration: '90 days' }
-      ],
-      notes: 'Monitor blood pressure regularly'
-    }
-  ];
+  // Real prescriptions filtered by patient ID
+  const displayPrescriptions = patientPrescriptions;
 
   const mockBilling: BillingRecord[] = [
     {
@@ -407,40 +390,58 @@ const PatientDetailsDialog = ({
                   <Pill className="w-5 h-5 mr-2 text-green-600" />
                   Prescriptions
                 </h3>
-                <div className="space-y-4">
-                  {mockPrescriptions.map((prescription) => (
-                    <div key={prescription.id} className="bg-white rounded-lg border border-gray-200 p-6">
-                      <div className="flex justify-between items-start mb-4">
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{prescription.doctorName}</h4>
-                          <p className="text-sm text-gray-500">{new Date(prescription.date).toLocaleDateString()}</p>
+                {loading ? (
+                  <div className="text-center py-8 text-gray-500">
+                    Loading prescriptions...
+                  </div>
+                ) : displayPrescriptions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    No prescriptions found for this patient
+                  </div>
+                ) : (
+                  <div className="space-y-4">
+                    {displayPrescriptions.map((prescription) => (
+                      <div key={prescription.id} className="bg-white rounded-lg border border-gray-200 p-6">
+                        <div className="flex justify-between items-start mb-4">
+                          <div>
+                            <h4 className="font-semibold text-gray-900">{prescription.doctorName}</h4>
+                            <p className="text-sm text-gray-500">{new Date(prescription.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <FileText className="w-5 h-5 text-gray-400" />
                         </div>
-                        <FileText className="w-5 h-5 text-gray-400" />
-                      </div>
-                      <div className="space-y-3">
-                        {prescription.medications.map((med, index) => (
-                          <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
-                            <div className="flex justify-between items-start">
-                              <div>
-                                <p className="font-medium text-gray-900">{med.name}</p>
-                                <p className="text-sm text-gray-600">{med.dosage} - {med.frequency}</p>
-                                <p className="text-sm text-gray-500">Duration: {med.duration}</p>
+                        <div className="space-y-3">
+                          {prescription.medicines.map((med: Medicine, index: number) => (
+                            <div key={index} className="border-l-4 border-blue-500 pl-4 py-2">
+                              <div className="flex justify-between items-start">
+                                <div>
+                                  <p className="font-medium text-gray-900">{med.name}</p>
+                                  <p className="text-sm text-gray-600">{med.dosage} - {med.frequency}</p>
+                                  <p className="text-sm text-gray-500">Duration: {med.duration}</p>
+                                  {med.instructions && (
+                                    <p className="text-sm text-gray-500 mt-1">Instructions: {med.instructions}</p>
+                                  )}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        ))}
-                        {prescription.notes && (
-                          <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-                            <p className="text-sm text-yellow-800">
-                              <AlertCircle className="w-4 h-4 inline mr-1" />
-                              {prescription.notes}
-                            </p>
-                          </div>
-                        )}
+                          ))}
+                          {prescription.generalNotes && (
+                            <div className="mt-4 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                              <p className="text-sm text-yellow-800">
+                                <AlertCircle className="w-4 h-4 inline mr-1" />
+                                {prescription.generalNotes}
+                              </p>
+                            </div>
+                          )}
+                          {prescription.followUpDate && (
+                            <div className="mt-2 text-sm text-gray-600">
+                              <strong>Follow-up Date:</strong> {new Date(prescription.followUpDate).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
 

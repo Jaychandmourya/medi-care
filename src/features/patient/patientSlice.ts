@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { PatientFormData } from "../../validation-schema/patientValidation";
+import type { PatientFormData } from "../../schema/patientValidation";
 import { getAllPatients, addPatient as addPatientThunk, updatePatient as updatePatientThunk, deletePatient as deletePatientThunk } from "./patientThunk"
 
 

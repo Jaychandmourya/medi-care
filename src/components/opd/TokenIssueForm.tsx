@@ -17,7 +17,7 @@ import Input from '@/components/ui/Input'
 import type { AppDispatch, RootState } from '@/app/store'
 
 // Import Schema files
-import { tokenSchema } from '@/validation-schema/opdSchema'
+import { tokenSchema } from '@/schema/opdSchema'
 
 // Import dispatch and selector for redux
 import { useDispatch, useSelector } from 'react-redux'

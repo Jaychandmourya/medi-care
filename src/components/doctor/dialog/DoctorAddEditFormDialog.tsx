@@ -6,14 +6,14 @@ import { Country, State } from 'country-state-city'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import type { LocalDoctor } from '@/types/doctors/doctorType'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
-import { useDispatch, useSelector } from 'react-redux'
-import { type AppDispatch, type RootState } from '@/app/store'
+import { useDispatch } from 'react-redux'
+import { type AppDispatch } from '@/app/store'
 import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
 import { type DoctorSchedule as DoctorScheduleType } from '@/features/db/dexie'
 import Input from '@/components/ui/Input'
 import CountryStateCitySelector from '../CountryStateCitySelector'
 import { Button } from '@/components/ui/Button'
-import DoctorScheduleComponent from '../DoctorSchedule'
+import { DoctorSchedule as DoctorScheduleComponent } from '../DoctorSchedule'
 import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {
@@ -64,8 +64,6 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
   // State for country/state codes (selector uses codes, form stores names)
   const [countryCode, setCountryCode] = useState('')
   const [stateCode, setStateCode] = useState('')
-
-  const { schedules } = useSelector((state: RootState) => state.doctorSchedule)
 
   const {
     register,
@@ -196,16 +194,15 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
 
   const loadExistingSchedule = async (doctorIdToUse?: string) => {
       const doctorId = doctorIdToUse || currentDoctor.id
-      console.log('loadExistingSchedule called with doctorId:', doctorId)
       if (!doctorId) {
-        console.log('No doctorId, skipping schedule load')
         setLoadingSchedule(false)
         return
       }
       try {
-        await dispatch(fetchDoctorSchedules())
-        const schedule = schedules.find(s => s.doctorId === doctorId)
-        console.log('Found schedule:', schedule)
+        const result = await dispatch(fetchDoctorSchedules())
+        // Access fresh schedules from the action result payload or thunk return
+        const freshSchedules = (result.payload as DoctorScheduleType[]) || []
+        const schedule = freshSchedules.find((s: DoctorScheduleType) => s.doctorId === doctorId)
         if (schedule) {
           setExistingSchedule(schedule)
         } else {
@@ -220,13 +217,9 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
     }
 
   const handleNextStep = async () => {
-    console.log('handleNextStep called, current mode:', mode)
     if (currentStep === 'doctor-info') {
-      // Validate all fields first
       const isValid = await trigger()
-      console.log('Form validation result:', isValid)
       if (!isValid) {
-        // Get specific error messages
         const errorFields = Object.entries(errors)
           .map(([field, error]) => `${field}: ${error?.message}`)
           .join(', ')
@@ -236,18 +229,16 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
 
       // Get form data and store it temporarily
       const data = watch()
-      console.log('Form data:', data)
       setEditData(data as DoctorFormData)
       setPendingDoctorData(data as DoctorFormData)
       pendingDoctorDataRef.current = data as DoctorFormData
 
       // For edit mode, save immediately. For add mode, defer until Complete Setup
       if (mode === 'edit') {
-        console.log('Edit mode: saving doctor...')
         setSaving(true)
         try {
           const result = await onSave(data as DoctorFormData, false)
-          console.log('onSave result:', result)
+          setNewlySavedDoctor(data as LocalDoctor)
           if (result && typeof result === 'object' && 'id' in result) {
             setNewlySavedDoctor(result as LocalDoctor)
           }
@@ -260,13 +251,11 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
         }
       }
 
-      console.log('Proceeding to schedule step...')
       setLoadingSchedule(true)
       setCurrentStep('schedule')
       // In edit mode, use the saved doctor's ID to load schedule
       // In add mode, we don't have an ID yet - will be created on Complete Setup
       const doctorIdForSchedule = mode === 'edit' && newlySavedDoctor?.id ? newlySavedDoctor.id : currentDoctor.id
-      console.log('Using doctorId for schedule:', doctorIdForSchedule)
       if (doctorIdForSchedule) {
         await loadExistingSchedule(doctorIdForSchedule)
       } else {
@@ -282,7 +271,6 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
   }
 
   const handleSave = async (data: DoctorFormData) => {
-    console.log('Save data:', data)
     setSaving(true)
     try {
       await onSave(data, true)
@@ -294,14 +282,6 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
     }
   }
 
-  // Helper functions for DoctorSchedule component
-  const clearCurrentDoctorData = () => {
-    // This function is called by DoctorSchedule when clearing doctor data
-    // In this context, we don't need to do anything since the doctor is fixed
-  }
-
-  // Callback to save doctor before saving schedule (for add mode)
-  // Using ref to avoid stale closure issues
   const handleBeforeScheduleSave = async (): Promise<string | null> => {
     const doctorData = pendingDoctorDataRef.current
     if (!doctorData) {
@@ -313,13 +293,9 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
     if (mode === 'edit') {
       return currentDoctor.id || null
     }
-
-    // In add mode, save the doctor first to get the ID
-    console.log('Add mode: saving doctor before schedule...', doctorData)
     setSaving(true)
     try {
       const result = await onSave(doctorData, false)
-      console.log('onSave result:', result)
       if (result && typeof result === 'object' && 'id' in result) {
         const savedDoctor = result as LocalDoctor
         setNewlySavedDoctor(savedDoctor)
@@ -338,13 +314,10 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
   }
 
   const handleNavigateToAddDoctor = async () => {
-    // Refresh parent data first before closing dialog
     onComplete?.()
-    // Close the dialog after everything is saved
     if (mode === 'edit' && editData) {
       await onSave(editData, true)
     } else if (mode === 'add' && pendingDoctorData) {
-      // Doctor was already saved in handleBeforeScheduleSave, just close
       onCancel()
     }
   }
@@ -591,7 +564,7 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
                 <div>
                   {/* Create a temp doctor from pending data for display before save */}
                   {(() => {
-                    const displayDoctor = mode === 'add' && newlySavedDoctor
+                    const displayDoctor = newlySavedDoctor
                       ? newlySavedDoctor
                       : mode === 'add' && pendingDoctorData
                         ? { ...currentDoctor, ...pendingDoctorData, id: 'temp-id' } as LocalDoctor
@@ -602,7 +575,6 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
                     doctors={[displayDoctor]}
                     addingSchedule={addingSchedule}
                     setAddingSchedule={setAddingSchedule}
-                    clearCurrentDoctorData={clearCurrentDoctorData}
                     onNavigateToAddDoctor={handleNavigateToAddDoctor}
                     onBeforeScheduleSave={handleBeforeScheduleSave}
                     existingSchedule={existingSchedule}

@@ -17,7 +17,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 
 // Import validation schema file
-import { bookingSchema } from '@/validation-schema/appointmentSchema'
+import { bookingSchema } from '@/schema/appointmentSchema'
 
 // Import Types files
 import type { RootState } from "@/app/store";

@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 
 // Import Schema file
-import { vitalsSchema } from '@/validation-schema/vitalsSchema'
+import { vitalsSchema } from '@/schema/vitalsSchema'
 
 // Import Types files
 import type { Vitals, VitalsFormData, Patient } from '@/types/vitals/vitalsType';

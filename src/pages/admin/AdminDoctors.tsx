@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from 'react-redux'
 
 // Import Slice file for redux
 import { setActiveTab, clearError } from '@/features/doctor/doctorSlice'
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
 
 const DoctorSearch = lazy(() => import('@/components/doctor/DoctorSearch'))
 const InternalDoctorList = lazy(() => import('@/components/doctor/InternalDoctorList'))
@@ -22,6 +23,7 @@ const AdminDoctorsComponent = () => {
 
   useEffect(() => {
     dispatch(clearError())
+    dispatch(fetchLocalDoctors())
   }, [dispatch])
 
   return (

@@ -19,7 +19,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor, addLocalDoctor } from '@/features/doctor/doctorThunk'
 
 // Lazy loaded components
-const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorEditFormDialog'))
+const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorAddEditFormDialog'))
 const DoctorViewModal = lazy(() => import('@/components/doctor/dialog/DoctorViewModal'))
 const DeleteDialog = lazy(() => import('@/components/ui/dialog/DeleteDialog'))
 
@@ -157,7 +157,6 @@ export default function InternalDoctorList() {
   const handleSaveEdit = useCallback(async (data: DoctorFormData, shouldCloseDialog: boolean = true): Promise<void> => {
     if (!editingDoctor?.id) return
     try {
-      // Convert form data to update format
       const updates: Partial<LocalDoctor> = {
         firstName: data.firstName,
         lastName: data.lastName,
@@ -314,10 +313,7 @@ export default function InternalDoctorList() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="text-sm text-gray-700">
-                          {doctor.city && doctor.state
-                            ? `${doctor.city}, ${doctor.state}`
-                            : doctor.city || doctor.state || 'N/A'
-                          }
+                          {doctor.address || 'N/A'}
                         </div>
                         {doctor.country && (
                           <div className="text-xs text-gray-500">{doctor.country}</div>

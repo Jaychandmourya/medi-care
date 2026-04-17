@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/Label';
 import  DatePicker from '@/components/ui/DatePicker';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { updateAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
-import { rescheduleSchema } from '@/validation-schema/appointmentSchema'
+import { rescheduleSchema } from '@/schema/appointmentSchema'
 
 
 type RescheduleFormData = z.infer<typeof rescheduleSchema>;

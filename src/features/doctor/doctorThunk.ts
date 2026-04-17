@@ -74,7 +74,6 @@ export const searchDoctors = createAsyncThunk(
     }
     // Use Vite dev server proxy to avoid CORS
     const url = `/api/npi?${params.toString()}`
-    console.log('NPI API URL:', url) // Debug log
 
     try {
       const response = await fetch(url)

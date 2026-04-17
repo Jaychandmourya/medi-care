@@ -360,8 +360,7 @@ const DoctorPatients = () => {
                     </td>
                   </tr>
                 ) : (
-                  paginated.map((patient) => {
-                    // Get patient's appointments with current doctor
+                    paginated.map((patient) => {
                     const patientAppointments = appointments.filter(
                       apt => apt.patientId === patient.id
                     )
@@ -373,7 +372,7 @@ const DoctorPatients = () => {
                     return (
                       <tr key={patient.id} className="hover:bg-gray-50 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900 font-mono">{patient.patientId}</div>
+                          <div className="text-sm font-medium text-gray-900 font-mono">{patient.patientId || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="flex items-center">

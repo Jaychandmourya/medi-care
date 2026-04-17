@@ -44,9 +44,6 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState(false)
 
-  // Reset form state when editingBed changes - use key prop pattern instead of useEffect
-  const formKey = `${editingBed?.bedId || 'new'}-${isOpen}`
-
   // Early return if dialog is not open
   if (!isOpen) return null
 
@@ -93,7 +90,7 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
   }
 
   return (
-    <div key={formKey} className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
         <div className="p-6 border-b border-gray-100">
           <h3 className="text-xl font-semibold text-gray-900">
@@ -146,6 +143,7 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
               required
             >
               <option value="available">Available</option>
+              <option value="occupied">Occupied</option>
               <option value="reserved">Reserved</option>
               <option value="maintenance">Maintenance</option>
             </Input>

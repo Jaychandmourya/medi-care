@@ -204,7 +204,7 @@ const AdminAppointments = () => {
       </div>
 
       {/* Weekly calendar */}
-      <div className="bg-white rounded-lg shadow-md p-6">
+      <div id="weekly-calendar-container" className="bg-white rounded-lg shadow-md p-6">
         <Suspense fallback={<CalendarSkeleton />}>
           <WeeklyCalendar
             doctorId={selectedDoctor || undefined}
@@ -217,6 +217,7 @@ const AdminAppointments = () => {
             onSetSelectedDate={(date) => dispatch(setSelectedDate(date))}
             onSetSelectedAppointment={(appointment) => dispatch(setSelectedAppointment(appointment))}
             onShowDetailModal={() => setShowDetailModal(true)}
+            onPrint={handlePrintSchedule}
           />
         </Suspense>
       </div>
@@ -236,11 +237,11 @@ const AdminAppointments = () => {
             body * {
               visibility: hidden;
             }
-            .bg-white.rounded-lg.shadow-md.p-6:last-child,
-            .bg-white.rounded-lg.shadow-md.p-6:last-child * {
+            #weekly-calendar-container,
+            #weekly-calendar-container * {
               visibility: visible;
             }
-            .bg-white.rounded-lg.shadow-md.p-6:last-child {
+            #weekly-calendar-container {
               position: absolute;
               left: 0;
               top: 0;

@@ -38,7 +38,7 @@ import {
 const AddMedicineDialog = lazy(() => import('./dialog/AddMedicineDialog'))
 
 // Schema
-import { prescriptionSchema } from '@/validation-schema/prescriptionSchema'
+import { prescriptionSchema } from '@/schema/prescriptionSchema'
 
 type PrescriptionFormData = z.infer<typeof prescriptionSchema>
 

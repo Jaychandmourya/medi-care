@@ -313,7 +313,7 @@ export default function PatientList() {
 
         {/* Responsive Table */}
         {filtered.length === 0 ? (
-          <div className="bg-white rounded-2xl shadow-lg p-12 backdrop-blur-sm bg-opacity-95 text-center">
+          <div className="bg-white rounded-2xl shadow-lg p-12 bg-opacity-95 text-center">
             <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4">
               <Search className="w-8 h-8 text-gray-400" />
             </div>

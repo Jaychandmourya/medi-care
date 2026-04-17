@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/app/hooks'
 import { getAllPatients } from '@/features/patient/patientThunk'
-import type { PatientFormData } from '@/validation-schema/patientValidation'
+import type { PatientFormData } from '@/schema/patientValidation'
 import { Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
 import AddEditPatientDialog from '@/components/admin/patient/AddEditPatientDialog'

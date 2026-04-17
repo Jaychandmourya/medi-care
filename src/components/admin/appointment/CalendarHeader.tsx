@@ -1,6 +1,6 @@
 import React from 'react';
 import { format, addDays } from 'date-fns';
-import { ChevronLeft, ChevronRight, Calendar } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import type { RoleColors } from '@/types/appointment/appointmentType';
 
@@ -8,6 +8,7 @@ interface CalendarHeaderProps {
   currentWeek: Date;
   onNavigateWeek: (direction: 'prev' | 'next') => void;
   onGoToToday: () => void;
+  onPrint?: () => void;
   roleColors?: RoleColors;
 }
 
@@ -15,6 +16,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
   currentWeek,
   onNavigateWeek,
   onGoToToday,
+  onPrint,
   roleColors
 }) => {
   const getHeaderClass = () => {
@@ -44,6 +46,17 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
           </h2>
         </div>
         <div className="flex items-center space-x-2">
+          {onPrint && (
+            <Button
+              onClick={onPrint}
+              variant="secondary"
+              size="sm"
+              className="flex items-center"
+            >
+              <Printer className="w-4 h-4 mr-1" />
+              Print
+            </Button>
+          )}
           <Button
             onClick={onGoToToday}
             variant="secondary"

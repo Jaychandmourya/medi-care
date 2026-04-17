@@ -20,24 +20,22 @@ interface DoctorScheduleProps {
   doctors: any[]
   addingSchedule: boolean
   setAddingSchedule: (value: boolean) => void
-  clearCurrentDoctorData: () => void
   onNavigateToAddDoctor?: () => void
   onBeforeScheduleSave?: () => Promise<string | null>
   existingSchedule?: DoctorSchedule | null
   isNewDoctor?: boolean
 }
 
-const DoctorSchedule = ({
+export function DoctorSchedule({
   lastAddedDoctor,
   doctors,
   addingSchedule,
   setAddingSchedule,
-  clearCurrentDoctorData,
   onNavigateToAddDoctor,
   onBeforeScheduleSave,
   existingSchedule,
   isNewDoctor = false
-}: DoctorScheduleProps) => {
+}: DoctorScheduleProps) {
 
   // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
@@ -91,7 +89,6 @@ const DoctorSchedule = ({
 
   // Methods
   const handleAddSchedule = useCallback(async (data: DoctorScheduleFormData) => {
-    console.log('handleAddSchedule called with data:', data)
     setAddingSchedule(true)
     try {
       let doctorId = data.doctorId
@@ -99,9 +96,7 @@ const DoctorSchedule = ({
       // If this is a new doctor, save doctor first to get the real ID
       // Use ref to check latest value to avoid stale closure
       if (isNewDoctorRef.current && onBeforeScheduleSave) {
-        console.log('New doctor detected, saving doctor first...')
         const newDoctorId = await onBeforeScheduleSave()
-        console.log('Got new doctor ID:', newDoctorId)
         if (!newDoctorId) {
           toast.error('Failed to save doctor. Cannot create schedule.')
           setAddingSchedule(false)
@@ -146,18 +141,19 @@ const DoctorSchedule = ({
       sessionStorage.removeItem('doctorAdded')
 
       // Clear current doctor data from parent component
-      clearCurrentDoctorData()
 
       // Navigate back to Add Doctor step
       if (onNavigateToAddDoctor) {
         onNavigateToAddDoctor()
       }
     } catch (error) {
-      toast.error(`Failed to ${existingSchedule ? 'update' : 'add'} doctor schedule`)
+      console.error('Schedule update error:', error)
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+      toast.error(`Failed to ${existingSchedule ? 'update' : 'add'} doctor schedule: ${errorMessage}`)
     } finally {
       setAddingSchedule(false)
     }
-  }, [dispatch, resetSchedule, setAddingSchedule, clearCurrentDoctorData, onNavigateToAddDoctor, onBeforeScheduleSave, existingSchedule])
+  }, [dispatch, resetSchedule, setAddingSchedule, onNavigateToAddDoctor, onBeforeScheduleSave, existingSchedule])
 
   const handleWorkingDayChange = useCallback((dayValue: number, checked: boolean) => {
     const currentDays = watchedScheduleValues.workingDays || []
@@ -233,7 +229,6 @@ const DoctorSchedule = ({
                 {...registerSchedule('doctorId')}
                 value={lastAddedDoctor ? lastAddedDoctor.id : doctors.length > 0 ? doctors[0].id : ''}
                 onChange={(e) => {
-                  console.log('Doctor ID changed:', e.target.value)
                   setScheduleValue('doctorId', e.target.value)
                 }}
               />
@@ -275,15 +270,6 @@ const DoctorSchedule = ({
                 <span className="font-semibold ml-2">Department:</span> {lastAddedDoctor.department} |
                 <span className="font-semibold ml-2">Status:</span> <span className="text-green-700 font-medium">{lastAddedDoctor.status || 'Active'}</span>
               </p>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={clearCurrentDoctorData}
-                className="px-3 py-1 text-xs bg-red-50 text-red-600 hover:bg-red-100 border border-red-200"
-              >
-                Clear Doctor
-              </Button>
             </div>
           )}
         </div>
@@ -455,8 +441,6 @@ const DoctorSchedule = ({
           <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3">
             {DAYS_OF_WEEK.map((day) => {
               const isChecked = watchedScheduleValues.workingDays?.includes(day.value) || false
-              console.log(`Day ${day.label} (${day.value}):`, isChecked)
-
               return (
                 <label
                   key={day.value}
@@ -466,7 +450,6 @@ const DoctorSchedule = ({
                     type="checkbox"
                     checked={isChecked}
                     onChange={(e) => {
-                      console.log('Checkbox change:', day.value, e.target.checked)
                       handleWorkingDayChange(day.value, e.target.checked)
                     }}
                     className="sr-only peer"
@@ -526,5 +509,3 @@ const DoctorSchedule = ({
     </form>
   )
 }
-
-export default DoctorSchedule

@@ -28,7 +28,7 @@ const AdminPrescriptions = () => {
   }
 
   return (
-    <div className="min-h-screen lg:px-6">
+    <div className="min-h-screen">
       <div className="">
         {/* Header */}
         <div className="bg-white mb-8 p-6 rounded-lg border border-gray-200 shadow-sm">

@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/app/store'
-import type { PatientFormData } from '@/validation-schema/patientValidation'
+import type { PatientFormData } from '@/schema/patientValidation'
 import { Users, TrendingUp, Calendar } from 'lucide-react'
 
 const RegistrationStats = () => {

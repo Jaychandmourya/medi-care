@@ -10,7 +10,7 @@ import Input from '@/components/ui/Input'
 
 // Import Types files
 import type { RootState } from '@/app/store'
-import type { PatientFormData } from '@/validation-schema/patientValidation'
+import type { PatientFormData } from '@/schema/patientValidation'
 import type { Bed, BedStatus } from '@/types/bed/bedType'
 
 // Import form control, validation and zod

@@ -8,6 +8,7 @@ interface DatePickerProps {
   placeholder?: string;
   className?: string;
   disablePastDates?: boolean;
+  disableFutureDates?: boolean;
   onBlur?: () => void;
 }
 
@@ -17,6 +18,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   placeholder = 'Select date',
   className = '',
   disablePastDates = false,
+  disableFutureDates = false,
   onBlur
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -54,6 +56,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
       today.setHours(0, 0, 0, 0);
       if (date < today) {
         return; // Don't allow selection of past dates
+      }
+    }
+
+    // Check if future dates should be disabled
+    if (disableFutureDates) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      if (date > today) {
+        return; // Don't allow selection of future dates
       }
     }
 
@@ -181,20 +192,23 @@ const DatePicker: React.FC<DatePickerProps> = ({
           {days.map(day => {
             const isSelected = selectedDate && isSameDay(day, selectedDate);
             const isTodayDate = isToday(day);
-            const isPastDate = disablePastDates && day < new Date(new Date().setHours(0, 0, 0, 0));
+            const today = new Date(new Date().setHours(0, 0, 0, 0));
+            const isPastDate = disablePastDates && day < today;
+            const isFutureDate = disableFutureDates && day > today;
+            const isDisabled = isPastDate || isFutureDate;
 
             return (
               <button
                 key={day.toISOString()}
                 type="button"
                 onClick={() => handleDateSelect(day)}
-                disabled={isPastDate}
+                disabled={isDisabled}
                 className={`
                   p-2 text-sm rounded transition-colors
                   ${isSelected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''}
                   ${isTodayDate && !isSelected ? 'bg-blue-100 text-blue-700 font-semibold' : ''}
-                  ${!isSelected && !isTodayDate && !isPastDate ? 'text-gray-700 hover:bg-blue-50' : ''}
-                  ${isPastDate ? 'text-gray-300 cursor-not-allowed' : ''}
+                  ${!isSelected && !isTodayDate && !isDisabled ? 'text-gray-700 hover:bg-blue-50' : ''}
+                  ${isDisabled ? 'text-gray-300 cursor-not-allowed' : ''}
                 `}
               >
                 {format(day, 'd')}

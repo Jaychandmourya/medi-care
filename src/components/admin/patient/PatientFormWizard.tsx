@@ -9,7 +9,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // Import validation schemas files
-import { patientSchema, stepSchemas } from "@/validation-schema/patientValidation";
+import { patientSchema, stepSchemas } from "@/schema/patientValidation";
 
 // Import Types file
 import type { Patient } from "@/types/patients/patientType";

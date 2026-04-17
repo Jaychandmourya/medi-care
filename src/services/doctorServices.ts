@@ -25,7 +25,7 @@ export const doctorDBOperations = {
         city: doctor.city,
         state: doctor.state,
         country: doctor.country,
-        address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
+        address: doctor.address,
         contact: doctor.contact,
         postalCode: doctor.postalCode || '',
         credential: undefined,
@@ -79,6 +79,8 @@ export const doctorDBOperations = {
     const updateData: Partial<Doctor> = {}
     if (updates.firstName || updates.lastName) {
       updateData.name = `${updates.firstName || existingDoctor.name.split(' ')[0]} ${updates.lastName || existingDoctor.name.split(' ').slice(1).join(' ')}`.trim()
+      updateData.firstName = updates.firstName
+      updateData.lastName = updates.lastName
     }
     if (updates.specialty !== undefined) {
       updateData.specialization = updates.specialty
@@ -90,7 +92,10 @@ export const doctorDBOperations = {
     if (updates.state !== undefined) updateData.state = updates.state
     if (updates.country !== undefined) updateData.country = updates.country
     if (updates.contact !== undefined) updateData.contact = updates.contact
-    if(updates.email !== undefined) updateData.email = updates.email
+    if (updates.email !== undefined) updateData.email = updates.email
+    if (updates.postalCode !== undefined) updateData.postalCode = updates.postalCode
+    if (updates.gender !== undefined) updateData.gender = updates.gender
+    if (updates.address !== undefined) updateData.address = updates.address
     return await db.doctors.update(id, updateData)
   },
 

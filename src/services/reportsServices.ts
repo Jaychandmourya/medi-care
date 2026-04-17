@@ -240,47 +240,70 @@ export const reportsServices = {
   },
 
   // Fetch Drug Recalls - from external API (OpenFDA)
-  // Falls back to mock data if API fails
+  // Uses real FDA enforcement data with product_type categorization
   async fetchDrugRecalls(): Promise<DrugRecallData[]> {
     try {
+      // Fetch recent drug recalls from OpenFDA
       const response = await fetch(
-        'https://api.fda.gov/drug/enforcement.json?search=status:Ongoing&limit=5'
+        'https://api.fda.gov/drug/enforcement.json?limit=20'
       );
 
       if (!response.ok) {
-        throw new Error('Failed to fetch drug recalls');
+        throw new Error(`Failed to fetch drug recalls: ${response.status}`);
       }
 
       const data = await response.json();
-
-      // Process FDA data into our format
       const recalls = data.results || [];
-      const drugClassCounts: Record<string, number> = {};
 
-      recalls.forEach((recall: { product_type?: string; product_description?: string }) => {
-        // Extract drug class from product description or type
-        const description = recall.product_description || '';
-        let drugClass = 'Other';
-
-        if (description.toLowerCase().includes('antibiotic')) drugClass = 'Antibiotics';
-        else if (description.toLowerCase().includes('pain') || description.toLowerCase().includes('analgesic')) drugClass = 'Pain Relievers';
-        else if (description.toLowerCase().includes('cardio') || description.toLowerCase().includes('heart')) drugClass = 'Cardiovascular';
-        else if (description.toLowerCase().includes('diabetes') || description.toLowerCase().includes('insulin')) drugClass = 'Diabetes';
-        else if (description.toLowerCase().includes('mental') || description.toLowerCase().includes('psych')) drugClass = 'Mental Health';
-
-        drugClassCounts[drugClass] = (drugClassCounts[drugClass] || 0) + 1;
-      });
-
-      // If no data from API, use fallback
-      if (Object.keys(drugClassCounts).length === 0) {
+      if (recalls.length === 0) {
+        console.warn('No recall data from FDA API');
         return getMockDrugRecalls();
       }
 
-      return Object.entries(drugClassCounts).map(([drugClass, recallCount]) => ({
-        drugClass,
-        recallCount,
-        lastUpdated: new Date().toISOString(),
-      }));
+      // Group by product_type from FDA data
+      const drugClassCounts: Record<string, { count: number; lastDate: string }> = {};
+
+      recalls.forEach((recall: {
+        product_type?: string;
+        product_description?: string;
+        recall_initiation_date?: string;
+        reason_for_recall?: string;
+      }) => {
+        // Use product_type as the primary category, fallback to extraction from description
+        let drugClass = recall.product_type || 'Other';
+
+        // If product_type is too generic, try to extract from description
+        if (drugClass === 'Other' || drugClass === 'Drugs') {
+          const description = (recall.product_description || '').toLowerCase();
+          const reason = (recall.reason_for_recall || '').toLowerCase();
+          const combined = description + ' ' + reason;
+
+          if (combined.includes('antibiotic') || combined.includes('amoxicillin') || combined.includes('azithromycin')) drugClass = 'Antibiotics';
+          else if (combined.includes('pain') || combined.includes('analgesic') || combined.includes('opioid') || combined.includes('ibuprofen')) drugClass = 'Pain Relievers';
+          else if (combined.includes('cardio') || combined.includes('heart') || combined.includes('blood pressure') || combined.includes('hypertension')) drugClass = 'Cardiovascular';
+          else if (combined.includes('diabetes') || combined.includes('insulin') || combined.includes('glucose')) drugClass = 'Diabetes';
+          else if (combined.includes('mental') || combined.includes('psych') || combined.includes('depression') || combined.includes('anxiety')) drugClass = 'Mental Health';
+          else if (combined.includes('vaccine') || combined.includes('immunization')) drugClass = 'Vaccines';
+          else if (combined.includes('sterile') || combined.includes('injection') || combined.includes('iv')) drugClass = 'Injectables';
+          else drugClass = 'Other Medications';
+        }
+
+        const current = drugClassCounts[drugClass] || { count: 0, lastDate: '' };
+        const recallDate = recall.recall_initiation_date || new Date().toISOString();
+
+        drugClassCounts[drugClass] = {
+          count: current.count + 1,
+          lastDate: recallDate > current.lastDate ? recallDate : current.lastDate,
+        };
+      });
+
+      return Object.entries(drugClassCounts)
+        .map(([drugClass, data]) => ({
+          drugClass,
+          recallCount: data.count,
+          lastUpdated: data.lastDate,
+        }))
+        .sort((a, b) => b.recallCount - a.recallCount);
     } catch (error) {
       console.warn('Failed to fetch drug recalls from API, using mock data:', error);
       return getMockDrugRecalls();
@@ -288,15 +311,15 @@ export const reportsServices = {
   },
 };
 
-// Mock drug recalls fallback
+// Mock drug recalls fallback - generates dynamic random data
 function getMockDrugRecalls(): DrugRecallData[] {
-  return [
-    { drugClass: 'Antibiotics', recallCount: 12, lastUpdated: new Date().toISOString() },
-    { drugClass: 'Pain Relievers', recallCount: 8, lastUpdated: new Date().toISOString() },
-    { drugClass: 'Cardiovascular', recallCount: 15, lastUpdated: new Date().toISOString() },
-    { drugClass: 'Diabetes', recallCount: 6, lastUpdated: new Date().toISOString() },
-    { drugClass: 'Mental Health', recallCount: 9, lastUpdated: new Date().toISOString() },
-  ];
+  const drugClasses = ['Antibiotics', 'Pain Relievers', 'Cardiovascular', 'Diabetes', 'Mental Health'];
+
+  return drugClasses.map(drugClass => ({
+    drugClass,
+    recallCount: Math.floor(Math.random() * 20) + 1, // Random 1-20
+    lastUpdated: new Date().toISOString(),
+  }));
 }
 
 export default reportsServices;

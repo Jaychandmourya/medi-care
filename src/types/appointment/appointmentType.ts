@@ -17,6 +17,7 @@ export interface WeeklyCalendarProps {
   onSetSelectedDate: (date: string) => void;
   onSetSelectedAppointment: (appointment: Appointment) => void;
   onShowDetailModal: () => void;
+  onPrint?: () => void;
   roleColors?: RoleColors;
 }
 

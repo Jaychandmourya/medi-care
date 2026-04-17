@@ -220,11 +220,12 @@ export const appointmentServices = {
       if (existingSchedule) {
         // Update existing schedule
         const updatedSchedule = {
+          ...existingSchedule,
           ...scheduleData,
           updatedAt: new Date().toISOString(),
         };
         await db.doctorSchedules.update(existingSchedule.id, updatedSchedule);
-        return { id: existingSchedule.id, ...updatedSchedule };
+        return updatedSchedule;
       } else {
         // Create new schedule
         const newSchedule = {

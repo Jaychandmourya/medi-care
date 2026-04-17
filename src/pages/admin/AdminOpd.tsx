@@ -6,7 +6,7 @@ import QueueAnalytics from '@/components/opd/QueueAnalytics'
 const AdminOpd = () => {
   return (
     <div className="min-h-screen">
-      <div className="max-w-7xl mx-auto">
+      <div>
         <div className="mb-6 lg:mb-8 bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
             <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-lg flex items-center justify-center shrink-0">

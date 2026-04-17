@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk, type PayloadAction } from '@reduxjs/toolkit'
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit'
 import { db, type DoctorSchedule } from '@/features/db/dexie'
 import { appointmentServices } from '@/services/appointmentServices'
 
@@ -43,11 +43,16 @@ export const addDoctorSchedule = createAsyncThunk(
 export const updateDoctorSchedule = createAsyncThunk(
   'doctorSchedule/updateSchedule',
   async ({ id, updates }: { id: string; updates: Partial<DoctorSchedule> }) => {
-    await db.doctorSchedules.update(id, {
-      ...updates,
-      updatedAt: new Date().toISOString()
-    })
-    return { id, updates }
+    try {
+      await db.doctorSchedules.update(id, {
+        ...updates,
+        updatedAt: new Date().toISOString()
+      })
+      return { id, updates }
+    } catch (error) {
+      console.error('Error updating doctor schedule:', error)
+      throw error
+    }
   }
 )
 
@@ -89,11 +94,12 @@ const doctorScheduleSlice = createSlice({
       })
       .addCase(addDoctorSchedule.fulfilled, (state, action) => {
         state.loading = false
-        const existingIndex = state.schedules.findIndex(s => s.doctorId === action.payload.doctorId)
+        const payload = action.payload as DoctorSchedule
+        const existingIndex = state.schedules.findIndex(s => s.doctorId === payload.doctorId)
         if (existingIndex >= 0) {
-          state.schedules[existingIndex] = action.payload
+          state.schedules[existingIndex] = payload
         } else {
-          state.schedules.push(action.payload)
+          state.schedules.push(payload)
         }
       })
       .addCase(addDoctorSchedule.rejected, (state, action) => {
@@ -101,12 +107,21 @@ const doctorScheduleSlice = createSlice({
         state.error = action.error.message || 'Failed to add doctor schedule'
       })
       // Update schedule
+      .addCase(updateDoctorSchedule.pending, (state) => {
+        state.loading = true
+        state.error = null
+      })
       .addCase(updateDoctorSchedule.fulfilled, (state, action) => {
+        state.loading = false
         const { id, updates } = action.payload
         const index = state.schedules.findIndex(s => s.id === id)
         if (index >= 0) {
           state.schedules[index] = { ...state.schedules[index], ...updates }
         }
+      })
+      .addCase(updateDoctorSchedule.rejected, (state, action) => {
+        state.loading = false
+        state.error = action.error.message || 'Failed to update doctor schedule'
       })
       // Delete schedule
       .addCase(deleteDoctorSchedule.fulfilled, (state, action) => {

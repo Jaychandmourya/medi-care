@@ -337,6 +337,7 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
 
       {/* Add/Edit Modal */}
       <AddEditBedDialog
+        key={editingBed?.bedId || 'new'}
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         onSubmit={handleSubmit}

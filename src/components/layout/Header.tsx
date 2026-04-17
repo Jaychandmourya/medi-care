@@ -3,7 +3,7 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { login, logout } from "@/features/auth/authSlice"
 import { toggleTheme } from "@/features/theme/themeSlice"
-import { useNavigate } from "react-router-dom"
+import { useNavigate, useLocation } from "react-router-dom"
 import type { Role } from "@/types/auth/auth"
 import { DoctorSelectionDialog } from "@/components/auth/login/DoctorSelectionDialog"
 import { doctorDBOperations } from "@/services/doctorServices"
@@ -89,8 +89,38 @@ const Header = ({ setIsOpen }: HeaderProps) => {
   const notifDropdownRef = useRef<HTMLDivElement>(null);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
   const theme = useAppSelector((state) => state.theme.theme);
+
+  // Define available routes for each role
+  const roleRoutes: Record<Role, string[]> = {
+    doctor: ['', 'patients', 'appointments', 'prescriptions'],
+    admin: ['', 'patients', 'appointments', 'opd', 'beds', 'prescriptions', 'doctors', 'reports'],
+    nurse: ['', 'beds', 'vitals'],
+    receptionist: ['', 'patients', 'appointments', 'opd'],
+  };
+
+  const getSmartRoute = (targetRole: Role): string => {
+    const currentPath = location.pathname;
+    const pathParts = currentPath.split('/').filter(Boolean);
+
+    // If on a root route like /doctor, just go to new role root
+    if (pathParts.length < 2) {
+      return `/${targetRole}`;
+    }
+
+    // Extract sub-route (e.g., "patients" from "/doctor/patients")
+    const subRoute = pathParts[1];
+
+    // Check if target role supports this sub-route
+    if (roleRoutes[targetRole].includes(subRoute)) {
+      return `/${targetRole}/${subRoute}`;
+    }
+
+    // Fallback to role dashboard
+    return `/${targetRole}`;
+  };
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -125,7 +155,7 @@ const Header = ({ setIsOpen }: HeaderProps) => {
       })
     );
     setShowDoctorModal(false);
-    navigate('/doctor');
+    navigate(getSmartRoute('doctor'));
   };
 
   const handleSwitchRole = async (roleConfig: RoleConfig) => {
@@ -152,7 +182,7 @@ const Header = ({ setIsOpen }: HeaderProps) => {
         setLoadingDoctors(false);
       }
     } else {
-      // For non-doctor roles, switch immediately
+      // For non-doctor roles, switch immediately with smart routing
       dispatch(
         login({
           role: roleConfig.role as Role,
@@ -161,13 +191,8 @@ const Header = ({ setIsOpen }: HeaderProps) => {
           avatar: "https://i.pravatar.cc/150",
         })
       );
-      const routeMap: Record<Role, string> = {
-        doctor: "/doctor",
-        admin: "/admin",
-        nurse: "/nurse",
-        receptionist: "/receptionist",
-      };
-      navigate(routeMap[roleConfig.role as Role]);
+      // Use smart routing to navigate to equivalent page or fallback to dashboard
+      navigate(getSmartRoute(roleConfig.role as Role));
     }
   };
 
@@ -208,13 +233,13 @@ const Header = ({ setIsOpen }: HeaderProps) => {
       <div className="flex items-center gap-2 md:gap-4 relative">
 
         {/* Theme Toggle */}
-        <button
+        {/* <button
           className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-700 dark:text-gray-300 transition-colors flex items-center justify-center"
           onClick={() => dispatch(toggleTheme())}
           aria-label={theme === "dark" ? "Switch to light mode" : "Switch to dark mode"}
         >
           {theme === "dark" ? <Sun size={20} className="text-yellow-500" /> : <Moon size={20} className="text-gray-600" />}
-        </button>
+        </button> */}
 
         {/* Notification */}
         <div ref={notifDropdownRef} className="relative">
