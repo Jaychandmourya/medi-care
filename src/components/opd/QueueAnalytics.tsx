@@ -46,20 +46,20 @@ const QueueAnalytics = () => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl text-black font-bold mb-6 flex items-center gap-2">
+    <div className="bg-white rounded-lg shadow-md p-4 lg:p-6">
+      <h2 className="text-lg sm:text-xl text-black font-bold mb-4 sm:mb-6 flex items-center gap-2">
         <BarChart3 className="w-5 h-5" />
         Queue Analytics
       </h2>
 
       {/* Key Metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Users className="w-5 h-5 text-blue-600" />
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-6">
+        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <Users className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600" />
             <span className="text-xs text-blue-600 font-medium">Total Active</span>
           </div>
-          <div className="text-2xl font-bold text-blue-900">
+          <div className="text-xl sm:text-2xl font-bold text-blue-900">
             {waitingTokens.length + inProgressTokens.length + skippedTokens.length}
           </div>
           <div className="text-xs text-blue-700 mt-1">
@@ -67,12 +67,12 @@ const QueueAnalytics = () => {
           </div>
         </div>
 
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Activity className="w-5 h-5 text-green-600" />
+        <div className="bg-green-50 border border-green-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <Activity className="w-4 h-4 sm:w-5 sm:h-5 text-green-600" />
             <span className="text-xs text-green-600 font-medium">Served Today</span>
           </div>
-          <div className="text-2xl font-bold text-green-900">
+          <div className="text-xl sm:text-2xl font-bold text-green-900">
             {servedToday}
           </div>
           <div className="text-xs text-green-700 mt-1">
@@ -80,12 +80,12 @@ const QueueAnalytics = () => {
           </div>
         </div>
 
-        <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <Clock className="w-5 h-5 text-orange-600" />
+        <div className="bg-orange-50 border border-orange-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <Clock className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600" />
             <span className="text-xs text-orange-600 font-medium">Avg Wait</span>
           </div>
-          <div className="text-2xl font-bold text-orange-900">
+          <div className="text-xl sm:text-2xl font-bold text-orange-900">
             {formatTime(averageWaitTime)}
           </div>
           <div className="text-xs text-orange-700 mt-1">
@@ -93,12 +93,12 @@ const QueueAnalytics = () => {
           </div>
         </div>
 
-        <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="w-5 h-5 text-purple-600" />
+        <div className="bg-purple-50 border border-purple-200 rounded-lg p-3 sm:p-4">
+          <div className="flex items-center justify-between mb-1 sm:mb-2">
+            <TrendingUp className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600" />
             <span className="text-xs text-purple-600 font-medium">Flow Rate</span>
           </div>
-          <div className="text-2xl font-bold text-purple-900">
+          <div className="text-xl sm:text-2xl font-bold text-purple-900">
             {servedToday > 0 ? Math.round((servedToday / (waitingTokens.length + servedToday)) * 100) : 0}%
           </div>
           <div className="text-xs text-purple-700 mt-1">
@@ -109,22 +109,22 @@ const QueueAnalytics = () => {
 
       {/* Status Distribution */}
       <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Status Distribution</h3>
-        <div className="grid grid-cols-4 gap-3">
-          <div className="text-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-            <div className="text-xl font-bold text-yellow-700">{waitingTokens.length}</div>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Status Distribution</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
+          <div className="text-center p-2 sm:p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="text-lg sm:text-xl font-bold text-yellow-700">{waitingTokens.length}</div>
             <div className="text-xs text-yellow-600">Waiting</div>
           </div>
-          <div className="text-center p-3 bg-green-50 border border-green-200 rounded-lg">
-            <div className="text-xl font-bold text-green-700">{inProgressTokens.length}</div>
+          <div className="text-center p-2 sm:p-3 bg-green-50 border border-green-200 rounded-lg">
+            <div className="text-lg sm:text-xl font-bold text-green-700">{inProgressTokens.length}</div>
             <div className="text-xs text-green-600">In Progress</div>
           </div>
-          <div className="text-center p-3 bg-orange-50 border border-orange-200 rounded-lg">
-            <div className="text-xl font-bold text-orange-700">{skippedTokens.length}</div>
+          <div className="text-center p-2 sm:p-3 bg-orange-50 border border-orange-200 rounded-lg">
+            <div className="text-lg sm:text-xl font-bold text-orange-700">{skippedTokens.length}</div>
             <div className="text-xs text-orange-600">Skipped</div>
           </div>
-          <div className="text-center p-3 bg-gray-50 border border-gray-200 rounded-lg">
-            <div className="text-xl font-bold text-gray-700">{doneTokens.length}</div>
+          <div className="text-center p-2 sm:p-3 bg-gray-50 border border-gray-200 rounded-lg">
+            <div className="text-lg sm:text-xl font-bold text-gray-700">{doneTokens.length}</div>
             <div className="text-xs text-gray-600">Done</div>
           </div>
         </div>
@@ -132,21 +132,21 @@ const QueueAnalytics = () => {
 
       {/* Department Analytics */}
       <div>
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Department Breakdown</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-gray-700 mb-3">Department Breakdown</h3>
         <div className="space-y-3">
           {Object.entries(departmentStats).map(([department, stats]) => {
             const total = stats.waiting + stats.inProgress + stats.skipped + stats.done
             const completionRate = total > 0 ? Math.round((stats.done / total) * 100) : 0
 
             return (
-              <div key={department} className="border border-gray-200 rounded-lg p-3">
-                <div className="flex items-center justify-between mb-2">
-                  <div className="font-medium text-gray-800">{department}</div>
-                  <div className="text-sm text-gray-600">
+              <div key={department} className="border border-gray-200 rounded-lg p-2 sm:p-3">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2 gap-1">
+                  <div className="font-medium text-gray-800 text-sm sm:text-base">{department}</div>
+                  <div className="text-xs sm:text-sm text-gray-600">
                     {total} total • {completionRate}% completed
                   </div>
                 </div>
-                <div className="grid grid-cols-4 gap-2 text-xs">
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
                   <div className="text-center p-2 bg-yellow-50 rounded">
                     <div className="font-bold text-yellow-700">{stats.waiting}</div>
                     <div className="text-yellow-600">Waiting</div>
@@ -171,9 +171,9 @@ const QueueAnalytics = () => {
       </div>
 
       {/* Performance Indicators */}
-      <div className="mt-6 p-4 bg-gray-50 rounded-lg">
+      <div className="mt-6 p-3 sm:p-4 bg-gray-50 rounded-lg">
         <h3 className="text-sm font-semibold text-gray-700 mb-2">Performance Indicators</h3>
-        <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-xs">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-3 text-xs">
           <div className="flex items-center gap-2">
             <div className={`w-2 h-2 rounded-full ${averageWaitTime > 30 ? 'bg-red-500' : averageWaitTime > 15 ? 'bg-yellow-500' : 'bg-green-500'}`}></div>
             <span className="text-gray-600">Wait Time: {averageWaitTime > 30 ? 'High' : averageWaitTime > 15 ? 'Moderate' : 'Good'}</span>

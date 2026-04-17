@@ -15,10 +15,11 @@ import { doctorDBOperations } from '@/services/doctorServices'
 interface DoctorSearchResultsProps {
   onViewDetails: (doctor: NPIResult) => void
   onAddToSystem: (doctor: NPIResult) => void
+  searchPerformed: boolean
 }
 
-function DoctorSearchResults({ onViewDetails, onAddToSystem }: DoctorSearchResultsProps) {
-  const { searchResults, loading, resultCount, currentPage, totalPages } = useSelector((state: RootState) => state.doctors)
+function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: DoctorSearchResultsProps) {
+  const { searchResults, searchLoading: loading, resultCount, currentPage, totalPages } = useSelector((state: RootState) => state.doctors)
   const [addingDoctor, setAddingDoctor] = useState<string | null>(null)
 
   const handleViewDetails = useCallback((doctor: NPIResult) => {
@@ -85,12 +86,15 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem }: DoctorSearchResul
   }
 
   if (searchResults.length === 0) {
+    if (!searchPerformed) {
+      return null
+    }
     return (
-      <div className="text-center py-12">
-        <User className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-        <h3 className="text-lg font-medium text-gray-900 mb-2">No doctors found</h3>
-        <p className="text-gray-500">
-          Try adjusting your search criteria or browse different specialties.
+      <div className="text-center py-8 sm:py-12 bg-white rounded-xl border border-gray-100 px-4">
+        <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+        <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No doctors found</h4>
+        <p className="text-sm text-gray-500 max-w-md mx-auto">
+          Try adjusting your search criteria. You can search by name, location, or specialty.
         </p>
       </div>
     )

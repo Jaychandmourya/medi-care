@@ -1,12 +1,25 @@
-import { useEffect, useState, useCallback, useMemo } from 'react';
+import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from 'react';
+
+// Import icons file
 import { Plus, Filter, Calendar, Printer, Search } from 'lucide-react';
-import { useAppDispatch, useAppSelector } from '@/app/hooks';
+
+// Import UI components
 import { Button } from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
+
+// Import Type file
+import type { RootState } from "@/app/store";
+
+// Import dispatch and selector
+import { useAppDispatch, useAppSelector } from '@/app/hooks';
+
+// Import Thunk file
+import { getAllPatients } from "@/features/patient/patientThunk";
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
+
+// Import Slice file
 import {
-  fetchDoctors,
   fetchDoctorSchedules,
-  fetchPatients,
   setSelectedDoctor,
   fetchAppointments,
   updateAppointment,
@@ -14,10 +27,12 @@ import {
   setSelectedDate,
   setSelectedAppointment,
 } from '@/features/appointment/appointmentSlice';
-import WeeklyCalendar from '@/components/admin/appointment/WeeklyCalendar';
-import BookingModal from '@/components/admin/appointment/dialog/BookingModal';
-import AppointmentDetailModal from '@/components/admin/appointment/dialog/AppointmentDetailModal';
-import RescheduleModal from '@/components/admin/appointment/dialog/RescheduleModal';
+
+// Lazy loading components
+const WeeklyCalendar = lazy(() => import('@/components/admin/appointment/WeeklyCalendar'));
+const BookingModal = lazy(() => import('@/components/admin/appointment/dialog/BookingModal'));
+const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/dialog/AppointmentDetailModal'));
+const RescheduleModal = lazy(() => import('@/components/admin/appointment/dialog/RescheduleModal'));
 
 // Role-based color configuration
 const roleColors = {
@@ -46,41 +61,51 @@ const roleColors = {
     header: 'bg-pink-600'
   }
 };
+
+
 const ReceptionistAppointments = () => {
+
+  // Redux dispatch
   const dispatch = useAppDispatch();
+
+  // Redux selector
   const {
-    doctors,
     selectedDoctor,
     appointments,
-    patients,
     loading,
     doctorSchedules
   } = useAppSelector(
     (state) => state.appointments
-  );
+    );
   const { user } = useAppSelector((state) => state.auth);
-  const userRole = user?.role || 'receptionist'; // Default to receptionist for this component
+  const patients = useAppSelector((state: RootState) => state.patients.list);
+  const { localDoctors } = useAppSelector((state: RootState) => state.doctors)
+
+  const userRole = user?.role || 'receptionist';
   const currentRoleColors = roleColors[userRole as keyof typeof roleColors] || roleColors.receptionist;
+
+  // State
   const [searchTerm, setSearchTerm] = useState<string>('');
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false)
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false)
   const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false)
 
+  // UseEffect
   useEffect(() => {
 
     // Wait a bit longer to ensure database is fully initialized
     const initializeData = async () => {
-      await new Promise(resolve => setTimeout(resolve, 500)); // 500ms delay
-      dispatch(fetchDoctors());
+      await new Promise(resolve => setTimeout(resolve, 500));
+      dispatch(fetchLocalDoctors());
       dispatch(fetchDoctorSchedules());
-      dispatch(fetchPatients());
+      dispatch(getAllPatients());
 
       // Add another small delay before fetching appointments
       setTimeout(() => {
         dispatch(fetchAppointments({
           doctorId: selectedDoctor || undefined,
           startDate: new Date(),
-          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // 7 days from now
+          endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
         }));
       }, 200);
     };
@@ -88,6 +113,7 @@ const ReceptionistAppointments = () => {
     initializeData();
   }, [dispatch, selectedDoctor]);
 
+  // Method
   const handleDoctorFilter = useCallback((doctorId: string) => {
     dispatch(setSelectedDoctor(doctorId === 'all' ? null : doctorId));
   }, [dispatch]);
@@ -98,11 +124,11 @@ const ReceptionistAppointments = () => {
 
   // Memoize filtered doctors to prevent recalculation on every render
   const filteredDoctors = useMemo(() => {
-    return doctors.filter(doctor =>
+    return localDoctors.filter(doctor =>
       doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       doctor.department.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [doctors, searchTerm]);
+  }, [localDoctors, searchTerm]);
 
   return (
     <div className="space-y-6">
@@ -177,7 +203,7 @@ const ReceptionistAppointments = () => {
           <div className={`mt-4 flex items-center justify-between p-3 rounded-lg ${currentRoleColors.secondary}`}>
             <span className={`text-sm ${currentRoleColors.secondary.includes('text-') ? currentRoleColors.secondary.split(' ').find(c => c.startsWith('text-')) : 'text-blue-800'}`}>
               Showing appointments for: <strong>
-                {doctors.find(d => d.id === selectedDoctor)?.name || 'Selected Doctor'}
+                {localDoctors.find(d => d.id === selectedDoctor)?.name || 'Selected Doctor'}
               </strong>
             </span>
             <Button
@@ -193,29 +219,37 @@ const ReceptionistAppointments = () => {
 
       {/* Calendar */}
       <div className={`bg-white rounded-lg shadow-md p-6 ${currentRoleColors.calendar}`}>
-        <WeeklyCalendar
-          doctorId={selectedDoctor || undefined}
-          appointments={appointments}
-          patients={patients}
-          loading={loading}
-          doctorSchedules={doctorSchedules}
-          onUpdateAppointment={(params) => dispatch(updateAppointment(params))}
-          onSetSelectedWeek={(week) => dispatch(setSelectedWeek(week))}
-          onSetSelectedDate={(date) => dispatch(setSelectedDate(date))}
-          onSetSelectedAppointment={(appointment) => dispatch(setSelectedAppointment(appointment))}
-          onShowDetailModal={() => setShowDetailModal(true)}
-          roleColors={currentRoleColors}
-        />
+        <Suspense fallback={<div className="flex justify-center items-center h-64">Loading calendar...</div>}>
+          <WeeklyCalendar
+            doctorId={selectedDoctor || undefined}
+            appointments={appointments}
+            patients={patients}
+            loading={loading}
+            doctorSchedules={doctorSchedules}
+            onUpdateAppointment={(params) => dispatch(updateAppointment(params))}
+            onSetSelectedWeek={(week) => dispatch(setSelectedWeek(week))}
+            onSetSelectedDate={(date) => dispatch(setSelectedDate(date))}
+            onSetSelectedAppointment={(appointment) => dispatch(setSelectedAppointment(appointment))}
+            onShowDetailModal={() => setShowDetailModal(true)}
+            roleColors={currentRoleColors}
+          />
+        </Suspense>
       </div>
 
       {/* Modals */}
-      <BookingModal
-        showBookingModal={showBookingModal}
-        closeBookingModel={() => setShowBookingModal(false)}
-        roleColors={currentRoleColors}
-      />
-      <AppointmentDetailModal showDetailModal={showDetailModal} closeShowDetailModal={() => setShowDetailModal(false)} handleRescheduleModal={ ()=> setShowRescheduleModal(true) } />
-      <RescheduleModal showRescheduleModal={showRescheduleModal} closeRescheduleModal={() => { setShowRescheduleModal(false); setShowDetailModal(false); }} />
+      <Suspense fallback={<div>Loading booking modal...</div>}>
+        <BookingModal
+          showBookingModal={showBookingModal}
+          closeBookingModel={() => setShowBookingModal(false)}
+          roleColors={currentRoleColors}
+        />
+      </Suspense>
+      <Suspense fallback={<div>Loading detail modal...</div>}>
+        <AppointmentDetailModal showDetailModal={showDetailModal} closeShowDetailModal={() => setShowDetailModal(false)} handleRescheduleModal={ ()=> setShowRescheduleModal(true) } />
+      </Suspense>
+      <Suspense fallback={<div>Loading reschedule modal...</div>}>
+        <RescheduleModal showRescheduleModal={showRescheduleModal} closeRescheduleModal={() => { setShowRescheduleModal(false); setShowDetailModal(false); }} />
+      </Suspense>
 
 
       {/* Print Styles */}

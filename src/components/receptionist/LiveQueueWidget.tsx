@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/app/store'
 import { Monitor, Users, Clock, ArrowRight, RefreshCw } from 'lucide-react'
@@ -45,7 +45,7 @@ const LiveQueueWidget = () => {
 
   return (
     <div className="bg-gradient-to-br from-purple-50 to-indigo-100 rounded-xl shadow-lg p-6 border border-purple-200">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap gap-2 items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-purple-900 flex items-center gap-2">
           <Monitor className="w-6 h-6 text-purple-600" />
           OPD Queue Live View
@@ -54,8 +54,8 @@ const LiveQueueWidget = () => {
           <button
             onClick={() => setIsAutoRefreshing(!isAutoRefreshing)}
             className={`flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium transition-colors ${
-              isAutoRefreshing 
-                ? 'bg-green-100 text-green-800 border border-green-200' 
+              isAutoRefreshing
+                ? 'bg-green-100 text-green-800 border border-green-200'
                 : 'bg-gray-100 text-gray-800 border border-gray-200'
             }`}
           >

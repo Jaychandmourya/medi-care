@@ -151,9 +151,9 @@ const NurseBeds = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 rounded-md shadow-sm">
       {/* Header */}
-      <div className="bg-white border-b">
+      <div className="bg-white rounded-t-md border-b">
         <div className="px-4 py-6">
           <Label className="text-2xl font-bold text-gray-800">Bed Management</Label>
           <p className="text-gray-600 mt-1">Manage hospital beds and patient assignments</p>
@@ -178,7 +178,7 @@ const NurseBeds = () => {
       </Suspense>
 
       {/* Main Content */}
-      <div className="bg-white">
+      <div className="bg-white rounded-b-md">
         {loading ? (
           <div className="flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>

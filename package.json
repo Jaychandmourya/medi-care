@@ -17,6 +17,7 @@
     "@tailwindcss/vite": "^4.2.1",
     "clsx": "^2.1.1",
     "cors": "^2.8.6",
+    "country-state-city": "3.2.1",
     "date-fns": "^4.1.0",
     "dexie": "^4.3.0",
     "express": "^5.2.1",

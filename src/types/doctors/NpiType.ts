@@ -61,5 +61,12 @@ export interface NPIResult {
     desc?: string
     primary?: boolean
   }>
+  practiceLocations?: Array<{
+    name?: string
+    address?: {
+      city?: string
+      state?: string
+    }
+  }>
   country?: string
 }

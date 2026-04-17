@@ -204,10 +204,15 @@ export const appointmentServices = {
         await db.open();
       }
 
-      // Check if doctor exists
-      const doctor = await db.doctors.where('id').equals(doctorId).first();
-      if (!doctor) {
-        throw new Error(`Doctor with ID ${doctorId} not found`);
+      // Skip doctor existence check for temporary IDs (new doctors being added)
+      const isTempId = doctorId.startsWith('temp-');
+
+      // Check if doctor exists (skip for temporary IDs during doctor creation)
+      if (!isTempId) {
+        const doctor = await db.doctors.where('id').equals(doctorId).first();
+        if (!doctor) {
+          throw new Error(`Doctor with ID ${doctorId} not found`);
+        }
       }
 
       // Check if schedule already exists for this doctor

@@ -1,18 +1,34 @@
-import { useState, useEffect } from 'react'
-import { useSelector } from 'react-redux'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { useNavigate } from 'react-router-dom'
-import type { RootState } from '@/app/store'
+
+// Import icon file
 import { Users, Calendar, Plus, Ticket, TrendingUp, Activity } from 'lucide-react'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
-import LiveQueueWidget from '@/components/receptionist/LiveQueueWidget'
-import RegistrationStats from '@/components/receptionist/RegistrationStats'
-import PendingAppointments from '@/components/receptionist/PendingAppointments'
+
+// Import types file
+import type { RootState } from '@/app/store'
+
+import { useSelector } from 'react-redux'
+
+// Lazy loaded components
+const LiveQueueWidget = lazy(() => import('@/components/receptionist/LiveQueueWidget'))
+const RegistrationStats = lazy(() => import('@/components/receptionist/RegistrationStats'))
+const PendingAppointments = lazy(() => import('@/components/receptionist/PendingAppointments'))
+
 
 const ReceptionistDashboard = () => {
-  const { user } = useSelector((state: RootState) => state.auth)
+
   const navigate = useNavigate()
+
+  // Redux Selector
+  const { user } = useSelector((state: RootState) => state.auth)
+
+  // State
   const [currentTime, setCurrentTime] = useState(new Date())
 
+  // UseEffect
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date())
@@ -20,6 +36,7 @@ const ReceptionistDashboard = () => {
     return () => clearInterval(timer)
   }, [])
 
+  // Method
   const handleRegisterPatient = () => {
     navigate('/receptionist/patients')
   }
@@ -33,11 +50,11 @@ const ReceptionistDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-50 via-white to-indigo-50 p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen">
+      <div className="">
         {/* Header */}
-        <div className="mb-6 sm:mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-purple-200 backdrop-blur-sm bg-opacity-90 mb-6 sm:mb-8">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-900 flex items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -95,13 +112,44 @@ const ReceptionistDashboard = () => {
         <div className="grid grid-cols-1 xl:grid-cols-3 gap-4 sm:gap-6">
           {/* Left Column - OPD Queue Live View */}
           <div className="xl:col-span-2">
-            <LiveQueueWidget />
+            <Suspense fallback={
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-200 animate-pulse">
+                <div className="h-4 bg-purple-200 rounded w-1/4 mb-4"></div>
+                <div className="space-y-3">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-5/6"></div>
+                  <div className="h-3 bg-gray-200 rounded w-4/6"></div>
+                </div>
+              </div>
+            }>
+              <LiveQueueWidget />
+            </Suspense>
           </div>
 
           {/* Right Column - Stats */}
           <div className="space-y-4 sm:space-y-6">
-            <RegistrationStats />
-            <PendingAppointments />
+            <Suspense fallback={
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-200 animate-pulse">
+                <div className="h-4 bg-purple-200 rounded w-1/3 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-2/3"></div>
+                </div>
+              </div>
+            }>
+              <RegistrationStats />
+            </Suspense>
+            <Suspense fallback={
+              <div className="bg-white rounded-xl shadow-lg p-6 border border-purple-200 animate-pulse">
+                <div className="h-4 bg-purple-200 rounded w-1/2 mb-4"></div>
+                <div className="space-y-2">
+                  <div className="h-3 bg-gray-200 rounded"></div>
+                  <div className="h-3 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              </div>
+            }>
+              <PendingAppointments />
+            </Suspense>
           </div>
         </div>
       </div>

@@ -42,7 +42,7 @@ const CustomTooltip = ({ active, payload }: TooltipProps) => {
 export default function RevenueChart({ data }: Props) {
 
   return (
-    <div className="bg-gradient-to-br from-white to-gray-50 rounded-2xl p-6 shadow-xl border border-gray-100 h-[400px] hover:shadow-2xl transition-shadow duration-300">
+    <div className="bg-linear-to-br from-white to-gray-50 rounded-2xl p-4 md:p-6 shadow-xl border border-gray-100 h-[300px] md:h-[400px] hover:shadow-2xl transition-shadow duration-300">
       <div className="flex justify-between items-center mb-6">
         <div>
           <h3 className="text-xl font-bold text-gray-800">Revenue Summary</h3>
@@ -58,7 +58,7 @@ export default function RevenueChart({ data }: Props) {
         <BarChart
           data={data}
           margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
-          barSize={100}
+          barSize={40}
         >
           <defs>
             <linearGradient id="colorGradient" x1="0" y1="0" x2="0" y2="1">
@@ -68,11 +68,11 @@ export default function RevenueChart({ data }: Props) {
           </defs>
           <XAxis
             dataKey="month"
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            tick={{ fill: '#6b7280', fontSize: 10 }}
             axisLine={{ stroke: '#e5e7eb' }}
           />
           <YAxis
-            tick={{ fill: '#6b7280', fontSize: 12 }}
+            tick={{ fill: '#6b7280', fontSize: 10 }}
             axisLine={{ stroke: '#e5e7eb' }}
             tickFormatter={(value) => `$${(value / 1000).toFixed(0)}k`}
           />

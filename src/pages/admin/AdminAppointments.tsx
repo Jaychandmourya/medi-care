@@ -14,6 +14,10 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks';
 // Import Type file
 import type { RootState } from "@/app/store";
 
+// Import Thunk file for redux
+import { getAllPatients } from "@/features/patient/patientThunk";
+import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
+
 // Import Slice file for redux
 import {
   fetchDoctorSchedules,
@@ -24,10 +28,6 @@ import {
   setSelectedDate,
   setSelectedAppointment,
 } from '@/features/appointment/appointmentSlice';
-
-// Import Thunk file for redux
-import { getAllPatients } from "@/features/patient/patientThunk";
-import { fetchLocalDoctors } from '@/features/doctor/doctorThunk'
 
 // Import components files
 import CalendarSkeleton from '@/components/admin/appointment/CalendarSkeleton';
@@ -57,7 +57,7 @@ const AdminAppointments = () => {
   const patients = useAppSelector((state: RootState) => state.patients.list);
   const { localDoctors } = useAppSelector((state: RootState) => state.doctors)
 
-  // Variable
+  // State
   const [showBookingModal, setShowBookingModal] = useState<boolean>(false)
   const [showDetailModal, setShowDetailModal] = useState<boolean>(false)
   const [showRescheduleModal, setShowRescheduleModal] = useState<boolean>(false)

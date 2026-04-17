@@ -21,23 +21,30 @@ const AdminDashboard = () => {
 
     return (
       <>
-        <div className="p-6 grid grid-cols-3 gap-6">
-          <PatientsTodayCard total={data.patientsToday} />
+        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-4 md:gap-6">
+          <PatientsTodayCard
+            total={data.patientsToday}
+            percentage={data.patientsTodayChange.percentage}
+            trend={data.patientsTodayChange.trend}
+          />
           <BedOccupancyChart occupied={data.bedOccupancy.occupied} available={data.bedOccupancy.available} maintenance={data.bedOccupancy.maintenance} />
           <OPDQueueWidget queueCount={data.opdQueueCount} />
 
-          <div className="col-span-1">
+          <div className="col-span-1 lg:col-span-2 xl:col-span-1">
             <RevenueChart data={data.revenueData} />
           </div>
 
-          <TopDepartmentsChart data={data.departmentData} />
-
-          <DoctorAvailability doctors={data.doctorAvailability}/>
-
-          <div className="col-span-3">
-            <AlertsPanel alerts={data.alerts} />
+          <div className="col-span-1 lg:col-span-2 xl:col-span-1">
+            <TopDepartmentsChart data={data.departmentData} />
           </div>
 
+          <div className="col-span-1 lg:col-span-2 xl:col-span-1">
+            <DoctorAvailability doctors={data.doctorAvailability}/>
+          </div>
+
+          <div className="col-span-1 lg:col-span-2 xl:col-span-3">
+            <AlertsPanel alerts={data.alerts} />
+          </div>
         </div>
       </>
     )

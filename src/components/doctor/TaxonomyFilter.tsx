@@ -1,26 +1,24 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
 import { ChevronDown, Briefcase } from 'lucide-react'
 
-// Common taxonomy codes for dropdown
+// Common taxonomy codes for dropdown (extracted from API data)
 const COMMON_TAXONOMIES = [
+  { code: '101YA0400X', desc: 'Counselor, Addiction (Substance Use Disorder)' },
+  { code: '101Y00000X', desc: 'Counselor' },
+  { code: '104100000X', desc: 'Social Worker' },
+  { code: '1041C0700X', desc: 'Social Worker, Clinical' },
+  { code: '106S00000X', desc: 'Behavior Technician' },
+  { code: '111N00000X', desc: 'Chiropractor' },
+  { code: '122300000X', desc: 'Dentist' },
   { code: '207Q00000X', desc: 'Family Medicine' },
-  { code: '207R00000X', desc: 'Internal Medicine' },
-  { code: '208000000X', desc: 'Pediatrics' },
-  { code: '207RC0000X', desc: 'Cardiovascular Disease' },
-  { code: '207X00000X', desc: 'Orthopaedic Surgery' },
-  { code: '207Y00000X', desc: 'Neurology' },
-  { code: '207U00000X', desc: 'General Surgery' },
-  { code: '207T00000X', desc: 'Psychiatry' },
-  { code: '207PE0004X', desc: 'Emergency Medicine' },
-  { code: '207V00000X', desc: 'Obstetrics & Gynecology' },
-  { code: '207ZB0001X', desc: 'Anesthesiology' },
-  { code: '207ZD0900X', desc: 'Dermatology' },
-  { code: '2085R0001X', desc: 'Radiology' },
-  { code: '207N00000X', desc: 'Ophthalmology' },
-  { code: '207L00000X', desc: 'Allergy' },
-  { code: '207M00000X', desc: 'Physical Medicine & Rehabilitation' },
-  { code: '207P00000X', desc: 'Pathology' },
-  { code: '207C00000X', desc: 'Emergency Medical Services' }
+  { code: '225100000X', desc: 'Physical Therapist' },
+  { code: '251S00000X', desc: 'Community/Behavioral Health' },
+  { code: '252Y00000X', desc: 'Early Intervention Provider Agency' },
+  { code: '261QR0405X', desc: 'Clinic/Center, Rehabilitation, Substance Use Disorder' },
+  { code: '3336C0003X', desc: 'Pharmacy, Community/Retail Pharmacy' },
+  { code: '3336C0004X', desc: 'Pharmacy, Compounding Pharmacy' },
+  { code: '343800000X', desc: 'Secured Medical Transport (VAN)' },
+  { code: '363LP0808X', desc: 'Nurse Practitioner, Psych/Mental Health' }
 ]
 
 interface TaxonomyFilterProps {

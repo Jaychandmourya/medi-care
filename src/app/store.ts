@@ -9,6 +9,7 @@ import doctorReducer from "@/features/doctor/doctorSlice"
 import reportsReducer from "@/features/reports/reportsSlice"
 import doctorScheduleReducer from "@/features/doctorSchedule/doctorScheduleSlice"
 import vitalsReducer from "@/features/vital/VitalSlice"
+import themeReducer from "@/features/theme/themeSlice"
 
 export const store = configureStore({
   reducer: {
@@ -22,6 +23,7 @@ export const store = configureStore({
     reports: reportsReducer,
     doctorSchedule: doctorScheduleReducer,
     vitals: vitalsReducer,
+    theme: themeReducer,
   },
 })
 

@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react
 import toast from 'react-hot-toast'
 
 // Import icons file
-import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Mail, Building } from 'lucide-react'
+import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Building, Plus } from 'lucide-react'
 
 // Import UI components
 import { Button } from '@/components/ui/Button'
@@ -16,7 +16,7 @@ import { type DoctorFormData } from '@/features/doctor/validation/doctorValidati
 import { useDispatch, useSelector } from 'react-redux'
 
 // Import Thunk file for redux
-import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor } from '@/features/doctor/doctorThunk'
+import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor, addLocalDoctor } from '@/features/doctor/doctorThunk'
 
 // Lazy loaded components
 const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorEditFormDialog'))
@@ -31,6 +31,7 @@ export default function InternalDoctorList() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [viewingDoctor, setViewingDoctor] = useState<LocalDoctor | null>(null)
   const [editingDoctor, setEditingDoctor] = useState<LocalDoctor | null>(null)
+  const [isAddingNew, setIsAddingNew] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState<{
     isOpen: boolean
     doctorId: string
@@ -98,8 +99,51 @@ export default function InternalDoctorList() {
 
   const handleEditDoctor = useCallback((doctor: LocalDoctor) => {
     setEditingDoctor(doctor)
+    setIsAddingNew(false)
     setActiveDropdown(null)
   }, [])
+
+  const handleAddNewDoctor = useCallback(() => {
+    setIsAddingNew(true)
+    setEditingDoctor(null)
+  }, [])
+
+  const handleSaveNewDoctor = useCallback(async (data: DoctorFormData, shouldCloseDialog: boolean = true): Promise<LocalDoctor | void> => {
+    try {
+      // Generate a temporary NPI for local doctors (not from NPI registry)
+      const tempNpi = `LOCAL-${Date.now()}`
+
+      const newDoctor = {
+        npi: tempNpi,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        middleName: data.middleName,
+        credential: data.credential,
+        gender: data.gender,
+        specialty: data.specialty,
+        department: data.department,
+        address: data.address,
+        city: data.city,
+        state: data.state,
+        country: data.country,
+        postalCode: data.postalCode,
+        contact: data.contact,
+        email: data.email,
+        addedAt: new Date().toISOString()
+      }
+
+      const result = await dispatch(addLocalDoctor(newDoctor)).unwrap()
+      if (shouldCloseDialog) {
+        setIsAddingNew(false)
+      }
+      toast.success('Doctor added successfully')
+      return result
+    } catch (error) {
+      console.error('Failed to add doctor:', error)
+      toast.error('Failed to add doctor')
+      throw error
+    }
+  }, [dispatch])
 
   const handleViewDoctor = useCallback((doctor: LocalDoctor) => {
     setViewingDoctor(doctor)
@@ -110,7 +154,7 @@ export default function InternalDoctorList() {
     setActiveDropdown(activeDropdown === doctorId ? null : doctorId)
   }, [activeDropdown])
 
-  const handleSaveEdit = useCallback(async (data: DoctorFormData) => {
+  const handleSaveEdit = useCallback(async (data: DoctorFormData, shouldCloseDialog: boolean = true): Promise<void> => {
     if (!editingDoctor?.id) return
     try {
       // Convert form data to update format
@@ -131,12 +175,15 @@ export default function InternalDoctorList() {
         email: data.email
       }
 
-      await dispatch(updateLocalDoctor({ id: editingDoctor.id.toString(), updates }))
-      setEditingDoctor(null)
+      await dispatch(updateLocalDoctor({ id: editingDoctor.id.toString(), updates })).unwrap()
+      if (shouldCloseDialog) {
+        setEditingDoctor(null)
+      }
       toast.success('Doctor updated successfully')
     } catch (error) {
       console.error('Failed to update doctor:', error)
       toast.error('Failed to update doctor')
+      throw error
     }
   }, [editingDoctor, dispatch])
 
@@ -149,8 +196,15 @@ export default function InternalDoctorList() {
     return parts.join(' ')
   }, [])
 
+  const formatWorkingDays = useCallback((days: number[]) => {
+    if (!days || days.length === 0) return 'No working days'
+    const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
+    return days.map(d => dayNames[d]).join(', ')
+  }, [])
+
   const handleCancelEdit = useCallback(() => {
     setEditingDoctor(null)
+    setIsAddingNew(false)
   }, [])
 
   const handleCloseViewModal = useCallback(() => {
@@ -158,8 +212,8 @@ export default function InternalDoctorList() {
   }, [])
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen lg:p-6">
+      <div className="space-y-6">
 
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
@@ -170,6 +224,13 @@ export default function InternalDoctorList() {
               </h1>
               <p className="text-gray-600 mt-1">Manage your doctor records</p>
             </div>
+            <Button
+              onClick={handleAddNewDoctor}
+              className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
+            >
+              <Plus className="w-4 h-4" />
+              Add New Doctor
+            </Button>
           </div>
         </div>
 
@@ -217,7 +278,7 @@ export default function InternalDoctorList() {
                       Location
                     </th>
                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-700 uppercase tracking-wider">
-                      Email
+                      Schedule
                     </th>
                     <th className="px-6 py-4 text-center text-xs font-semibold text-gray-700 uppercase tracking-wider">
                       Actions
@@ -263,10 +324,23 @@ export default function InternalDoctorList() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="flex items-center text-sm text-gray-700">
-                          <Mail className="w-4 h-4 mr-2 text-gray-400" />
-                          {doctor.email || 'N/A'}
-                        </div>
+                        {doctor.doctorSchedule ? (
+                          <div className="text-sm text-gray-700">
+                            <div className="flex items-center gap-1 mb-1">
+                              <span className="text-xs font-medium text-blue-600">
+                                {doctor.doctorSchedule.startTime} - {doctor.doctorSchedule.endTime}
+                              </span>
+                            </div>
+                            <div className="text-xs text-gray-500">
+                              {formatWorkingDays(doctor.doctorSchedule.workingDays)}
+                            </div>
+                            <div className="text-xs text-gray-400 mt-1">
+                              {doctor.doctorSchedule.slotDuration} min slots
+                            </div>
+                          </div>
+                        ) : (
+                          <span className="text-sm text-gray-400">No schedule set</span>
+                        )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="relative">
@@ -331,31 +405,34 @@ export default function InternalDoctorList() {
         )}
 
         {/* Pagination */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-600">
-              Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, filteredDoctors.length)} of {filteredDoctors.length} doctors
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 backdrop-blur-sm bg-opacity-95">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
+            <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1">
+              Showing <span className="font-medium">{((page - 1) * perPage) + 1}</span> to <span className="font-medium">{Math.min(page * perPage, filteredDoctors.length)}</span> of <span className="font-medium">{filteredDoctors.length}</span> doctors
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 order-1 sm:order-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 px-2 sm:px-3"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
               </Button>
-              <div className="flex items-center px-3 py-2 text-sm text-gray-700">
-                Page {page} of {Math.ceil(filteredDoctors.length / perPage) || 1}
+              <div className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-gray-50 rounded-md min-w-20 sm:min-w-24 justify-center">
+                <span className="sm:hidden">{page} / {Math.ceil(filteredDoctors.length / perPage) || 1}</span>
+                <span className="hidden sm:inline">Page {page} of {Math.ceil(filteredDoctors.length / perPage) || 1}</span>
               </div>
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setPage(Math.min(Math.ceil(filteredDoctors.length / perPage), page + 1))}
                 disabled={page >= Math.ceil(filteredDoctors.length / perPage)}
-                className="flex items-center gap-1"
+                className="flex items-center gap-1 px-2 sm:px-3"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>
@@ -363,15 +440,17 @@ export default function InternalDoctorList() {
         </div>
 
         {/* Edit Doctor Modal */}
-        {editingDoctor && (
-          <Suspense fallback={<div>Loading...</div>}>
-            <DoctorEditFormDialog
-              doctor={editingDoctor}
-              onCancel={handleCancelEdit}
-              onSave={handleSaveEdit}
-            />
-          </Suspense>
-        )}
+        {(editingDoctor || isAddingNew) && (
+        <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
+          <DoctorEditFormDialog
+            doctor={editingDoctor || undefined}
+            mode={isAddingNew ? 'add' : 'edit'}
+            onSave={isAddingNew ? handleSaveNewDoctor : handleSaveEdit}
+            onCancel={handleCancelEdit}
+            onComplete={() => dispatch(fetchLocalDoctors())}
+          />
+        </Suspense>
+      )}
 
         {/* View Doctor Modal */}
         {viewingDoctor && (

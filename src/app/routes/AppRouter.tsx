@@ -44,6 +44,10 @@ const ReceptionistPatient = lazy(() => import("@/pages/receptionist/Receptionist
 const ReceptionistAppointments = lazy(() => import("@/pages/receptionist/ReceptionistAppointments"))
 const ReceptionistOpd = lazy(() => import("@/pages/receptionist/ReceptionistOpd"))
 
+// Error pages
+const NotFound = lazy(() => import("@/pages/error/NotFound"))
+const AccessDenied = lazy(() => import("@/pages/error/AccessDenied"))
+
 import ProtectedRoute from "./ProtectedRoute"
 import RoleBasedRoute from "./RoleBasedRoute"
 
@@ -90,6 +94,7 @@ const AppRoutes = () => {
           <Route path="patients" element={<DoctorPatients />} />
           <Route path="appointments" element={<DoctorAppointments />} />
           <Route path="prescriptions" element={<DoctorPrescriptions />} />
+          <Route path="*" element={<NotFound />} />
 
         </Route>
 
@@ -146,6 +151,12 @@ const AppRoutes = () => {
           <Route path="appointments" element={<ReceptionistAppointments />} />
           <Route path="opd" element={<ReceptionistOpd />} />
         </Route>
+
+        {/* Access Denied - Direct Route */}
+        <Route path="/access-denied" element={<AccessDenied />} />
+
+        {/* 404 - Catch All */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>
   )

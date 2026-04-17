@@ -208,10 +208,10 @@ const AdminReports = () => {
   }
 
   return (
-    <div id="admin-reports-container" className="min-h-screen bg-gray-50 p-6">
+    <div id="admin-reports-container" className="min-h-screen">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex justify-between items-center mb-6">
+        <div className="flex flex-wrap gap-2 justify-between items-center mb-6 bg-white p-6 rounded-lg shadow-sm">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Admin Reports</h1>
             <p className="text-gray-600 mt-2">Comprehensive analytics and insights for MediCare HMS</p>

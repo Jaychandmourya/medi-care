@@ -160,8 +160,8 @@ const NurseDashboard = () => {
   const selectedWardInfo = wards.find(ward => ward.wardId === selectedWard)
 
   return (
-    <div className="p-6 bg-gray-50 min-h-screen">
-      <div className="mb-8">
+    <div className="min-h-screen">
+      <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Nurse Dashboard</h1>
         <p className="text-gray-600">Monitor ward status and patient vitals</p>
       </div>
@@ -169,7 +169,7 @@ const NurseDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Ward Bed Status Grid */}
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
-          <div className="flex justify-between items-center mb-6">
+          <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Ward Bed Status</h2>
             <select
               value={selectedWard}
@@ -185,35 +185,35 @@ const NurseDashboard = () => {
           </div>
 
           {selectedWardInfo && (
-            <div className="mb-4 p-4 bg-blue-50 rounded-lg">
-              <div className="flex justify-between items-center">
+            <div className="mb-4 p-3 sm:p-4 bg-blue-50 rounded-lg">
+              <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center gap-3">
                 <div>
-                  <h3 className="font-semibold text-blue-900">{selectedWardInfo.name}</h3>
-                  <p className="text-blue-700">Floor {selectedWardInfo.floor} • {selectedWardInfo.totalBeds} total beds</p>
+                  <h3 className="font-semibold text-blue-900 text-sm sm:text-base">{selectedWardInfo.name}</h3>
+                  <p className="text-blue-700 text-xs sm:text-sm">Floor {selectedWardInfo.floor} • {selectedWardInfo.totalBeds} total beds</p>
                 </div>
-                <div className="flex gap-4 text-sm">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                <div className="flex flex-wrap gap-2 sm:gap-4 text-xs sm:text-sm">
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-green-500 rounded-full"></div>
                     <span className="text-gray-600">
-                      {selectedWardBeds.filter(b => b.status === 'available').length} Available
+                      {selectedWardBeds.filter(b => b.status === 'available').length} <span className="hidden sm:inline">Available</span><span className="sm:hidden">Avail</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-red-500 rounded-full"></div>
                     <span className="text-gray-600">
-                      {selectedWardBeds.filter(b => b.status === 'occupied').length} Occupied
+                      {selectedWardBeds.filter(b => b.status === 'occupied').length} <span className="hidden sm:inline">Occupied</span><span className="sm:hidden">Occ</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-yellow-500 rounded-full"></div>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-yellow-500 rounded-full"></div>
                     <span className="text-gray-600">
-                      {selectedWardBeds.filter(b => b.status === 'reserved').length} Reserved
+                      {selectedWardBeds.filter(b => b.status === 'reserved').length} <span className="hidden sm:inline">Reserved</span><span className="sm:hidden">Res</span>
                     </span>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-gray-500 rounded-full"></div>
+                  <div className="flex items-center gap-1.5 sm:gap-2">
+                    <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 bg-gray-500 rounded-full"></div>
                     <span className="text-gray-600">
-                      {selectedWardBeds.filter(b => b.status === 'maintenance').length} Maintenance
+                      {selectedWardBeds.filter(b => b.status === 'maintenance').length} <span className="hidden sm:inline">Maintenance</span><span className="sm:hidden">Maint</span>
                     </span>
                   </div>
                 </div>
@@ -221,18 +221,18 @@ const NurseDashboard = () => {
             </div>
           )}
 
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3">
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 lg:grid-cols-6 xl:grid-cols-8 gap-2 sm:gap-3">
             {selectedWardBeds.map(bed => (
               <div
                 key={bed.bedId}
-                className={`relative p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${getStatusColor(bed.status)}`}
+                className={`relative p-2 sm:p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${getStatusColor(bed.status)}`}
                 title={`Bed ${bed.bedId} - ${bed.status}${bed.patientId ? ` - Patient ${bed.patientId}` : ''}`}
               >
                 <div className="text-center">
-                  <div className="text-lg font-bold">{bed.bedId.split('-')[1]}</div>
-                  <div className="text-xs mt-1">{getStatusIcon(bed.status)}</div>
+                  <div className="text-sm sm:text-lg font-bold">{bed.bedId.split('-')[1]}</div>
+                  <div className="text-xs mt-0.5 sm:mt-1">{getStatusIcon(bed.status)}</div>
                   {bed.patientId && (
-                    <div className="text-xs mt-1 truncate">{bed.patientId}</div>
+                    <div className="text-[10px] sm:text-xs mt-0.5 sm:mt-1 truncate">{bed.patientId}</div>
                   )}
                 </div>
               </div>

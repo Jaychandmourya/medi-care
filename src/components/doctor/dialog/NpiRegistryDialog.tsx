@@ -12,6 +12,7 @@ import TaxonomyFilter from '@/components/doctor/TaxonomyFilter'
 import DoctorSearchResults from '@/components/doctor/DoctorSearchResults'
 import SearchPagination from '@/components/doctor/SearchPagination'
 import DoctorDetailsModal from '@/components/doctor/dialog/DoctorDetailsModal'
+import CountryStateCitySelector from '@/components/doctor/CountryStateCitySelector'
 
 // Interface
 interface NpiRegistryDialogProps {
@@ -25,8 +26,14 @@ interface NpiRegistryDialogProps {
     lastName: string
     city: string
     state: string
+    country: string
   }
   onFilterChange: (field: string, value: string) => void
+  selectedCountryCode: string
+  onCountryChange: (countryCode: string, countryName: string) => void
+  selectedStateCode: string
+  onStateChange: (stateCode: string, stateName: string) => void
+  onCityChange: (cityName: string) => void
   hasActiveFilters: () => boolean
   onClearFilters: () => void
   showResults: boolean
@@ -54,7 +61,12 @@ const NpiRegistryDialog = ({
   totalPages,
   resultCount,
   onPageChange,
-  loading
+  loading,
+  selectedCountryCode,
+  onCountryChange,
+  selectedStateCode,
+  onStateChange,
+  onCityChange
 }: NpiRegistryDialogProps) => {
 
 
@@ -143,23 +155,17 @@ const NpiRegistryDialog = ({
               value={filterValues.lastName}
               onChange={(e) => onFilterChange('lastName', e.target.value)}
             />
+          </div>
 
-            {/* City Filter */}
-            <Input
-              id="filterCity"
-              label="City"
-              placeholder="Enter city"
-              value={filterValues.city}
-              onChange={(e) => onFilterChange('city', e.target.value)}
-            />
-
-            {/* State Filter */}
-            <Input
-              id="filterState"
-              label="State"
-              placeholder="Enter state"
-              value={filterValues.state}
-              onChange={(e) => onFilterChange('state', e.target.value)}
+          {/* Country/State/City Selector */}
+          <div className="mt-4">
+            <CountryStateCitySelector
+              selectedCountry={selectedCountryCode}
+              selectedState={selectedStateCode}
+              selectedCity={filterValues.city}
+              onCountryChange={onCountryChange}
+              onStateChange={onStateChange}
+              onCityChange={onCityChange}
             />
           </div>
 

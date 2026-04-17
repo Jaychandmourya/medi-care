@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
 // Import icons file
-import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
+import { Calendar, User, FileText, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -45,6 +45,8 @@ const PrescriptionHistory = () => {
   const [selectedStatus, setSelectedStatus] = useState<string>('')
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
   const [prescriptionToDelete, setPrescriptionToDelete] = useState<Prescription | null>(null)
+  const [currentPage, setCurrentPage] = useState<number>(1)
+  const ITEMS_PER_PAGE = 5
 
   // Get current doctor's ID from localStorage
   const getCurrentDoctorId = useCallback(() => {
@@ -124,42 +126,42 @@ const PrescriptionHistory = () => {
       })
   }, [filteredPrescriptionHistory, searchTerm, selectedPatient, selectedStatus])
 
-  // Group prescriptions by date (sorted by date descending)
-  const sortedGroupedPrescriptions = useMemo(() => {
-    const groupedPrescriptions = filteredPrescriptions.reduce((groups, prescription) => {
+  // Paginate prescriptions (5 per page, based on individual records)
+  const paginatedGroupedPrescriptions = useMemo(() => {
+    const allPrescriptions = filteredPrescriptions
+    const totalPages = Math.ceil(allPrescriptions.length / ITEMS_PER_PAGE)
+    const safePage = Math.min(currentPage, totalPages || 1)
+    const start = (safePage - 1) * ITEMS_PER_PAGE
+    const end = start + ITEMS_PER_PAGE
+    const pageItems = allPrescriptions.slice(start, end)
+
+    // Re-group the paginated items by date
+    const grouped = pageItems.reduce((groups, prescription) => {
       const date = new Date(prescription.createdAt).toLocaleDateString('en-US', {
         year: 'numeric',
         month: 'long',
         day: 'numeric'
       })
-      if (!groups[date]) {
-        groups[date] = []
-      }
+      if (!groups[date]) groups[date] = []
       groups[date].push(prescription)
       return groups
     }, {} as Record<string, Prescription[]>)
 
-    // Sort prescriptions within each date group by time (most recent first)
-    Object.keys(groupedPrescriptions).forEach(date => {
-      groupedPrescriptions[date].sort((a, b) => {
-        const timeA = new Date(a.createdAt).getTime()
-        const timeB = new Date(b.createdAt).getTime()
-        return timeB - timeA
-      })
+    // Sort prescriptions within each date group by time
+    Object.keys(grouped).forEach(date => {
+      grouped[date].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
     })
 
-    // Sort the date groups in descending order (most recent date first)
-    return Object.entries(groupedPrescriptions)
-      .sort(([dateA], [dateB]) => {
-        const timestampA = new Date(dateA).getTime()
-        const timestampB = new Date(dateB).getTime()
-        return timestampB - timestampA
-      })
+    // Sort date groups descending
+    const sorted = Object.entries(grouped)
+      .sort(([dateA], [dateB]) => new Date(dateB).getTime() - new Date(dateA).getTime())
       .reduce((acc, [date, prescriptions]) => {
         acc[date] = prescriptions
         return acc
       }, {} as Record<string, Prescription[]>)
-  }, [filteredPrescriptions])
+
+    return { grouped: sorted, totalPages, safePage }
+  }, [filteredPrescriptions, currentPage])
 
   const getStatusColor = useCallback((status: string) => {
     switch (status) {
@@ -328,7 +330,7 @@ const PrescriptionHistory = () => {
             <Input
               type="text"
               value={searchTerm}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSearchTerm(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
               placeholder="Search by patient, doctor, or diagnosis..."
               icon={Search}
               iconPosition="left"
@@ -341,7 +343,7 @@ const PrescriptionHistory = () => {
             <Input
               as="select"
               value={selectedPatient}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSelectedPatient(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSelectedPatient(e.target.value); setCurrentPage(1) }}
               className="px-3 py-2"
             >
               <option value="">All Patients</option>
@@ -358,7 +360,7 @@ const PrescriptionHistory = () => {
             <Input
               as="select"
               value={selectedStatus}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => setSelectedStatus(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSelectedStatus(e.target.value); setCurrentPage(1) }}
               className="px-3 py-2"
             >
               <option value="">All Status</option>
@@ -372,118 +374,198 @@ const PrescriptionHistory = () => {
 
       {/* Prescriptions List */}
       <div className="space-y-6">
-        {Object.entries(sortedGroupedPrescriptions).length === 0 ? (
+        {filteredPrescriptions.length === 0 ? (
           <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-8 text-center">
             <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">No prescriptions found</h3>
             <p className="text-gray-500">Try adjusting your search or filters</p>
           </div>
         ) : (
-          Object.entries(sortedGroupedPrescriptions).map(([date, datePrescriptions]) => (
-            <div key={date} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
-              {/* Date Header */}
-              <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-5 w-5 text-gray-500" />
-                  <h3 className="font-semibold text-gray-900">{date}</h3>
-                  <span className="text-sm text-gray-500">
-                    ({datePrescriptions.length} prescription{datePrescriptions.length > 1 ? 's' : ''})
-                  </span>
+          <>
+            {/* Results info */}
+            <div className="text-sm text-gray-500">
+              Showing {Math.min((paginatedGroupedPrescriptions.safePage - 1) * ITEMS_PER_PAGE + 1, filteredPrescriptions.length)}–{Math.min(paginatedGroupedPrescriptions.safePage * ITEMS_PER_PAGE, filteredPrescriptions.length)} of {filteredPrescriptions.length} prescriptions
+            </div>
+
+            {Object.entries(paginatedGroupedPrescriptions.grouped).map(([date, datePrescriptions]) => (
+              <div key={date} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
+                {/* Date Header */}
+                <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
+                  <div className="flex items-center gap-2">
+                    <Calendar className="h-5 w-5 text-gray-500" />
+                    <h3 className="font-semibold text-gray-900">{date}</h3>
+                    <span className="text-sm text-gray-500">
+                      ({datePrescriptions.length} prescription{datePrescriptions.length > 1 ? 's' : ''})
+                    </span>
+                  </div>
                 </div>
-              </div>
 
-              {/* Prescriptions for this date */}
-              <div className="divide-y divide-gray-200">
-                {datePrescriptions.map((prescription) => (
-                  <div key={prescription.id} className="p-6 hover:bg-gray-50 transition-colors">
-                    <div className="flex justify-between items-start">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-2">
-                          <h4 className="font-semibold text-gray-900">{prescription.patientName}</h4>
-                          <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(prescription.status)}`}>
-                            {prescription.status}
-                          </span>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
-                          <div className="flex items-center gap-2">
-                            <User className="h-4 w-4" />
-                            <span>Dr. {prescription.doctorName}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Calendar className="h-4 w-4" />
-                            <span>Created: {new Date(prescription.createdAt).toLocaleTimeString('en-US', {
-                              hour: '2-digit',
-                              minute: '2-digit',
-                              second: '2-digit',
-                              hour12: true
-                            })}</span>
-                          </div>
-                        </div>
-
-                        <div className="mb-3">
-                          <p className="text-sm font-medium text-gray-700 mb-1">Diagnosis:</p>
-                          <p className="text-sm text-gray-600">{prescription.diagnosis}</p>
-                        </div>
-
-                        <div>
-                          <p className="text-sm font-medium text-gray-700 mb-1">Medicines ({prescription.medicines.length}):</p>
-                          <div className="flex flex-wrap gap-1">
-                            {prescription.medicines.map((medicine) => (
-                              <span
-                                key={medicine.id}
-                                className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200"
-                              >
-                                {medicine.name}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
-
-                        {prescription.followUpDate && (
-                          <div className="mt-3">
-                            <span className="text-sm text-orange-600 font-medium">
-                              Follow-up: {new Date(prescription.followUpDate).toLocaleDateString()}
+                {/* Prescriptions for this date */}
+                <div className="divide-y divide-gray-200">
+                  {datePrescriptions.map((prescription) => (
+                    <div key={prescription.id} className="p-6 hover:bg-gray-50 transition-colors">
+                      <div className="flex flex-col sm:flex-row justify-between items-start">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h4 className="font-semibold text-gray-900">{prescription.patientName}</h4>
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${getStatusColor(prescription.status)}`}>
+                              {prescription.status}
                             </span>
                           </div>
-                        )}
-                      </div>
 
-                      <div className="flex gap-2 ml-4">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleViewPrescription(prescription)}
-                          className="p-2 text-blue-600 hover:bg-blue-50"
-                          title="View Prescription"
-                        >
-                          <Eye className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDownloadPrescription(prescription)}
-                          className="p-2 text-green-600 hover:bg-green-50"
-                          title="Download PDF"
-                        >
-                          <Download className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeletePrescription(prescription)}
-                          className="p-2 text-red-600 hover:bg-red-50"
-                          title="Delete Prescription"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600 mb-3">
+                            <div className="flex items-center gap-2">
+                              <User className="h-4 w-4" />
+                              <span>Dr. {prescription.doctorName}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Calendar className="h-4 w-4" />
+                              <span>Created: {new Date(prescription.createdAt).toLocaleTimeString('en-US', {
+                                hour: '2-digit',
+                                minute: '2-digit',
+                                second: '2-digit',
+                                hour12: true
+                              })}</span>
+                            </div>
+                          </div>
+
+                          <div className="mb-3">
+                            <p className="text-sm font-medium text-gray-700 mb-1">Diagnosis:</p>
+                            <p className="text-sm text-gray-600">{prescription.diagnosis}</p>
+                          </div>
+
+                          <div>
+                            <p className="text-sm font-medium text-gray-700 mb-1">Medicines ({prescription.medicines.length}):</p>
+                            <div className="flex flex-wrap gap-1">
+                              {prescription.medicines.map((medicine) => (
+                                <span
+                                  key={medicine.id}
+                                  className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-full border border-blue-200"
+                                >
+                                  {medicine.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+
+                          {prescription.followUpDate && (
+                            <div className="mt-3">
+                              <span className="text-sm text-orange-600 font-medium">
+                                Follow-up: {new Date(prescription.followUpDate).toLocaleDateString()}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+
+                        <div className="flex gap-2 sm:ml-4 mt-3 sm:mt-0">
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleViewPrescription(prescription)}
+                            className="p-2 text-blue-600 hover:bg-blue-50"
+                            title="View Prescription"
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDownloadPrescription(prescription)}
+                            className="p-2 text-green-600 hover:bg-green-50"
+                            title="Download PDF"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeletePrescription(prescription)}
+                            className="p-2 text-red-600 hover:bg-red-50"
+                            title="Delete Prescription"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
-            </div>
-          ))
+            ))}
+
+            {/* Pagination */}
+            {paginatedGroupedPrescriptions.totalPages > 1 && (
+              <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
+                  {/* Previous button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={paginatedGroupedPrescriptions.safePage === 1}
+                    className="flex items-center gap-1 w-full sm:w-auto"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                    Previous
+                  </Button>
+
+                  {/* Page numbers */}
+                  <div className="flex items-center gap-1 flex-wrap justify-center">
+                    {(() => {
+                      const total = paginatedGroupedPrescriptions.totalPages
+                      const current = paginatedGroupedPrescriptions.safePage
+                      const pages: (number | string)[] = []
+
+                      if (total <= 7) {
+                        for (let i = 1; i <= total; i++) pages.push(i)
+                      } else {
+                        pages.push(1)
+                        if (current > 3) pages.push('start-ellipsis')
+                        const start = Math.max(2, current - 1)
+                        const end = Math.min(total - 1, current + 1)
+                        for (let i = start; i <= end; i++) pages.push(i)
+                        if (current < total - 2) pages.push('end-ellipsis')
+                        pages.push(total)
+                      }
+
+                      return pages.map((page, idx) => {
+                        if (typeof page === 'string') {
+                          return (
+                            <span key={page} className="px-2 py-1 text-gray-400 select-none">…</span>
+                          )
+                        }
+                        return (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentPage(page)}
+                            className={`min-w-9 h-9 px-3 rounded-md text-sm font-medium transition-colors ${
+                              page === current
+                                ? 'bg-blue-600 text-white shadow-sm'
+                                : 'text-gray-700 hover:bg-gray-100'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        )
+                      })
+                    })()}
+                  </div>
+
+                  {/* Next button */}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(p => Math.min(paginatedGroupedPrescriptions.totalPages, p + 1))}
+                    disabled={paginatedGroupedPrescriptions.safePage === paginatedGroupedPrescriptions.totalPages}
+                    className="flex items-center gap-1 w-full sm:w-auto"
+                  >
+                    Next
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            )}
+          </>
         )}
       </div>
 

@@ -1,13 +1,24 @@
-import { useState } from 'react'
-import { useSelector } from 'react-redux'
+import { useState, lazy, Suspense } from 'react'
+
+// Import icon file
 import { FileText, History, Plus, Eye } from 'lucide-react'
+
+// Import type file
 import type { RootState } from '@/app/store'
-import PrescriptionBuilder from '@/components/prescription/PrescriptionBuilder'
-import PrescriptionPDFView from '@/components/prescription/PrescriptionPDFView'
-import PrescriptionHistory from '@/components/prescription/PrescriptionHistory'
+
+// Import selector file
+import { useSelector } from 'react-redux'
+
+const PrescriptionBuilder = lazy(() => import('@/components/prescription/PrescriptionBuilder'))
+const PrescriptionPDFView = lazy(() => import('@/components/prescription/PrescriptionPDFView'))
+const PrescriptionHistory = lazy(() => import('@/components/prescription/PrescriptionHistory'))
 
 const DoctorPrescriptions = () => {
+
+  // Redux selector
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
+
+  // State
   const [activeView, setActiveView] = useState<'builder' | 'history' | 'preview'>('builder')
 
   const handleViewChange = (view: 'builder' | 'history' | 'preview') => {
@@ -15,10 +26,10 @@ const DoctorPrescriptions = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen">
+      <div>
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 bg-white rounded-lg shadow-sm p-6">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Prescription Management</h1>
           <p className="text-gray-600">Create and manage digital prescriptions with OpenFDA integration</p>
         </div>
@@ -66,9 +77,9 @@ const DoctorPrescriptions = () => {
 
         {/* Content Area */}
         <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-          {activeView === 'builder' && <PrescriptionBuilder />}
-          {activeView === 'history' && <PrescriptionHistory />}
-          {activeView === 'preview' && <PrescriptionPDFView />}
+          {activeView === 'builder' && <Suspense fallback={<div>Loading...</div>}><PrescriptionBuilder /></Suspense>}
+          {activeView === 'history' && <Suspense fallback={<div>Loading...</div>}><PrescriptionHistory /></Suspense>}
+          {activeView === 'preview' && <Suspense fallback={<div>Loading...</div>}><PrescriptionPDFView /></Suspense>}
         </div>
 
         {/* Features Info */}

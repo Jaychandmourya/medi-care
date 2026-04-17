@@ -1,5 +1,5 @@
 import Dexie, { type Table } from "dexie";
-import type { Bed, Ward } from '@/features/bed/bedSlice'
+import type{ Bed, Ward } from '@/types/bed/bedType'
 import type { Appointment } from '@/types/appointment/appointmentType';
 import type { Patient } from '@/types/patients/patientType'
 import type { Vitals } from '@/types/vitals/vitalsType'

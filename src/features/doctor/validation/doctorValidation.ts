@@ -22,12 +22,13 @@ export const doctorFormSchema = z.object({
     .max(50, 'Credential must be less than 50 characters')
     .optional(),
 
-  gender: z.enum(['M', 'F', 'O'], 'Please select a valid gender')
-    .optional(),
+  gender: z.enum(['M', 'F', 'O']).refine((val) => val !== undefined, {
+    message: 'Please select a gender'
+  }),
 
   specialty: z.string()
-    .max(100, 'Specialty must be less than 100 characters')
-    .optional(),
+    .min(1, 'Specialty is required')
+    .max(100, 'Specialty must be less than 100 characters'),
 
   department: z.string()
     .min(1, 'Department is required')
@@ -39,21 +40,24 @@ export const doctorFormSchema = z.object({
 
   city: z.string()
     .max(50, 'City must be less than 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'City can only contain letters, spaces, hyphens and apostrophes')
-    .optional(),
+    .regex(/^[a-zA-Z\s'-]*$/, 'City can only contain letters, spaces, hyphens and apostrophes')
+    .optional()
+    .or(z.literal('')),
 
   state: z.string()
-    .max(2, 'State must be exactly 2 characters')
-    .regex(/^[a-zA-Z]{2}$/, 'State must contain exactly 2 letters')
-    .optional(),
+    .max(50, 'State must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]*$/, 'State can only contain letters, spaces, hyphens and apostrophes')
+    .optional()
+    .or(z.literal('')),
 
   country: z.string()
-    .max(50, 'County must be less than 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'County can only contain letters, spaces, hyphens and apostrophes')
+    .max(50, 'Country must be less than 50 characters')
+    .regex(/^[a-zA-Z\s'-]+$/, 'Country can only contain letters, spaces, hyphens and apostrophes')
     .optional(),
 
   postalCode: z.string()
-    .regex(/^(\d{5}(-\d{4})?|\d{9})$/, 'Please enter a valid postal code (e.g., 780285333, 12345-6789)')
+    .max(10, 'Postal code cannot exceed 10 characters')
+    .regex(/^[a-zA-Z0-9]{1,10}$/, 'Postal code must be 1-10 alphanumeric characters')
     .optional(),
 
   phone: z.string()
@@ -61,13 +65,17 @@ export const doctorFormSchema = z.object({
     .optional(),
 
   contact: z.string()
-    .max(200, 'Contact information must be less than 200 characters')
-    .optional(),
+    .min(1, 'Phone number is required')
+    .max(15, 'Phone number must be less than 15 characters')
+    .regex(/^[+]?[(]?[0-9]{3}[)]?[-\s.]?[0-9]{3}[-\s.]?[0-9]{4,6}$/, 'Please enter a valid phone number'),
 
   email: z.string()
-    .email('Please enter a valid email address')
     .max(100, 'Email must be less than 100 characters')
-    .optional(),
+    .optional()
+    .or(z.literal(''))
+    .refine((val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val), {
+      message: 'Please enter a valid email address'
+    }),
 
   addedAt: z.string().optional(),
 })

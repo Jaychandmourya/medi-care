@@ -55,7 +55,7 @@ const useDebounce = <T extends (...args: never[]) => unknown>(callback: T, delay
 
 export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, onClearForm, clearTrigger }: DoctorAutocompleteProps) {
   const dispatch = useDispatch<AppDispatch>()
-  const { searchResults, loading } = useSelector((state: RootState) => state.doctors)
+  const { searchResults, searchLoading: loading } = useSelector((state: RootState) => state.doctors)
   const [query, setQuery] = useState('')
   const [showSuggestions, setShowSuggestions] = useState(false)
   const [adding, setAdding] = useState(false)
@@ -145,7 +145,6 @@ export default function DoctorAutocomplete({ onFieldPopulate, onFormPopulate, on
   // Transform NPI results to AutocompleteDoctor format - memoized for performance
   const suggestions: AutocompleteDoctor[] = useMemo(() => {
     return searchResults.map((doctor: NPIResult) => {
-      console.log('doctor',doctor)
       const basic = doctor.basic
       const primaryAddress = doctor.addresses?.find(addr => addr.address_1)
       const primaryTaxonomy = doctor.taxonomies?.find(tax => tax.primary)

@@ -1,10 +1,17 @@
 import React, { useState, useCallback, useMemo, useEffect } from 'react';
+
 import { format, startOfWeek, addDays, addMinutes, parse, isBefore, isAfter } from 'date-fns';
+
+// Import Icons file
 import { Clock } from 'lucide-react';
+
+// Import type file
+import type { WeeklyCalendarProps, Appointment } from '@/types/appointment/appointmentType';
+
+// Import components
 import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
-import type{ WeeklyCalendarProps, Appointment } from '@/types/appointment/appointmentType';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
@@ -20,7 +27,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   roleColors
 }) => {
 
-  // Veritable
+  // State
   const [currentWeek, setCurrentWeek] = useState(startOfWeek(new Date()));
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
   const [hoveredSlot, setHoveredSlot] = useState<{ date: string; time: string; appointmentId: string } | null>(null);
@@ -29,10 +36,9 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   // Sync currentWeek with Redux selectedWeek
   useEffect(() => {
     if (onSetSelectedWeek) {
-      // Initialize Redux state with current week if not already set
       onSetSelectedWeek(currentWeek.toISOString());
     }
-  }, [currentWeek, onSetSelectedWeek]); // Include dependencies
+  }, [currentWeek, onSetSelectedWeek]);
 
   // Computed values
   const weekDays = useMemo(() =>

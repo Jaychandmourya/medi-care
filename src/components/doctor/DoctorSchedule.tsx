@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react'
+import { useCallback, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 
 import { Button } from '@/components/ui/Button'
@@ -22,7 +22,9 @@ interface DoctorScheduleProps {
   setAddingSchedule: (value: boolean) => void
   clearCurrentDoctorData: () => void
   onNavigateToAddDoctor?: () => void
+  onBeforeScheduleSave?: () => Promise<string | null>
   existingSchedule?: DoctorSchedule | null
+  isNewDoctor?: boolean
 }
 
 const DoctorSchedule = ({
@@ -32,11 +34,19 @@ const DoctorSchedule = ({
   setAddingSchedule,
   clearCurrentDoctorData,
   onNavigateToAddDoctor,
-  existingSchedule
+  onBeforeScheduleSave,
+  existingSchedule,
+  isNewDoctor = false
 }: DoctorScheduleProps) => {
 
   // Redux dispatch
   const dispatch = useDispatch<AppDispatch>()
+
+  // Use ref to track isNewDoctor to avoid stale closure issues
+  const isNewDoctorRef = useRef(isNewDoctor)
+  useEffect(() => {
+    isNewDoctorRef.current = isNewDoctor
+  }, [isNewDoctor])
 
   // Form control
   const {
@@ -81,8 +91,25 @@ const DoctorSchedule = ({
 
   // Methods
   const handleAddSchedule = useCallback(async (data: DoctorScheduleFormData) => {
+    console.log('handleAddSchedule called with data:', data)
     setAddingSchedule(true)
     try {
+      let doctorId = data.doctorId
+
+      // If this is a new doctor, save doctor first to get the real ID
+      // Use ref to check latest value to avoid stale closure
+      if (isNewDoctorRef.current && onBeforeScheduleSave) {
+        console.log('New doctor detected, saving doctor first...')
+        const newDoctorId = await onBeforeScheduleSave()
+        console.log('Got new doctor ID:', newDoctorId)
+        if (!newDoctorId) {
+          toast.error('Failed to save doctor. Cannot create schedule.')
+          setAddingSchedule(false)
+          return
+        }
+        doctorId = newDoctorId
+      }
+
       if (existingSchedule) {
         // Update existing schedule
         await dispatch(updateDoctorSchedule({
@@ -100,7 +127,7 @@ const DoctorSchedule = ({
         toast.success('Doctor schedule updated successfully!')
       } else {
         await dispatch(addDoctorSchedule({
-          doctorId: data.doctorId,
+          doctorId: doctorId,
           workingDays: data.workingDays,
           startTime: data.startTime,
           endTime: data.endTime,
@@ -108,7 +135,7 @@ const DoctorSchedule = ({
           lunchBreakStart: data.lunchBreakStart,
           lunchBreakEnd: data.lunchBreakEnd
         })).unwrap()
-        toast.success('Doctor schedule added successfully!')
+        toast.success('Doctor and schedule saved successfully!')
       }
 
       resetSchedule()
@@ -130,7 +157,7 @@ const DoctorSchedule = ({
     } finally {
       setAddingSchedule(false)
     }
-  }, [dispatch, resetSchedule, setAddingSchedule, clearCurrentDoctorData, onNavigateToAddDoctor, existingSchedule])
+  }, [dispatch, resetSchedule, setAddingSchedule, clearCurrentDoctorData, onNavigateToAddDoctor, onBeforeScheduleSave, existingSchedule])
 
   const handleWorkingDayChange = useCallback((dayValue: number, checked: boolean) => {
     const currentDays = watchedScheduleValues.workingDays || []
@@ -143,8 +170,13 @@ const DoctorSchedule = ({
     }
   }, [watchedScheduleValues.workingDays, setScheduleValue])
 
+  const onSubmitError = (errors: any) => {
+    console.error('Form validation errors:', errors)
+    toast.error('Please fix form errors before submitting')
+  }
+
   return (
-    <form onSubmit={handleScheduleSubmit(handleAddSchedule, () => {})}>
+    <form onSubmit={handleScheduleSubmit(handleAddSchedule, onSubmitError)}>
       <div className="space-y-8">
         {/* Schedule Status Header */}
         {existingSchedule && (

@@ -2,46 +2,68 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, useEffect, useRef, useMemo } from 'react'
 import { X, ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
+import { Country, State } from 'country-state-city'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
-import { type LocalDoctor } from '@/features/doctor/doctorSlice'
+import type { LocalDoctor } from '@/types/doctors/doctorType'
 import { COMMON_TAXONOMIES } from '@/features/doctor/doctorSlice'
 import { useDispatch, useSelector } from 'react-redux'
 import { type AppDispatch, type RootState } from '@/app/store'
 import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
-import { type DoctorSchedule } from '@/features/db/dexie'
+import { type DoctorSchedule as DoctorScheduleType } from '@/features/db/dexie'
 import Input from '@/components/ui/Input'
+import CountryStateCitySelector from '../CountryStateCitySelector'
 import { Button } from '@/components/ui/Button'
-import DoctorSchedule from '../DoctorSchedule'
+import DoctorScheduleComponent from '../DoctorSchedule'
 import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {
-  doctor: LocalDoctor
-  onSave: (data: DoctorFormData) => Promise<void>
+  doctor?: LocalDoctor
+  mode?: 'add' | 'edit'
+  onSave: (data: DoctorFormData, shouldCloseDialog?: boolean) => Promise<void | LocalDoctor>
   onCancel: () => void
+  onComplete?: () => void // Called after successful save to refresh parent data
 }
 
 type Step = 'doctor-info' | 'schedule'
 
-interface ScheduleStepData {
-  workingDays: number[]
-  startTime: string
-  endTime: string
-  slotDuration: '15' | '20' | '30'
-  lunchBreakStart?: string
-  lunchBreakEnd?: string
+const defaultDoctor: Partial<LocalDoctor> = {
+  npi: '',
+  firstName: '',
+  lastName: '',
+  middleName: '',
+  credential: '',
+  specialty: '',
+  department: '',
+  address: '',
+  city: '',
+  state: '',
+  country: '',
+  postalCode: '',
+  gender: undefined,
+  contact: '',
+  addedAt: new Date().toISOString(),
 }
 
-export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditFormProps) {
+export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel, onComplete }: DoctorEditFormProps) {
+  const dispatch = useDispatch<AppDispatch>()
 
+  const currentDoctor = doctor || defaultDoctor as LocalDoctor
   const [saving, setSaving] = useState(false)
-  const [editData, setEditData] = useState<DoctorEditFormProps>(null)
+  const [editData, setEditData] = useState<DoctorFormData | null>(null)
   const [showSpecialtyDropdown, setShowSpecialtyDropdown] = useState(false)
   const [currentStep, setCurrentStep] = useState<Step>('doctor-info')
-  const [existingSchedule, setExistingSchedule] = useState<DoctorSchedule | null>(null)
+  const [existingSchedule, setExistingSchedule] = useState<DoctorScheduleType | null>(null)
   const [loadingSchedule, setLoadingSchedule] = useState(false)
   const [addingSchedule, setAddingSchedule] = useState(false)
+  const [newlySavedDoctor, setNewlySavedDoctor] = useState<LocalDoctor | null>(null)
+  const [pendingDoctorData, setPendingDoctorData] = useState<DoctorFormData | null>(null)
+  const pendingDoctorDataRef = useRef<DoctorFormData | null>(null)
   const specialtyRef = useRef<HTMLDivElement>(null)
-  const dispatch = useDispatch<AppDispatch>()
+
+
+  // State for country/state codes (selector uses codes, form stores names)
+  const [countryCode, setCountryCode] = useState('')
+  const [stateCode, setStateCode] = useState('')
 
   const { schedules } = useSelector((state: RootState) => state.doctorSchedule)
 
@@ -50,30 +72,100 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
     handleSubmit,
     formState: { errors },
     setValue,
-    watch
+    watch,
+    trigger,
+    reset
   } = useForm<DoctorFormData>({
     resolver: zodResolver(doctorFormSchema),
+    mode: 'onChange',
     defaultValues: {
-      id: doctor.id,
-      firstName: doctor.firstName,
-      lastName: doctor.lastName,
-      gender: (doctor.gender as 'M' | 'F' | 'O' | undefined) || undefined,
-      specialty: doctor.specialty || '',
-      department: doctor.department || '',
-      address: doctor.address || '',
-      city: doctor.city || '',
-      state: doctor.state || '',
-      country: doctor.country || '',
-      postalCode: doctor.postalCode || '',
-      contact: doctor.contact || '',
-      email: doctor.email || '',
-      addedAt: doctor.addedAt || '',
+      id: currentDoctor.id || '',
+      firstName: currentDoctor.firstName || '',
+      lastName: currentDoctor.lastName || '',
+      gender: (currentDoctor.gender as 'M' | 'F' | 'O' | undefined) || undefined,
+      specialty: currentDoctor.specialty || '',
+      department: currentDoctor.department || '',
+      address: currentDoctor.address || '',
+      city: currentDoctor.city || '',
+      state: currentDoctor.state || '',
+      country: currentDoctor.country || '',
+      postalCode: currentDoctor.postalCode || '',
+      contact: currentDoctor.contact || '',
+      addedAt: currentDoctor.addedAt || '',
     }
   })
 
   const watchedValues = watch()
 
+  // Reset form values when doctor prop changes (for edit mode)
+  useEffect(() => {
+    if (doctor) {
+      reset({
+        id: doctor.id || '',
+        firstName: doctor.firstName || '',
+        lastName: doctor.lastName || '',
+        gender: (doctor.gender as 'M' | 'F' | 'O' | undefined) || undefined,
+        specialty: doctor.specialty || '',
+        department: doctor.department || '',
+        address: doctor.address || '',
+        city: doctor.city || '',
+        state: doctor.state || '',
+        country: doctor.country || '',
+        postalCode: doctor.postalCode || '',
+        contact: doctor.contact || '',
+        addedAt: doctor.addedAt || '',
+      })
+    }
+  }, [doctor, reset])
 
+  // Map country/state names to codes when editing existing doctor
+  useEffect(() => {
+    const countryName = currentDoctor.country?.trim()
+    const stateName = currentDoctor.state?.trim()
+
+    if (countryName) {
+      const countries = Country.getAllCountries()
+      // Try exact match first, then case-insensitive
+      let foundCountry = countries.find(c => c.name === countryName)
+      if (!foundCountry) {
+        foundCountry = countries.find(c => c.name.toLowerCase() === countryName.toLowerCase())
+      }
+      // Also try matching by ISO code
+      if (!foundCountry) {
+        foundCountry = countries.find(c => c.isoCode.toLowerCase() === countryName.toLowerCase())
+      }
+
+      if (foundCountry) {
+        setCountryCode(foundCountry.isoCode)
+        if (stateName) {
+          const states = State.getStatesOfCountry(foundCountry.isoCode)
+          // Try exact match first, then case-insensitive
+          let foundState = states.find(s => s.name === stateName)
+          if (!foundState) {
+            foundState = states.find(s => s.name.toLowerCase() === stateName.toLowerCase())
+          }
+          // Also try matching by ISO code (e.g., "CA" instead of "California")
+          if (!foundState) {
+            foundState = states.find(s => s.isoCode.toLowerCase() === stateName.toLowerCase())
+          }
+
+          if (foundState) {
+            setStateCode(foundState.isoCode)
+          } else {
+            setStateCode('')
+          }
+        } else {
+          setStateCode('')
+        }
+      } else {
+        setCountryCode('')
+        setStateCode('')
+      }
+    } else {
+      setCountryCode('')
+      setStateCode('')
+    }
+  }, [currentDoctor.id, currentDoctor.country, currentDoctor.state])
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -102,33 +194,83 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
   }, [watchedValues.specialty])
 
 
-  const loadExistingSchedule = async () => {
-      if (!doctor.id) return
+  const loadExistingSchedule = async (doctorIdToUse?: string) => {
+      const doctorId = doctorIdToUse || currentDoctor.id
+      console.log('loadExistingSchedule called with doctorId:', doctorId)
+      if (!doctorId) {
+        console.log('No doctorId, skipping schedule load')
+        setLoadingSchedule(false)
+        return
+      }
       try {
         await dispatch(fetchDoctorSchedules())
-        const schedule = schedules.find(s => s.doctorId === doctor.id)
+        const schedule = schedules.find(s => s.doctorId === doctorId)
+        console.log('Found schedule:', schedule)
         if (schedule) {
           setExistingSchedule(schedule)
         } else {
           setExistingSchedule(null)
         }
       } catch (error) {
+        console.error('Failed to load doctor schedule:', error)
         toast.error('Failed to load doctor schedule')
+      } finally {
+        setLoadingSchedule(false)
       }
     }
 
   const handleNextStep = async () => {
+    console.log('handleNextStep called, current mode:', mode)
     if (currentStep === 'doctor-info') {
-      try {
-        const isValid = await handleSubmit(async (data) => {
-          // Then move to schedule step
-          setEditData(data)
-          setCurrentStep('schedule')
-          loadExistingSchedule()
-        })()
-      } catch (error) {
-        console.error('Validation or save failed:', error)
-        toast.error('Failed to save doctor information')
+      // Validate all fields first
+      const isValid = await trigger()
+      console.log('Form validation result:', isValid)
+      if (!isValid) {
+        // Get specific error messages
+        const errorFields = Object.entries(errors)
+          .map(([field, error]) => `${field}: ${error?.message}`)
+          .join(', ')
+        toast.error(`Validation errors: ${errorFields}`)
+        return
+      }
+
+      // Get form data and store it temporarily
+      const data = watch()
+      console.log('Form data:', data)
+      setEditData(data as DoctorFormData)
+      setPendingDoctorData(data as DoctorFormData)
+      pendingDoctorDataRef.current = data as DoctorFormData
+
+      // For edit mode, save immediately. For add mode, defer until Complete Setup
+      if (mode === 'edit') {
+        console.log('Edit mode: saving doctor...')
+        setSaving(true)
+        try {
+          const result = await onSave(data as DoctorFormData, false)
+          console.log('onSave result:', result)
+          if (result && typeof result === 'object' && 'id' in result) {
+            setNewlySavedDoctor(result as LocalDoctor)
+          }
+        } catch (err) {
+          console.error('Failed to save doctor:', err)
+          toast.error('Failed to save doctor. Please try again.')
+          return
+        } finally {
+          setSaving(false)
+        }
+      }
+
+      console.log('Proceeding to schedule step...')
+      setLoadingSchedule(true)
+      setCurrentStep('schedule')
+      // In edit mode, use the saved doctor's ID to load schedule
+      // In add mode, we don't have an ID yet - will be created on Complete Setup
+      const doctorIdForSchedule = mode === 'edit' && newlySavedDoctor?.id ? newlySavedDoctor.id : currentDoctor.id
+      console.log('Using doctorId for schedule:', doctorIdForSchedule)
+      if (doctorIdForSchedule) {
+        await loadExistingSchedule(doctorIdForSchedule)
+      } else {
+        setLoadingSchedule(false)
       }
     }
   }
@@ -143,8 +285,10 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
     console.log('Save data:', data)
     setSaving(true)
     try {
-    } catch (error) {
-      toast.error('Failed to update doctor')
+      await onSave(data, true)
+    } catch (err) {
+      console.error('Failed to save doctor:', err)
+      toast.error('Failed to save doctor')
     } finally {
       setSaving(false)
     }
@@ -156,10 +300,53 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
     // In this context, we don't need to do anything since the doctor is fixed
   }
 
-  const handleNavigateToAddDoctor = async() => {
-    // Navigate back to doctor info step
-    await onSave(editData)
-    // setCurrentStep('doctor-info')
+  // Callback to save doctor before saving schedule (for add mode)
+  // Using ref to avoid stale closure issues
+  const handleBeforeScheduleSave = async (): Promise<string | null> => {
+    const doctorData = pendingDoctorDataRef.current
+    if (!doctorData) {
+      toast.error('No doctor data available')
+      return null
+    }
+
+    // In edit mode, return existing doctor ID
+    if (mode === 'edit') {
+      return currentDoctor.id || null
+    }
+
+    // In add mode, save the doctor first to get the ID
+    console.log('Add mode: saving doctor before schedule...', doctorData)
+    setSaving(true)
+    try {
+      const result = await onSave(doctorData, false)
+      console.log('onSave result:', result)
+      if (result && typeof result === 'object' && 'id' in result) {
+        const savedDoctor = result as LocalDoctor
+        setNewlySavedDoctor(savedDoctor)
+        pendingDoctorDataRef.current = null
+        toast.success('Doctor saved successfully!')
+        return savedDoctor.id || null
+      }
+      return null
+    } catch (err) {
+      console.error('Failed to save doctor:', err)
+      toast.error('Failed to save doctor. Please try again.')
+      throw err
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  const handleNavigateToAddDoctor = async () => {
+    // Refresh parent data first before closing dialog
+    onComplete?.()
+    // Close the dialog after everything is saved
+    if (mode === 'edit' && editData) {
+      await onSave(editData, true)
+    } else if (mode === 'add' && pendingDoctorData) {
+      // Doctor was already saved in handleBeforeScheduleSave, just close
+      onCancel()
+    }
   }
 
   const renderStepIndicator = () => {
@@ -209,7 +396,9 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
     <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50">
       <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">Edit Doctor Information</h2>
+          <h2 className="text-xl font-semibold text-gray-900">
+            {mode === 'add' ? 'Add New Doctor' : 'Edit Doctor Information'}
+          </h2>
           <Button
             variant="ghost"
             size="icon"
@@ -246,12 +435,13 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
               placeholder="Enter last name"
             />
 
-                        {/* Specialty */}
+            {/* Specialty */}
             <div className="relative" ref={specialtyRef}>
               <div onClick={() => setShowSpecialtyDropdown(true)}>
                 <Input
                   id="specialty"
                   label="Specialty"
+                  required
                   registration={register('specialty')}
                   error={errors.specialty}
                   placeholder="Enter or select specialty"
@@ -286,28 +476,18 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
             {/* Contact */}
             <Input
               id="contact"
-              label="Contact"
+              label="Phone"
+              required
               registration={register('contact')}
               error={errors.contact}
-              placeholder="Enter contact information"
+              placeholder="Enter phone number"
             />
-
-            {/* Email */}
-            <Input
-              id="email"
-              label="Email"
-              type="email"
-              registration={register('email')}
-              error={errors.email}
-              placeholder="Enter email address"
-            />
-
-
 
             {/* Gender */}
             <Input
               id="gender"
               label="Gender"
+              required
               as="select"
               registration={register('gender')}
               error={errors.gender}
@@ -335,32 +515,27 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
               <option value="Dermatology">Dermatology</option>
             </Input>
 
-            {/* City */}
-            <Input
-              id="city"
-              label="City"
-              registration={register('city')}
-              error={errors.city}
-              placeholder="Enter city"
-            />
-
-            {/* State */}
-            <Input
-              id="state"
-              label="State"
-              registration={register('state')}
-              error={errors.state}
-              placeholder="e.g., CA, NY"
-            />
-
-            {/* country */}
-            <Input
-              id="country"
-              label="Country"
-              registration={register('country')}
-              error={errors.country}
-              placeholder="Enter country"
-            />
+            {/* Country, State, City Selector */}
+            <div className="md:col-span-2">
+              <CountryStateCitySelector
+                selectedCountry={countryCode}
+                selectedState={stateCode}
+                selectedCity={watch('city') || ''}
+                onCountryChange={(code, name) => {
+                  setCountryCode(code)
+                  setStateCode('')
+                  setValue('country', name)
+                  setValue('state', '')
+                  setValue('city', '')
+                }}
+                onStateChange={(code, name) => {
+                  setStateCode(code)
+                  setValue('state', name)
+                  setValue('city', '')
+                }}
+                onCityChange={(cityName) => setValue('city', cityName)}
+              />
+            </div>
 
             {/* Postal Code */}
             <Input
@@ -372,15 +547,15 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
             />
 
             {/* Address */}
-            <div className="md:col-span-2">
-              <Input
-                id="address"
-                label="Address"
-                registration={register('address')}
-                error={errors.address}
-                placeholder="Enter address"
-              />
-            </div>
+            <Input
+              id="address"
+              as="textarea"
+              label="Address"
+              registration={register('address')}
+              error={errors.address}
+              placeholder="Enter address"
+              rows={3}
+            />
           </div>
 
           {/* Action Buttons for Doctor Info Step */}
@@ -414,15 +589,27 @@ export default function DoctorEditForm({ doctor, onSave, onCancel }: DoctorEditF
                 </div>
               ) : (
                 <div>
-                  <DoctorSchedule
-                    lastAddedDoctor={doctor}
-                    doctors={[doctor]}
+                  {/* Create a temp doctor from pending data for display before save */}
+                  {(() => {
+                    const displayDoctor = mode === 'add' && newlySavedDoctor
+                      ? newlySavedDoctor
+                      : mode === 'add' && pendingDoctorData
+                        ? { ...currentDoctor, ...pendingDoctorData, id: 'temp-id' } as LocalDoctor
+                        : currentDoctor as LocalDoctor
+                    return (
+                  <DoctorScheduleComponent
+                    lastAddedDoctor={displayDoctor}
+                    doctors={[displayDoctor]}
                     addingSchedule={addingSchedule}
                     setAddingSchedule={setAddingSchedule}
                     clearCurrentDoctorData={clearCurrentDoctorData}
                     onNavigateToAddDoctor={handleNavigateToAddDoctor}
+                    onBeforeScheduleSave={handleBeforeScheduleSave}
                     existingSchedule={existingSchedule}
+                    isNewDoctor={mode === 'add' && !newlySavedDoctor}
                   />
+                    )
+                  })()}
 
                   {/* Navigation buttons for schedule step */}
                   <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-gray-200">

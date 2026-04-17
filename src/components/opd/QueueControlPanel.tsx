@@ -115,47 +115,52 @@ const QueueControlPanel = () => {
   }, [dispatch])
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-6">
-      <h2 className="text-xl font-bold mb-4 flex items-center gap-2 text-black">
-        <Clock className="w-5 h-5" />
+    <div className="bg-white rounded-lg shadow-md p-4 md:p-6">
+      {/* Header */}
+      <h2 className="text-lg sm:text-xl font-bold mb-3 sm:mb-4 flex items-center gap-2 text-black">
+        <Clock className="w-4 h-4 sm:w-5 sm:h-5" />
         Queue Control
       </h2>
 
       {/* Simulation Control */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
-          <h3 className="text-lg font-semibold text-gray-700">Auto Simulation</h3>
+      <div className="mb-4 sm:mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+          <h3 className="text-base sm:text-lg font-semibold text-gray-700">Auto Simulation</h3>
           <Button
             onClick={toggleSimulationHandler}
             variant={simulationRunning ? 'destructive' : 'default'}
+            className="w-full sm:w-auto justify-center"
+            size="sm"
           >
             {simulationRunning ? (
               <>
-                <Pause className="w-5 h-5" />
-                Stop Simulation
+                <Pause className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+                <span className="sm:hidden">Stop</span>
+                <span className="hidden sm:inline">Stop Simulation</span>
               </>
             ) : (
               <>
-                <Play className="w-5 h-5" />
-                Start Simulation
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-1.5 sm:mr-2" />
+                <span className="sm:hidden">Start</span>
+                <span className="hidden sm:inline">Start Simulation</span>
               </>
             )}
           </Button>
         </div>
 
         {simulationRunning && (
-          <div className="bg-green-50 border border-green-200 rounded-md p-3 text-sm text-green-700">
-            <div className="flex items-center justify-between">
+          <div className="bg-green-50 border border-green-200 rounded-md p-2.5 sm:p-3 text-xs sm:text-sm text-green-700">
+            <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-0">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
-                Auto-advancing queue
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0"></div>
+                <span className="truncate">Auto-advancing queue</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="w-4 h-4" />
-                <span className="font-bold text-lg">{countdownTimer}s</span>
+              <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                <Clock className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                <span className="font-bold text-base sm:text-lg">{countdownTimer}s</span>
               </div>
             </div>
-            <div className="mt-2 bg-green-200 rounded-full h-2 overflow-hidden">
+            <div className="mt-2 bg-green-200 rounded-full h-1.5 sm:h-2 overflow-hidden">
               <div
                 className="bg-green-500 h-full transition-all duration-1000 ease-linear"
                 style={{ width: `${(countdownTimer / 30) * 100}%` }}
@@ -166,38 +171,42 @@ const QueueControlPanel = () => {
       </div>
 
       {/* Manual Controls */}
-      <div className="mb-6">
-        <h3 className="text-lg font-semibold text-gray-700 mb-3">Manual Controls</h3>
-        <div className="flex gap-3">
+      <div className="mb-4 sm:mb-6">
+        <h3 className="text-sm sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-3">Manual Controls</h3>
+        <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
           <Button
             onClick={handleAdvance}
             disabled={!currentToken}
             variant="default"
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2"
+            size="sm"
           >
-            <SkipForward className="w-5 h-5" />
-            Call Next
+            <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="sm:hidden">Next</span>
+            <span className="hidden sm:inline">Call Next</span>
           </Button>
           <Button
             onClick={handleSkip}
             disabled={!currentToken}
             variant="destructive"
-            className="flex-1 flex items-center justify-center gap-2"
+            className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2"
+            size="sm"
           >
-            <RotateCcw className="w-5 h-5" />
-            Skip Current
+            <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
+            <span className="sm:hidden">Skip</span>
+            <span className="hidden sm:inline">Skip Current</span>
           </Button>
         </div>
       </div>
 
       {/* Current Token Info */}
       {currentTokenData && (
-        <div className="bg-blue-50 border border-blue-200 rounded-md p-4 mb-6">
-          <h3 className="text-sm font-semibold text-blue-800 mb-2">Currently Serving</h3>
-          <div className="text-lg font-bold text-blue-900">
+        <div className="bg-blue-50 border border-blue-200 rounded-md p-3 sm:p-4 mb-4 sm:mb-6">
+          <h3 className="text-xs sm:text-sm font-semibold text-blue-800 mb-1.5 sm:mb-2">Currently Serving</h3>
+          <div className="text-base sm:text-lg font-bold text-blue-900 truncate">
             #{currentTokenData.tokenId} - {currentTokenData.patientName}
           </div>
-          <div className="text-sm text-blue-700">
+          <div className="text-xs sm:text-sm text-blue-700">
             {currentTokenData.department}
           </div>
         </div>
@@ -206,15 +215,15 @@ const QueueControlPanel = () => {
       {/* Skipped Tokens */}
       {skippedTokens.length > 0 && (
         <div>
-          <h3 className="text-lg font-semibold text-gray-700 mb-3">Skipped Patients</h3>
-          <div className="space-y-2">
+          <h3 className="text-sm sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-3">Skipped Patients ({skippedTokens.length})</h3>
+          <div className="space-y-2 max-h-48 sm:max-h-64 overflow-y-auto">
             {skippedTokens.map(token => (
-              <div key={token.tokenId} className="flex items-center justify-between p-3 bg-orange-50 border border-orange-200 rounded-md">
-                <div>
-                  <div className="font-medium text-gray-800">
+              <div key={token.tokenId} className="flex flex-col xs:flex-row xs:items-center xs:justify-between p-2.5 sm:p-3 bg-orange-50 border border-orange-200 rounded-md gap-2 xs:gap-3">
+                <div className="min-w-0">
+                  <div className="font-medium text-gray-800 text-sm sm:text-base truncate">
                     #{token.tokenId} - {token.patientName}
                   </div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-xs sm:text-sm text-gray-600">
                     {token.department}
                   </div>
                 </div>
@@ -222,6 +231,7 @@ const QueueControlPanel = () => {
                   onClick={() => handleRequeue(token.tokenId)}
                   variant="destructive"
                   size="sm"
+                  className="w-full xs:w-auto shrink-0 text-xs sm:text-sm"
                 >
                   Re-queue
                 </Button>
@@ -232,9 +242,9 @@ const QueueControlPanel = () => {
       )}
 
       {!currentToken && skippedTokens.length === 0 && (
-        <div className="text-center text-gray-400 py-8">
-          <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-          <div>No active tokens in queue</div>
+        <div className="text-center text-gray-400 py-6 sm:py-8">
+          <Clock className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 text-gray-300" />
+          <div className="text-sm sm:text-base">No active tokens in queue</div>
         </div>
       )}
     </div>

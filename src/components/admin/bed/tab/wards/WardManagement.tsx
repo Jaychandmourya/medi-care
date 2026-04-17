@@ -33,9 +33,9 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const dispatch = useDispatch<AppDispatch>()
   const { wards, beds, loading } = useSelector((state: RootState) => state.beds)
 
-  const [searchQuery, setSearchQuery] = useState('')
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
+  const [searchQuery, setSearchQuery] = useState<string>('')
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false)
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [editingWard, setEditingWard] = useState<Ward | null>(null)
   const [wardToDelete, setWardToDelete] = useState<Ward | null>(null)
 
@@ -89,15 +89,15 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   return (
     <div className="space-y-6">
       {/* Header & Search */}
-      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-          <div>
-            <h2 className="text-xl font-bold text-gray-800">Ward Management</h2>
-            <p className="text-gray-500 text-sm mt-1">Manage hospital wards and their bed capacity</p>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div className="min-w-0">
+            <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">Ward Management</h2>
+            <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage hospital wards and their bed capacity</p>
           </div>
           <Button
             onClick={() => handleOpenModal()}
-            className="flex items-center gap-2"
+            className="flex items-center gap-2 w-full sm:w-auto justify-center shrink-0"
           >
             <Plus className="w-4 h-4" />
             Add Ward
@@ -105,22 +105,22 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
         </div>
 
         {/* Search */}
-        <div className="mt-6">
-          <div className="relative max-w-md">
+        <div className="mt-4 sm:mt-6">
+          <div className="relative">
             <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
             <input
               type="text"
               placeholder="Search wards..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             />
           </div>
         </div>
       </div>
 
       {/* Wards Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4 sm:gap-6">
         {loading ? (
           <div className="col-span-full flex items-center justify-center py-12">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
@@ -140,18 +140,18 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
             return (
               <div
                 key={ward.wardId}
-                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 hover:shadow-md transition-shadow cursor-pointer"
+                className="bg-white rounded-2xl shadow-sm border border-gray-100 p-4 sm:p-6 hover:shadow-md transition-shadow cursor-pointer"
                 onClick={() => onWardClick?.(ward)}
               >
                 {/* Ward Header */}
                 <div className="flex items-start justify-between mb-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                      <Building2 className="w-6 h-6 text-blue-600" />
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+                    <div className="w-10 h-10 sm:w-12 sm:h-12 bg-blue-100 rounded-xl flex items-center justify-center shrink-0">
+                      <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     </div>
-                    <div>
+                    <div className="min-w-0">
                       <h3 className="font-semibold text-gray-900">{ward.name}</h3>
-                      <p className="text-sm text-gray-500">Floor {ward.floor}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Floor {ward.floor}</p>
                     </div>
                   </div>
                   <div className="flex gap-1">
@@ -181,27 +181,27 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-4 mb-4">
-                  <div className="text-center p-3 bg-gray-50 rounded-xl">
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4">
+                  <div className="text-center p-2 sm:p-3 bg-gray-50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 text-gray-600 mb-1">
-                      <BedSingle className="w-4 h-4" />
-                      <span className="text-xs">Total</span>
+                      <BedSingle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-[10px] sm:text-xs">Total</span>
                     </div>
-                    <p className="text-xl font-bold text-gray-900">{bedCount}</p>
+                    <p className="text-lg sm:text-xl font-bold text-gray-900">{bedCount}</p>
                   </div>
-                  <div className="text-center p-3 bg-green-50 rounded-xl">
+                  <div className="text-center p-2 sm:p-3 bg-green-50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 text-green-600 mb-1">
-                      <BedSingle className="w-4 h-4" />
-                      <span className="text-xs">Free</span>
+                      <BedSingle className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-[10px] sm:text-xs">Free</span>
                     </div>
-                    <p className="text-xl font-bold text-green-700">{availableCount}</p>
+                    <p className="text-lg sm:text-xl font-bold text-green-700">{availableCount}</p>
                   </div>
-                  <div className="text-center p-3 bg-red-50 rounded-xl">
+                  <div className="text-center p-2 sm:p-3 bg-red-50 rounded-xl">
                     <div className="flex items-center justify-center gap-1 text-red-600 mb-1">
-                      <Users className="w-4 h-4" />
-                      <span className="text-xs">Occ</span>
+                      <Users className="w-3 h-3 sm:w-4 sm:h-4" />
+                      <span className="text-[10px] sm:text-xs">Occ</span>
                     </div>
-                    <p className="text-xl font-bold text-red-700">{occupiedCount}</p>
+                    <p className="text-lg sm:text-xl font-bold text-red-700">{occupiedCount}</p>
                   </div>
                 </div>
 
@@ -228,8 +228,8 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
                 </div>
 
                 {/* Footer */}
-                <div className="mt-4 pt-4 border-t border-gray-100 flex items-center justify-between">
-                  <span className="text-xs text-gray-500">
+                <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-gray-100 flex items-center justify-between gap-2">
+                  <span className="text-[10px] sm:text-xs text-gray-500 truncate">
                     ID: {ward.wardId}
                   </span>
                   <span className={`text-xs px-2 py-1 rounded-full ${

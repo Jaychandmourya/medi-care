@@ -1,7 +1,12 @@
-import PatientList from "@/components/admin/patient/PatientList";
-import { useAppSelector } from "@/app/hooks";
-import type { RootState } from "@/app/store";
 import { ROLE_THEME } from "@/utils/theme";
+
+// Import type file
+import type { RootState } from "@/app/store";
+
+import { useAppSelector } from "@/app/hooks";
+
+// Import components
+import PatientList from "@/components/admin/patient/PatientList";
 
 const ReceptionistPatient = () => {
   const user = useAppSelector((state: RootState) => state.auth.user);

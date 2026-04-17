@@ -2,8 +2,19 @@ import { BrowserRouter } from "react-router-dom"
 import AppRouter from "@/app/routes/AppRouter"
 import { Toaster } from "react-hot-toast"
 import "@/utils/fixDatabase" // Load database fix utility
+import { useEffect } from "react"
+import { useAppSelector } from "@/app/hooks"
 
 function App() {
+  const theme = useAppSelector((state) => state.theme.theme)
+
+  useEffect(() => {
+    if (theme === "dark") {
+      document.documentElement.classList.add("dark")
+    } else {
+      document.documentElement.classList.remove("dark")
+    }
+  }, [theme])
 
   return (
     <>

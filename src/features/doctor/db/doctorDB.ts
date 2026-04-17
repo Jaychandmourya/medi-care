@@ -1,28 +1,37 @@
-import { type LocalDoctor } from '../doctorSlice'
+import type { LocalDoctor } from '@/types/doctors/doctorType'
 import { db, type Doctor } from '../../db/dexie'
 
 // Database operations using MediCareDB
 export const doctorDBOperations = {
-  // Get all local doctors
+  // Get all local doctors with their schedules
   getAll: async (): Promise<LocalDoctor[]> => {
     const doctors = await db.doctors.orderBy('createdAt').reverse().toArray()
-    return doctors.map(doctor => ({
-      id: doctor.id,
-      npi: doctor.id, // Using doctor ID as NPI for compatibility
-      firstName: doctor.name.split(' ')[0] || '',
-      lastName: doctor.name.split(' ').slice(1).join(' ') || '',
-      email: doctor.email,
-      specialty: doctor.specialization,
-      city: doctor.city,
-      state: doctor.state,
-      country: doctor.country, // Map country to country for compatibility
-      address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
-      contact: doctor.contact,
-      postalCode: doctor.postalCode || '',
-      credential: undefined,
-      gender: undefined,
-      addedAt: doctor.createdAt
-    }))
+    const schedules = await db.doctorSchedules.toArray()
+
+    return doctors.map(doctor => {
+      // Find schedule for this doctor
+      const doctorSchedule = schedules.find(s => s.doctorId === doctor.id)
+
+      return {
+        id: doctor.id,
+        npi: doctor.id, // Using doctor ID as NPI for compatibility
+        firstName: doctor.name.split(' ')[0] || '',
+        lastName: doctor.name.split(' ').slice(1).join(' ') || '',
+        email: doctor.email,
+        specialty: doctor.specialization,
+        department: doctor.department || doctor.specialization || 'General',
+        city: doctor.city,
+        state: doctor.state,
+        country: doctor.country,
+        address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
+        contact: doctor.contact,
+        postalCode: doctor.postalCode || '',
+        credential: undefined,
+        gender: undefined,
+        addedAt: doctor.createdAt,
+        doctorSchedule: doctorSchedule // Attach schedule if found
+      }
+    })
   },
 
   // Add a new doctor
@@ -30,9 +39,10 @@ export const doctorDBOperations = {
     const doctorData: Doctor = {
       id: doctor.npi || `DOC-${Date.now()}`,
       name: `${doctor.firstName} ${doctor.lastName}`.trim(),
-      department: doctor.specialty || 'General',
+      department: doctor.department || doctor.specialty || 'General',
       specialization: doctor.specialty || 'General Practice',
       email: doctor.email || '',
+      phone: doctor.phone || doctor.contact || '',
       contact: doctor.contact,
       city: doctor.city,
       state: doctor.state,
@@ -83,6 +93,7 @@ export const doctorDBOperations = {
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || doctor.specialization || 'General',
       city: doctor.city,
       state: doctor.state,
       country: doctor.country,
@@ -102,11 +113,12 @@ export const doctorDBOperations = {
     if (!doctor) return undefined
 
     return {
-      id: parseInt(doctor.id),
+      id: doctor.id,
       npi: doctor.id,
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || doctor.specialization || 'General',
       city: doctor.city,
       email: doctor.email,
       state: doctor.state,
@@ -114,7 +126,7 @@ export const doctorDBOperations = {
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,
-      postalCode: undefined,
+      postalCode: doctor.postalCode || '',
       credential: undefined,
       gender: undefined,
       addedAt: doctor.createdAt
@@ -139,6 +151,7 @@ export const doctorDBOperations = {
       firstName: doctor.name.split(' ')[0] || '',
       lastName: doctor.name.split(' ').slice(1).join(' ') || '',
       specialty: doctor.specialization,
+      department: doctor.department || doctor.specialization || 'General',
       city: doctor.city,
       state: doctor.state,
       email: doctor.email,
@@ -146,7 +159,7 @@ export const doctorDBOperations = {
       address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
       phone: doctor.phone,
       contact: doctor.contact,
-      postalCode: undefined,
+      postalCode: doctor.postalCode || '',
       credential: undefined,
       gender: undefined,
       addedAt: doctor.createdAt

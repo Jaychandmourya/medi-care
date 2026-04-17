@@ -1,28 +1,45 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import { useSelector } from 'react-redux'
-import type { RootState } from '@/app/store'
-import { appointmentServices } from '@/services/appointmentServices'
-import type { Appointment, Patient } from '@/features/db/dexie'
+import toast from 'react-hot-toast'
+
+// Import icons file
+import { Search, Filter, Edit, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
+
+// Import UI components
 import { Button } from '@/components/ui/Button'
 import { Label } from '@/components/ui/Label'
 import Input from '@/components/ui/Input'
-import { Search, Filter, Edit, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
-import toast from 'react-hot-toast'
-import { ROLE_THEME } from '@/utils/theme'
 import ThreeDotMenu from '@/components/ui/ThreeDotMenu'
 
+// Import utile file
+import { ROLE_THEME } from '@/utils/theme'
+
+// Import Types files
+import type { RootState } from '@/app/store'
+import type { Appointment } from '@/types/appointment/appointmentType'
+import type { Patient } from '@/types/patients/patientType'
+
+// Import selector for redux
+import { useSelector } from 'react-redux'
+
+// Import services file
+import { appointmentServices } from '@/services/appointmentServices'
+import { patientService } from '@/services/patientServices'
+
 const DoctorPatients = () => {
+
+  // State
+  const [isOpenViewDialog, setIsOpenViewDialog] = useState<boolean>(false)
+  const [isOpenEditDialog, setIsOpenEditDialog] = useState<boolean>(false)
+  const [loading, setLoading] = useState<boolean>(true)
+  const [showFilters, setShowFilters] = useState<boolean>(false)
+
   const [patients, setPatients] = useState<Patient[]>([])
   const [appointments, setAppointments] = useState<Appointment[]>([])
-  const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState<string>('')
   const [page, setPage] = useState<number>(1)
-  const [showFilters, setShowFilters] = useState<boolean>(false)
 
   // Dialog states
-  const [isOpenViewDialog, setIsOpenViewDialog] = useState<boolean>(false)
-  const [isOpenEditDialog, setIsOpenEditDialog] = useState<boolean>(false)
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
 
   // Filter states
@@ -67,7 +84,7 @@ const DoctorPatients = () => {
         const uniquePatientIds = [...new Set(doctorAppointments.map(apt => apt.patientId))]
 
         // Fetch all patients and filter by those who have appointments with this doctor
-        const allPatients = await appointmentServices.fetchPatients()
+        const allPatients = await patientService.getAllPatients()
         const doctorPatients = allPatients.filter(patient =>
           uniquePatientIds.includes(patient.id)
         )
@@ -175,8 +192,8 @@ const DoctorPatients = () => {
   }
 
   return (
-    <div className="min-h-screen p-4 sm:p-6 lg:p-8">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="min-h-screen">
+      <div className="space-y-6">
 
         {/* Header */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
@@ -439,31 +456,87 @@ const DoctorPatients = () => {
         </div>
 
         {/* Pagination */}
-        <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
+        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 backdrop-blur-sm bg-opacity-95">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-600">
-              Showing {((page - 1) * perPage) + 1} to {Math.min(page * perPage, filtered.length)} of {filtered.length} patients
+            <div className="text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1">
+              Showing <span className="font-medium text-gray-900">{((page - 1) * perPage) + 1}</span> to <span className="font-medium text-gray-900">{Math.min(page * perPage, filtered.length)}</span> of <span className="font-medium text-gray-900">{filtered.length}</span> patients
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2 order-1 sm:order-2">
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="flex items-center gap-1"
+                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
               >
                 <ChevronLeft className="w-4 h-4" />
-                Previous
+                <span className="hidden sm:inline">Previous</span>
               </Button>
-              <div className="flex items-center px-3 py-2 text-sm text-gray-700">
-                Page {page} of {Math.ceil(filtered.length / perPage) || 1}
+
+              {/* Page Numbers - Hidden on mobile, shown on tablet+ */}
+              <div className="hidden md:flex items-center gap-1">
+                {Array.from({ length: Math.min(5, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
+                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
+                  let pageNum;
+                  if (totalPages <= 5) {
+                    pageNum = i + 1;
+                  } else if (page <= 3) {
+                    pageNum = i + 1;
+                  } else if (page >= totalPages - 2) {
+                    pageNum = totalPages - 4 + i;
+                  } else {
+                    pageNum = page - 2 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(pageNum)}
+                      className="h-10 w-10 p-0"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
               </div>
+
+              {/* Compact page numbers for mobile/tablet */}
+              <div className="flex items-center gap-1 md:hidden">
+                {Array.from({ length: Math.min(3, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
+                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
+                  let pageNum;
+                  if (totalPages <= 3) {
+                    pageNum = i + 1;
+                  } else if (page === 1) {
+                    pageNum = i + 1;
+                  } else if (page === totalPages) {
+                    pageNum = totalPages - 2 + i;
+                  } else {
+                    pageNum = page - 1 + i;
+                  }
+                  return (
+                    <Button
+                      key={pageNum}
+                      variant={page === pageNum ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setPage(pageNum)}
+                      className="h-10 w-10 p-0 font-semibold"
+                    >
+                      {pageNum}
+                    </Button>
+                  );
+                })}
+              </div>
+
               <Button
                 variant="outline"
+                size="sm"
                 onClick={() => setPage(Math.min(Math.ceil(filtered.length / perPage), page + 1))}
                 disabled={page >= Math.ceil(filtered.length / perPage)}
-                className="flex items-center gap-1"
+                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
               >
-                Next
+                <span className="hidden sm:inline">Next</span>
                 <ChevronRight className="w-4 h-4" />
               </Button>
             </div>

@@ -1,7 +1,7 @@
 export interface Token {
   tokenId: number
-  patientId: string
-  patientName?: string
+  patientId?: string
+  patientName: string
   department: string
   doctorId: string
   issuedAt: string

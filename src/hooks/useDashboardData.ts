@@ -37,6 +37,7 @@ interface Patient {
 
 interface DashboardData {
   patientsToday: number;
+  patientsTodayChange: { percentage: number; trend: 'up' | 'down' };
   bedOccupancy: { occupied: number; available: number; maintenance: number };
   opdQueueCount: number;
   revenueData: Array<{ month: string; revenue: number }>;
@@ -50,6 +51,7 @@ export const useDashboardData = () => {
   const [error, setError] = useState<string | null>(null);
   const [data, setData] = useState<DashboardData>({
     patientsToday: 0,
+    patientsTodayChange: { percentage: 0, trend: 'up' },
     bedOccupancy: { occupied: 0, available: 0, maintenance: 0 },
     opdQueueCount: 0,
     revenueData: [],
@@ -83,6 +85,22 @@ export const useDashboardData = () => {
       const createdDate = new Date(patient.createdAt).toISOString().split('T')[0];
       return createdDate === today ? count + 1 : count;
     }, 0);
+
+    // Calculate patients yesterday for comparison
+    const yesterday = format(new Date(Date.now() - 86400000), 'yyyy-MM-dd');
+    const patientsYesterday = allPatients.reduce((count, patient) => {
+      const createdDate = new Date(patient.createdAt).toISOString().split('T')[0];
+      return createdDate === yesterday ? count + 1 : count;
+    }, 0);
+
+    // Calculate percentage change
+    let percentageChange = 0;
+    if (patientsYesterday === 0) {
+      percentageChange = patientsToday > 0 ? 100 : 0;
+    } else {
+      percentageChange = Math.round(((patientsToday - patientsYesterday) / patientsYesterday) * 100);
+    }
+    const trend: 'up' | 'down' = patientsToday >= patientsYesterday ? 'up' : 'down';
 
     // Calculate bed occupancy in single pass
     const bedStats = allBeds.reduce((acc, bed) => {
@@ -192,6 +210,7 @@ export const useDashboardData = () => {
 
     return {
       patientsToday,
+      patientsTodayChange: { percentage: Math.abs(percentageChange), trend },
       bedOccupancy,
       opdQueueCount,
       revenueData,
@@ -257,6 +276,7 @@ export const useDashboardData = () => {
       // Set fallback data
       setData({
         patientsToday: 0,
+        patientsTodayChange: { percentage: 0, trend: 'up' },
         bedOccupancy: { occupied: 0, available: 0, maintenance: 0 },
         opdQueueCount: 0,
         revenueData: [],

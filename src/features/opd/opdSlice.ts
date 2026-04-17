@@ -9,7 +9,23 @@ const initialState: OPDState = {
   simulationRunning: false,
   servedToday: 0,
   lastTokenId: 0,
-  departments: ['General Medicine', 'Cardiology', 'Orthopedics', 'Pediatrics', 'Dermatology'],
+  departments: [
+    'Internal Medicine',
+    'Family Medicine',
+    'Pediatrics',
+    'Cardiovascular Disease',
+    'Orthopaedic Surgery',
+    'Neurology',
+    'General Surgery',
+    'Psychiatry',
+    'Emergency Medicine',
+    'Obstetrics & Gynecology',
+    'Anesthesiology',
+    'Dermatology',
+    'General Medicine',
+    'Cardiology',
+    'Orthopedics'
+  ],
   countdownTimer: 30
 }
 
@@ -17,8 +33,8 @@ const opdSlice = createSlice({
   name: 'opd',
   initialState,
   reducers: {
-    issueToken: (state, action: PayloadAction<{ patientId: string; patientName?: string; department: string; doctorId: string }>) => {
-      const { patientId, patientName, department, doctorId } = action.payload
+    issueToken: (state, action: PayloadAction<{ patientName: string; patientId?: string; department: string; doctorId: string }>) => {
+      const { patientName, patientId, department, doctorId } = action.payload
       state.lastTokenId += 1
 
       const newToken: Token = {
@@ -38,7 +54,7 @@ const opdSlice = createSlice({
       const appointmentId = `opd-${Date.now()}-${newToken.tokenId}`
       const appointment: Appointment = {
         id: appointmentId,
-        patientId,
+        patientId: patientId || `temp-${Date.now()}`,
         doctorId,
         department,
         date: new Date().toISOString().split('T')[0],

@@ -43,7 +43,7 @@ const AppointmentItem: React.FC<AppointmentItemProps> = React.memo(({
   };
 
   // Find patient by ID
-  const patient = patients.find(p => p.id === appointment.patientId);
+  const patient = patients?.find(p => p.id === appointment.patientId);
   const patientName = patient ? patient.name : `Patient ${appointment.patientId.slice(-4)}`;
 
   return (

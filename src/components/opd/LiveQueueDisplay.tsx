@@ -31,8 +31,8 @@ const LiveQueueDisplay = () => {
   }
 
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg shadow-lg p-6">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-gradient-to-br from-blue-50 to-indigo-100 rounded-lg shadow-lg p-4 lg:p-6">
+      <div className="flex flex-wrap gap-2 items-center justify-between mb-6">
         <h2 className="text-2xl font-bold text-gray-800 flex items-center gap-2">
           <Monitor className="w-6 h-6 text-blue-600" />
           Live Queue Display

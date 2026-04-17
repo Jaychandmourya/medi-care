@@ -1,11 +1,20 @@
-import { useEffect } from 'react';
-import WeeklyCalendar from '@/components/admin/appointment/WeeklyCalendar';
-import AppointmentDetailModal from '@/components/admin/appointment/dialog/AppointmentDetailModal';
-import RescheduleModal from '@/components/admin/appointment/dialog/RescheduleModal';
+import { useEffect, lazy, Suspense } from 'react';
+
+// Import date package
+import { startOfWeek, addDays } from 'date-fns';
+
+// Import Types files
+import type { Appointment } from '@/types/appointment/appointmentType';
+
+// Import selector and dispatch for redux
 import { useAppSelector, useAppDispatch } from '@/app/hooks';
+
+// Import Thunk file for redux
+import { getAllPatients } from "@/features/patient/patientThunk";
+
+// Import Slice file for redux
 import {
   fetchAppointments,
-  fetchPatients,
   fetchDoctorSchedules,
   updateAppointment,
   setSelectedWeek,
@@ -14,11 +23,18 @@ import {
   setShowDetailModal,
   setShowRescheduleModal,
 } from '@/features/appointment/appointmentSlice';
-import type { Appointment } from '@/features/db/dexie';
-import { startOfWeek, addDays } from 'date-fns';
+
+// Import lazy loading
+const WeeklyCalendar = lazy(() => import('@/components/admin/appointment/WeeklyCalendar'));
+const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/dialog/AppointmentDetailModal'));
+const RescheduleModal = lazy(() => import('@/components/admin/appointment/dialog/RescheduleModal'));
 
 const DoctorAppointments = () => {
+
+  // Redux dispatch
   const dispatch = useAppDispatch();
+
+   // Redux selector
   const { user } = useAppSelector((state) => state.auth);
   const {
     appointments,
@@ -26,8 +42,7 @@ const DoctorAppointments = () => {
     doctorSchedules,
     loading,
     showDetailModal,
-    showRescheduleModal,
-    selectedAppointment
+    showRescheduleModal
   } = useAppSelector((state) => state.appointments);
 
   // Get current doctor ID from auth or localStorage
@@ -47,8 +62,8 @@ const DoctorAppointments = () => {
   // Filter appointments for current doctor only
   const doctorAppointments = appointments.filter(apt => apt.doctorId === doctorId);
 
+  // UseEffect
   useEffect(() => {
-    // Fetch required data
     const now = new Date();
     const weekStart = startOfWeek(now);
     const weekEnd = addDays(weekStart, 6);
@@ -58,10 +73,11 @@ const DoctorAppointments = () => {
       startDate: weekStart,
       endDate: weekEnd
     }));
-    dispatch(fetchPatients());
+    dispatch(getAllPatients());
     dispatch(fetchDoctorSchedules());
   }, [dispatch, doctorId]);
 
+  // Methods
   const handleUpdateAppointment = (params: { id: string; updates: Partial<Appointment> }) => {
     dispatch(updateAppointment(params));
   };
@@ -103,8 +119,8 @@ const DoctorAppointments = () => {
   };
 
   return (
-    <div className="p-6">
-      <div className="mb-8">
+    <div>
+      <div className="mb-8 bg-white rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">My Appointments</h1>
@@ -119,32 +135,38 @@ const DoctorAppointments = () => {
       </div>
       {doctorId ? (
         <>
-          <WeeklyCalendar
-            doctorId={doctorId}
-            appointments={doctorAppointments}
-            patients={patients}
-            loading={loading}
-            doctorSchedules={doctorSchedules}
-            onUpdateAppointment={handleUpdateAppointment}
-            onSetSelectedWeek={handleSetSelectedWeek}
-            onSetSelectedDate={handleSetSelectedDate}
-            onSetSelectedAppointment={handleSetSelectedAppointment}
-            onShowDetailModal={handleShowDetailModal}
-            roleColors={roleColors}
-          />
+          <Suspense fallback={<div className="flex justify-center items-center h-64"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div></div>}>
+            <WeeklyCalendar
+              doctorId={doctorId}
+              appointments={doctorAppointments}
+              patients={patients}
+              loading={loading}
+              doctorSchedules={doctorSchedules}
+              onUpdateAppointment={handleUpdateAppointment}
+              onSetSelectedWeek={handleSetSelectedWeek}
+              onSetSelectedDate={handleSetSelectedDate}
+              onSetSelectedAppointment={handleSetSelectedAppointment}
+              onShowDetailModal={handleShowDetailModal}
+              roleColors={roleColors}
+            />
+          </Suspense>
 
           {/* Appointment Details Modal */}
-          <AppointmentDetailModal
-            showDetailModal={showDetailModal}
-            closeShowDetailModal={handleCloseDetailModal}
-            handleRescheduleModal={handleShowRescheduleModal}
-          />
+          <Suspense fallback={<div className="flex justify-center items-center p-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div></div>}>
+            <AppointmentDetailModal
+              showDetailModal={showDetailModal}
+              closeShowDetailModal={handleCloseDetailModal}
+              handleRescheduleModal={handleShowRescheduleModal}
+            />
+          </Suspense>
 
           {/* Reschedule Modal */}
-          <RescheduleModal
-            showRescheduleModal={showRescheduleModal}
-            closeRescheduleModal={handleCloseRescheduleModal}
-          />
+          <Suspense fallback={<div className="flex justify-center items-center p-4"><div className="animate-spin rounded-full h-6 w-6 border-b-2 border-gray-600"></div></div>}>
+            <RescheduleModal
+              showRescheduleModal={showRescheduleModal}
+              closeRescheduleModal={handleCloseRescheduleModal}
+            />
+          </Suspense>
         </>
       ) : (
         <div className="text-center py-8 text-gray-500">

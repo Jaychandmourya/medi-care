@@ -37,7 +37,7 @@ export default function BedOccupancyChart({
     <motion.div
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
-      className="bg-white rounded-2xl p-6 shadow-lg h-80"
+      className="bg-white rounded-2xl p-4 md:p-6 shadow-lg h-64 md:h-80"
     >
       <div className="flex justify-between items-center mb-4">
         <h3 className="font-semibold text-gray-700">
@@ -55,8 +55,8 @@ export default function BedOccupancyChart({
             dataKey="value"
             cx="50%"
             cy="50%"
-            innerRadius={60}
-            outerRadius={90}
+            innerRadius={50}
+            outerRadius={70}
             paddingAngle={2}
             cornerRadius={8}
             label={({ name, value }) => `${name}: ${value}`}

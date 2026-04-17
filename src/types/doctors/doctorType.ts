@@ -50,12 +50,14 @@ export interface LocalDoctor {
   contact?: string
   email?: string
   addedAt: string
+  doctorSchedule?: DoctorSchedule
 }
 
 export interface DoctorState {
   searchResults: NPIResult[]
   localDoctors: LocalDoctor[]
-  loading: boolean
+  searchLoading: boolean
+  localLoading: boolean
   error: string | null
   searchQuery: string
   selectedTaxonomy: string

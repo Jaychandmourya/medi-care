@@ -55,19 +55,23 @@ const TimeSlotColumn: React.FC<TimeSlotColumnProps> = React.memo(({
     >
       <div className="space-y-1">
         {/* Show appointments in this time slot and card */}
-        {appointments.map((appointment) => (
-          <AppointmentItem
-            key={appointment.id}
-            appointment={appointment}
-            patients={patients}
-            isDragged={draggedAppointment?.id === appointment.id}
-            onDragStart={onAppointmentDragStart}
-            onClick={onAppointmentClick}
-            onMouseEnter={() => onHoverSlot({ date: appointment.date, time: appointment.slot, appointmentId: appointment.id })}
-            onMouseLeave={() => onHoverSlot(null)}
-            showTooltip={hoveredSlot?.date === appointment.date && hoveredSlot?.time === appointment.slot && hoveredSlot?.appointmentId === appointment.id}
-          />
-        ))}
+        {appointments.length > 0 ? (
+          appointments.map((appointment) => (
+            <AppointmentItem
+              key={appointment.id}
+              appointment={appointment}
+              patients={patients}
+              isDragged={draggedAppointment?.id === appointment.id}
+              onDragStart={onAppointmentDragStart}
+              onClick={onAppointmentClick}
+              onMouseEnter={() => onHoverSlot({ date: appointment.date, time: appointment.slot, appointmentId: appointment.id })}
+              onMouseLeave={() => onHoverSlot(null)}
+              showTooltip={hoveredSlot?.date === appointment.date && hoveredSlot?.time === appointment.slot && hoveredSlot?.appointmentId === appointment.id}
+            />
+          ))
+        ) : (
+          <div className="p-2 rounded text-xs border border-transparent bg-transparent h-16" />
+        )}
       </div>
     </div>
   );

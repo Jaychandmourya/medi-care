@@ -1,44 +1,52 @@
 
-import { db } from '../features/db/dexie'
+import { db } from '@/features/db/dexie'
 
 // import types file
-import type { LocalDoctor, Doctor } from '@/types/doctors/doctorType'
+import type { LocalDoctor, Doctor, DoctorSchedule } from '@/types/doctors/doctorType'
 
 
 // Database operations using MediCareDB
 export const doctorDBOperations = {
-  // Get all local doctors
+  // Get all local doctors with their schedules
   getAll: async (): Promise<LocalDoctor[]> => {
     const doctors = await db.doctors.orderBy('createdAt').reverse().toArray()
-    return doctors.map(doctor => ({
-      id: doctor.id,
-      npi: doctor.id, // Using doctor ID as NPI for compatibility
-      name: doctor.name,
-      firstName: doctor.name.split(' ')[0] || '',
-      lastName: doctor.name.split(' ').slice(1).join(' ') || '',
-      email: doctor.email,
-      specialty: doctor.specialization,
-      department: doctor.department || 'General Medicine',
-      city: doctor.city,
-      state: doctor.state,
-      country: doctor.country, // Map country to country for compatibility
-      address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
-      contact: doctor.contact,
-      postalCode: doctor.postalCode || '',
-      credential: undefined,
-      gender: doctor.gender || 'M',
-      addedAt: doctor.createdAt
-    }))
+    const schedules = await db.doctorSchedules.toArray()
+
+    return doctors.map(doctor => {
+      const schedule = schedules.find(s => s.doctorId === doctor.id)
+      return {
+        id: doctor.id,
+        npi: doctor.npi || doctor.id,
+        name: doctor.name,
+        firstName: doctor.name.split(' ')[0] || '',
+        lastName: doctor.name.split(' ').slice(1).join(' ') || '',
+        specialty: doctor.specialization,
+        department: doctor.department || 'General Medicine',
+        city: doctor.city,
+        state: doctor.state,
+        country: doctor.country,
+        address: `${doctor.city || ''}, ${doctor.state || ''}`.trim(),
+        contact: doctor.contact,
+        postalCode: doctor.postalCode || '',
+        credential: undefined,
+        gender: doctor.gender || 'M',
+        addedAt: doctor.createdAt,
+        doctorSchedule: schedule
+      }
+    })
   },
 
   // Add a new doctor
-  add: async (doctor: Omit<LocalDoctor, 'id' | 'addedAt'>): Promise<number> => {
+  add: async (doctor: Omit<LocalDoctor, 'id' | 'addedAt'> & { doctorSchedules?: Omit<DoctorSchedule, 'doctorId'> }): Promise<number> => {
+    const doctorId = doctor.npi ? `NPI-${doctor.npi}` : `LOCAL-${Date.now()}`
     const doctorData: Doctor = {
-      id: doctor.npi || `DOC-${Date.now()}`,
+      id: doctorId,
+      npi: doctor.npi || `LOCAL-${Date.now()}`,
+      firstName: doctor.firstName,
+      lastName: doctor.lastName,
       name: `${doctor.firstName} ${doctor.lastName}`.trim(),
       department: doctor.department,
       specialization: doctor.specialty || 'General Practice',
-      email: doctor.email || '',
       contact: doctor.contact,
       city: doctor.city,
       state: doctor.state,
@@ -49,12 +57,22 @@ export const doctorDBOperations = {
       isActive: true,
       createdAt: new Date().toISOString()
     }
-    return await db.doctors.add(doctorData)
+    const doctorResult = await db.doctors.add(doctorData)
+
+    // Add doctor schedule if provided
+    if (doctor.doctorSchedules) {
+      const scheduleData: DoctorSchedule = {
+        ...doctor.doctorSchedules,
+        doctorId: doctorId
+      }
+      await db.doctorSchedules.add(scheduleData)
+    }
+
+    return doctorResult
   },
 
   // Update an existing doctor
   update: async (id: string, updates: Partial<LocalDoctor>): Promise<number> => {
-    console.log('updates',updates)
     const existingDoctor = await db.doctors.get(id)
     if (!existingDoctor) return 0
 
@@ -78,15 +96,11 @@ export const doctorDBOperations = {
 
   // Remove a doctor
   remove: async (id: string): Promise<void> => {
-    console.log(`Attempting to delete doctor with ID: ${id}`);
     const doctor = await db.doctors.get(id);
     if (!doctor) {
-      console.log(`❌ Doctor with ID ${id} not found in database`);
       throw new Error(`Doctor with ID ${id} not found`);
     }
-    console.log(`✅ Found doctor to delete:`, doctor);
     await db.doctors.delete(id);
-    console.log(`✅ Successfully deleted doctor with ID: ${id}`);
   },
 
   // Find by NPI (using doctor ID)
@@ -147,7 +161,7 @@ export const doctorDBOperations = {
       const doctorFirstName = doctor.name.split(' ')[0] || ''
       const doctorLastName = doctor.name.split(' ').slice(1).join(' ') || ''
       return doctorFirstName.toLowerCase() === firstName.toLowerCase() &&
-             doctorLastName.toLowerCase() === lastName.toLowerCase()
+            doctorLastName.toLowerCase() === lastName.toLowerCase()
     })
   },
 

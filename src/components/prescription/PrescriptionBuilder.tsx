@@ -340,7 +340,7 @@ const PrescriptionBuilder = () => {
 
       {/* Medicine Management */}
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-            <div className="flex justify-between items-center mb-4">
+            <div className="flex flex-wrap gap-2 justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Medicines</h3>
               <Button
                 onClick={handleAddMedicine}

@@ -1,9 +1,9 @@
 import { useEffect, useMemo } from 'react'
-import { useAppSelector, useAppDispatch } from '@/app/hooks'
-import { fetchAppointments, fetchDoctorSchedules } from '@/features/appointment/appointmentSlice'
-import { loadPrescriptionHistory } from '@/features/prescription/prescriptionSlice'
-import { getAllPatients } from '@/features/patient/patientThunk'
+
+// Import Date time package
 import { format, isToday, startOfDay, endOfDay, parseISO } from 'date-fns'
+
+// Import icons file
 import {
   Calendar,
   Clock,
@@ -16,11 +16,28 @@ import {
   CheckCircle,
   PlayCircle
 } from 'lucide-react'
+
+// Import router navigate
 import { useNavigate } from 'react-router-dom'
 
+// Import dispatch and selector for redux
+import { useAppSelector, useAppDispatch } from '@/app/hooks'
+
+// Import Thunk file for redux
+import { getAllPatients } from '@/features/patient/patientThunk'
+
+// Import Slice file for redux
+import { fetchAppointments, fetchDoctorSchedules } from '@/features/appointment/appointmentSlice'
+import { loadPrescriptionHistory } from '@/features/prescription/prescriptionSlice'
+
 const DoctorDashboard = () => {
-  const dispatch = useAppDispatch()
+
   const navigate = useNavigate()
+
+  // Redux dispatch
+  const dispatch = useAppDispatch()
+
+  // Redux selector
   const { user } = useAppSelector((state) => state.auth)
   const {
     appointments,
@@ -28,6 +45,8 @@ const DoctorDashboard = () => {
   } = useAppSelector((state) => state.appointments)
   const { prescriptionHistory } = useAppSelector((state) => state.prescriptions)
   const patients = useAppSelector((state) => state.patients.list)
+
+  // Computed
 
   // Get current doctor ID from auth or localStorage
   const getCurrentDoctorId = () => {
@@ -43,6 +62,7 @@ const DoctorDashboard = () => {
 
   const doctorId = getCurrentDoctorId()
 
+  // UseEffect
   useEffect(() => {
     if (doctorId) {
       const today = new Date()
@@ -195,10 +215,10 @@ const DoctorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 via-white to-purple-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div className="min-h-screen">
+      <div>
         {/* Header */}
-        <div className="mb-8">
+        <div className="mb-8 bg-white rounded-xl shadow-sm p-6">
           <h1 className="text-4xl font-bold text-gray-900 mb-2">Doctor Dashboard</h1>
           <p className="text-gray-600">Welcome back! Here's your overview for today.</p>
         </div>

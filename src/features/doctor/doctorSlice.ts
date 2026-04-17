@@ -17,7 +17,8 @@ import {
 const initialState: DoctorState = {
   searchResults: [],
   localDoctors: [],
-  loading: false,
+  searchLoading: false,
+  localLoading: false,
   error: null,
   searchQuery: '',
   selectedTaxonomy: '',
@@ -62,37 +63,43 @@ const doctorSlice = createSlice({
     },
     clearError: (state) => {
       state.error = null
+    },
+    clearSearchResults: (state) => {
+      state.searchResults = []
+      state.resultCount = 0
+      state.totalPages = 0
+      state.currentPage = 1
     }
   },
   extraReducers: (builder) => {
     builder
       // NPI Search
       .addCase(searchDoctors.pending, (state) => {
-        state.loading = true
+        state.searchLoading = true
         state.error = null
       })
       .addCase(searchDoctors.fulfilled, (state, action) => {
-        state.loading = false
+        state.searchLoading = false
         state.searchResults = action.payload.results || []
         state.resultCount = action.payload.result_count || 0
         state.totalPages = Math.ceil((action.payload.result_count || 0) / 10)
       })
       .addCase(searchDoctors.rejected, (state, action) => {
-        state.loading = false
+        state.searchLoading = false
         state.error = action.error.message || 'Failed to search doctors'
         state.searchResults = []
       })
       // Fetch Local Doctors
       .addCase(fetchLocalDoctors.pending, (state) => {
-        state.loading = true
+        state.localLoading = true
         state.error = null
       })
       .addCase(fetchLocalDoctors.fulfilled, (state, action) => {
-        state.loading = false
+        state.localLoading = false
         state.localDoctors = action.payload
       })
       .addCase(fetchLocalDoctors.rejected, (state, action) => {
-        state.loading = false
+        state.localLoading = false
         state.error = action.error.message || 'Failed to fetch local doctors'
       })
       // Add Local Doctor
@@ -122,15 +129,15 @@ const doctorSlice = createSlice({
       })
       // Search Local Doctors
       .addCase(searchLocalDoctors.pending, (state) => {
-        state.loading = true
+        state.localLoading = true
         state.error = null
       })
       .addCase(searchLocalDoctors.fulfilled, (state, action) => {
-        state.loading = false
+        state.localLoading = false
         state.localDoctors = action.payload
       })
       .addCase(searchLocalDoctors.rejected, (state, action) => {
-        state.loading = false
+        state.localLoading = false
         state.error = action.error.message || 'Failed to search local doctors'
       })
   }
@@ -141,7 +148,8 @@ export const {
   setSelectedTaxonomy,
   setCurrentPage,
   setActiveTab,
-  clearError
+  clearError,
+  clearSearchResults
 } = doctorSlice.actions
 
 export default doctorSlice.reducer

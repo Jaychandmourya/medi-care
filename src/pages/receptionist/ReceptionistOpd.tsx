@@ -2,11 +2,12 @@ import TokenIssueForm from '@/components/opd/TokenIssueForm'
 import LiveQueueDisplay from '@/components/opd/LiveQueueDisplay'
 import QueueControlPanel from '@/components/opd/QueueControlPanel'
 import QueueAnalytics from '@/components/opd/QueueAnalytics'
+
 const ReceptionistOpd = () => {
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
+    <div className="min-h-screen">
+      <div>
+        <div className="mb-8 bg-white rounded-lg p-4 lg:p-6 shadow-lg">
           <h1 className="text-3xl font-bold text-gray-900">OPD Token Management</h1>
           <p className="text-gray-600 mt-2">Real-time outpatient queue management system</p>
         </div>
