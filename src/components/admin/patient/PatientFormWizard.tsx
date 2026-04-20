@@ -9,7 +9,7 @@ import { useForm, FormProvider } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 
 // Import validation schemas files
-import { patientSchema, stepSchemas } from "@/schema/patientValidation";
+import { patientSchema, stepSchemas, type PatientFormData } from "@/schema/patientValidation";
 
 // Import Types file
 import type { Patient } from "@/types/patients/patientType";
@@ -42,7 +42,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   const userRole = useAppSelector((state) => state.auth.user?.role);
   const roleColors = getRoleColors(userRole || 'admin');
 
-  const methods = useForm<Patient>({
+  const methods = useForm<PatientFormData>({
     resolver: zodResolver(patientSchema),
     defaultValues: defaultData || {
       name: "",
@@ -124,7 +124,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   const handleBack = useCallback(() => setStep(prev => prev - 1), []);
 
   //  Submit all data in database
-  const onSubmit = useCallback(async (data: Patient) => {
+  const onSubmit = useCallback(async (data: PatientFormData) => {
     setIsSubmitting(true);
     // Show loading toast
     const loadingToast = toast.loading(data.id ? 'Updating patient...' : 'Adding patient...');

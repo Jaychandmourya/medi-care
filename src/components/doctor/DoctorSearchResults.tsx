@@ -119,7 +119,6 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
         <div className="grid gap-4">
           {searchResults.map((doctor) => {
             const basic = doctor.basic
-            const primaryAddress = doctor.addresses?.find((addr: { address_1?: string }) => addr.address_1)
             const primaryTaxonomy = doctor.taxonomies?.find((tax: { primary?: boolean }) => tax.primary)
             const isAdding = addingDoctor === basic?.npi
 

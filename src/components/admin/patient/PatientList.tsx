@@ -77,8 +77,8 @@ export default function PatientList() {
 
       // Search filter
       const searchMatch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.phone.includes(search) ||
+        (p.name?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+        (p.phone?.includes(search) ?? false) ||
         p.patientId?.toLowerCase().includes(search.toLowerCase()) ||
         p.bloodGroup?.toLowerCase().includes(search.toLowerCase());
 
@@ -92,6 +92,7 @@ export default function PatientList() {
 
       // Age range filter
       if (ageRange.min || ageRange.max) {
+        if (!p.dob) return false;
         const patientAge = calculateAge(p.dob);
         if (ageRange.min && patientAge < parseInt(ageRange.min)) return false;
         if (ageRange.max && patientAge > parseInt(ageRange.max)) return false;
@@ -361,14 +362,14 @@ export default function PatientList() {
                         <div className="flex items-center">
                           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
                             {p.photo ? (
-                              <img src={p.photo} alt={p.name} className="w-full h-full object-cover" />
+                              <img src={p.photo} alt={p.name || 'Patient'} className="w-full h-full object-cover" />
                             ) : (
-                              <span>{p.name.charAt(0).toUpperCase()}</span>
+                              <span>{(p.name || 'P').charAt(0).toUpperCase()}</span>
                             )}
                           </div>
                           <div className="ml-3">
                             <div className="text-sm font-semibold text-gray-900">
-                              {p.name}
+                              {p.name || 'Unknown'}
                             </div>
                             <div className="text-xs text-gray-500 font-mono">
                               {p.patientId}
@@ -377,7 +378,7 @@ export default function PatientList() {
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{p.phone}</div>
+                        <div className="text-sm text-gray-700">{p.phone || '-'}</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -390,7 +391,7 @@ export default function PatientList() {
                         </span>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <div className="text-sm text-gray-700">{calculateAge(p.dob)} years</div>
+                        <div className="text-sm text-gray-700">{p.dob ? calculateAge(p.dob) : '-'} years</div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <ThreeDotMenu

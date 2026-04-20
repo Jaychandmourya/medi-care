@@ -1,7 +1,7 @@
 import { useMemo } from 'react'
 import { useSelector } from 'react-redux'
 import type { RootState } from '@/app/store'
-import type { PatientFormData } from '@/schema/patientValidation'
+import type { Patient } from '@/types/patients/patientType'
 import { Users, TrendingUp, Calendar } from 'lucide-react'
 
 const RegistrationStats = () => {
@@ -12,7 +12,7 @@ const RegistrationStats = () => {
     const today = new Date()
     today.setHours(0, 0, 0, 0)
 
-    const todayRegistrations = patients.filter((patient: PatientFormData) => {
+    const todayRegistrations = patients.filter((patient: Patient) => {
       const registrationDate = new Date(patient.createdAt || '')
       return registrationDate >= today
     })
@@ -22,7 +22,7 @@ const RegistrationStats = () => {
     weekAgo.setDate(weekAgo.getDate() - 7)
     weekAgo.setHours(0, 0, 0, 0)
 
-    const weeklyRegistrations = patients.filter((patient: PatientFormData) => {
+    const weeklyRegistrations = patients.filter((patient: Patient) => {
       const registrationDate = new Date(patient.createdAt || '')
       return registrationDate >= weekAgo
     })
@@ -32,7 +32,7 @@ const RegistrationStats = () => {
     monthAgo.setDate(monthAgo.getDate() - 30)
     monthAgo.setHours(0, 0, 0, 0)
 
-    const monthlyRegistrations = patients.filter((patient: PatientFormData) => {
+    const monthlyRegistrations = patients.filter((patient: Patient) => {
       const registrationDate = new Date(patient.createdAt || '')
       return registrationDate >= monthAgo
     })

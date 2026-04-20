@@ -25,8 +25,8 @@ export class VitalsService {
         .filter(patient => patient.isActive) // Only get active patients
         .map(patient => ({
           id: patient.id || patient.patientId || '', // Use id, patientId, or empty string as fallback
-          name: patient.name,
-          age: this.calculateAge(patient.dob),
+          name: patient.name || 'Unknown',
+          age: patient.dob ? this.calculateAge(patient.dob) : 0,
           gender: patient.gender,
           bedNumber: bedMap.get(patient.patientId || '') || 'Unassigned' // Get bed number or show unassigned
         }));

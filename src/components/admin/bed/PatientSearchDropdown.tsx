@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useAppSelector, useAppDispatch } from '@/app/hooks'
 import { getAllPatients } from '@/features/patient/patientThunk'
-import type { PatientFormData } from '@/schema/patientValidation'
+import type { Patient } from '@/types/patients/patientType'
 import { Search, Plus } from 'lucide-react'
 import { Button } from '@/components/ui/Button'
-import AddEditPatientDialog from '@/components/admin/patient/AddEditPatientDialog'
+import AddEditPatientDialog from '@/components/admin/patient/dialog/AddEditPatientDialog'
 
 interface PatientSearchDropdownProps {
   selectedPatientId: string
@@ -50,7 +50,7 @@ const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
   const selectedPatient = useMemo(() =>
     patients.find(p => p.patientId === selectedPatientId), [patients, selectedPatientId])
 
-  const handlePatientClick = useCallback((patient: PatientFormData) => {
+  const handlePatientClick = useCallback((patient: Patient) => {
     onPatientSelect(patient.patientId || '')
     setIsOpen(false)
     setSearchTerm('')

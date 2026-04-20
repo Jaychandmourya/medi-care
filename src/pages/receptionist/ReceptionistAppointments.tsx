@@ -125,7 +125,7 @@ const ReceptionistAppointments = () => {
   // Memoize filtered doctors to prevent recalculation on every render
   const filteredDoctors = useMemo(() => {
     return localDoctors.filter(doctor =>
-      doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doctor.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false) ||
       doctor.department.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [localDoctors, searchTerm]);
@@ -178,7 +178,7 @@ const ReceptionistAppointments = () => {
               <option value="all">All Doctors</option>
               {filteredDoctors.map((doctor) => (
                 <option key={doctor.id} value={doctor.id}>
-                  Dr. {doctor.name} - {doctor.department}
+                  Dr. {doctor.name || `${doctor.firstName} ${doctor.lastName}`} - {doctor.department}
                 </option>
               ))}
             </Input>
@@ -203,7 +203,10 @@ const ReceptionistAppointments = () => {
           <div className={`mt-4 flex items-center justify-between p-3 rounded-lg ${currentRoleColors.secondary}`}>
             <span className={`text-sm ${currentRoleColors.secondary.includes('text-') ? currentRoleColors.secondary.split(' ').find(c => c.startsWith('text-')) : 'text-blue-800'}`}>
               Showing appointments for: <strong>
-                {localDoctors.find(d => d.id === selectedDoctor)?.name || 'Selected Doctor'}
+                {(() => {
+                  const d = localDoctors.find(doc => doc.id === selectedDoctor);
+                  return d?.name || (d ? `${d.firstName} ${d.lastName}` : 'Selected Doctor');
+                })()}
               </strong>
             </span>
             <Button

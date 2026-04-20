@@ -1,19 +1,19 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { PatientFormData } from "../../schema/patientValidation";
+import type { Patient } from "@/types/patients/patientType";
 import { getAllPatients, addPatient as addPatientThunk, updatePatient as updatePatientThunk, deletePatient as deletePatientThunk } from "./patientThunk"
 
 
 const patientSlice = createSlice({
   name: "patients",
   initialState: {
-    list: [] as PatientFormData[],
+    list: [] as Patient[],
   },
   reducers: {},
   extraReducers: (builder) => {
     builder.addCase(addPatientThunk.fulfilled, (state, action) => {
       state.list.push(action.payload);
     });
-    builder.addCase(addPatientThunk.rejected, (state, action) => {
+    builder.addCase(addPatientThunk.rejected, (_state, action) => {
       console.error('Add patient rejected:', action.payload);
     });
     builder.addCase(getAllPatients.fulfilled, (state, action) => {
@@ -25,7 +25,7 @@ const patientSlice = createSlice({
         state.list[index] = action.payload;
       }
     });
-    builder.addCase(updatePatientThunk.rejected, (state, action) => {
+    builder.addCase(updatePatientThunk.rejected, (_state, action) => {
       console.error('Update patient rejected:', action.payload);
     });
     builder.addCase(deletePatientThunk.fulfilled, (state, action) => {
@@ -34,7 +34,7 @@ const patientSlice = createSlice({
         state.list[index].isActive = false;
       }
     });
-    builder.addCase(deletePatientThunk.rejected, (state, action) => {
+    builder.addCase(deletePatientThunk.rejected, (_state, action) => {
       console.error('Delete patient rejected:', action.payload);
     });
   },

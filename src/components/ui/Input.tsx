@@ -22,6 +22,9 @@ export interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onClick?: () => void;
   onFocus?: () => void;
+  step?: string | number;
+  min?: string | number;
+  max?: string | number;
 }
 
 const Input: React.FC<InputProps> = ({
@@ -43,6 +46,9 @@ const Input: React.FC<InputProps> = ({
   onChange,
   onClick,
   onFocus,
+  step,
+  min,
+  max,
 }) => {
   const baseClasses = `w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm ${
     error ? 'border-red-500' : 'border-gray-300'
@@ -86,6 +92,9 @@ const Input: React.FC<InputProps> = ({
             {...commonProps}
             type={type}
             autoComplete="off"
+            step={step}
+            min={min}
+            max={max}
           />
         );
     }

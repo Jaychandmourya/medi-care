@@ -1,6 +1,5 @@
 import { db } from '../features/db/dexie';
 import type { Patient } from '@/types/patients/patientType'
-import type { PatientFormData } from '../schema/patientValidation';
 
 // Ensure database is ready
 export const initializeDatabase = async (): Promise<void> => {
@@ -40,7 +39,7 @@ const generatePatientId = async (): Promise<string> => {
 export const patientService = {
 
   //  Get AllPatients
-  async getAllPatients(): Promise<PatientFormData[]> {
+  async getAllPatients(): Promise<Patient[]> {
     try {
       await initializeDatabase();
       return await db.patients.toArray();
@@ -51,17 +50,17 @@ export const patientService = {
   },
 
   // Get Data With Patient Id
-  async getPatientById(id: string): Promise<PatientFormData | undefined> {
+  async getPatientById(id: string): Promise<Patient | undefined> {
     return await db.patients.get(id);
   },
 
   // Get Data With Patient patientId
-  async getPatientByPatientId(patientId: string): Promise<PatientFormData | undefined> {
+  async getPatientByPatientId(patientId: string): Promise<Patient | undefined> {
     return await db.patients.where('patientId').equals(patientId).first();
   },
 
   //  Add Data Patient
-  async addPatient(patient: Omit<PatientFormData, 'id' | 'createdAt' | 'updatedAt' | 'patientId'>): Promise<PatientFormData> {
+  async addPatient(patient: Omit<Patient, 'id' | 'createdAt' | 'updatedAt' | 'patientId'>): Promise<Patient> {
     try {
       await initializeDatabase();
       const patientId = await generatePatientId();
@@ -82,7 +81,7 @@ export const patientService = {
   },
 
    //  Update Data Patient
-  async updatePatient(id: string, updates: Partial<PatientFormData>): Promise<void> {
+  async updatePatient(id: string, updates: Partial<Patient>): Promise<void> {
     await db.patients.update(id, {
       ...updates,
       updatedAt: new Date().toISOString(),
@@ -103,7 +102,7 @@ export const patientService = {
   },
 
   //  Searching Patients with query
-  async searchPatients(query: string): Promise<PatientFormData[]> {
+  async searchPatients(query: string): Promise<Patient[]> {
     try {
       const lowerQuery = query.toLowerCase();
       return await db.patients

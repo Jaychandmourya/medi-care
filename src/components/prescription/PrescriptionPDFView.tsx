@@ -103,14 +103,14 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
                     {currentDate}
                   </div>
                   <div className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                    ID: {currentPrescription.id}
+                    ID: {prescription.id}
                   </div>
                 </div>
               </div>
               <div className="text-right">
                 <div className="text-sm text-gray-600">Prescription Date:</div>
                 <div className="font-medium">
-                  {new Date(currentPrescription.createdAt).toLocaleDateString()}
+                  {new Date(prescription.createdAt).toLocaleDateString()}
                 </div>
               </div>
             </div>
@@ -127,11 +127,11 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Name:</span>
-                  <span className="ml-2 text-gray-900">{currentPrescription.patientName}</span>
+                  <span className="ml-2 text-gray-900">{prescription.patientName}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Patient ID:</span>
-                  <span className="ml-2 text-gray-900">{currentPrescription.patientId}</span>
+                  <span className="ml-2 text-gray-900">{prescription.patientId}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">Phone:</span>
@@ -153,7 +153,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
               <div className="space-y-2 text-sm">
                 <div>
                   <span className="font-medium text-gray-600">Name:</span>
-                  <span className="ml-2 text-gray-900">{currentPrescription.doctorName}</span>
+                  <span className="ml-2 text-gray-900">{prescription.doctorName}</span>
                 </div>
                 <div>
                   <span className="font-medium text-gray-600">License:</span>
@@ -175,7 +175,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
           <div className="mb-8 print:mb-6 print:break-inside-avoid">
             <h3 className="font-semibold text-gray-900 mb-3">Diagnosis</h3>
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
-              <p className="text-gray-800">{currentPrescription.diagnosis}</p>
+              <p className="text-gray-800">{prescription.diagnosis}</p>
             </div>
           </div>
 
@@ -195,7 +195,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
                   </tr>
                 </thead>
                 <tbody>
-                  {currentPrescription.medicines.map((medicine, index) => (
+                  {prescription.medicines.map((medicine, index) => (
                     <tr key={medicine.id} className="hover:bg-gray-50">
                       <td className="border border-gray-300 px-4 py-2 text-center">{index + 1}</td>
                       <td className="border border-gray-300 px-4 py-2 font-medium">{medicine.name}</td>
@@ -213,17 +213,17 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
           </div>
 
           {/* General Notes */}
-          {currentPrescription.generalNotes && (
+          {prescription.generalNotes && (
             <div className="mb-8">
               <h3 className="font-semibold text-gray-900 mb-3">General Instructions</h3>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-                <p className="text-gray-800 whitespace-pre-line">{currentPrescription.generalNotes}</p>
+                <p className="text-gray-800 whitespace-pre-line">{prescription.generalNotes}</p>
               </div>
             </div>
           )}
 
           {/* Follow-up Date */}
-          {currentPrescription.followUpDate && (
+          {prescription.followUpDate && (
             <div className="mb-8">
               <h3 className="font-semibold text-gray-900 mb-3">Follow-up Information</h3>
               <div className="bg-green-50 border border-green-200 rounded-lg p-4">
@@ -231,7 +231,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
                   <Calendar className="h-5 w-5 text-green-600" />
                   <span className="font-medium text-gray-900">Follow-up Date:</span>
                   <span className="text-gray-800">
-                    {new Date(currentPrescription.followUpDate).toLocaleDateString('en-US', {
+                    {new Date(prescription.followUpDate).toLocaleDateString('en-US', {
                       year: 'numeric',
                       month: 'long',
                       day: 'numeric'
@@ -252,7 +252,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
               <div className="text-center">
                 <div className="w-48 h-0.5 bg-gray-400 mb-2"></div>
                 <p className="text-sm text-gray-600">Doctor Signature</p>
-                <p className="text-xs text-gray-500 mt-1">{currentPrescription.doctorName}</p>
+                <p className="text-xs text-gray-500 mt-1">{prescription.doctorName}</p>
               </div>
             </div>
           </div>

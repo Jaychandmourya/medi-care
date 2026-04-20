@@ -72,15 +72,6 @@ const AdminDoctorsComponent = () => {
         </div>
 
         {/* Quick Autocomplete Search */}
-        {/* <div className="mb-6">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <h3 className="text-lg font-semibold text-blue-900 mb-2">Quick Doctor Search</h3>
-            <p className="text-blue-700 text-sm mb-4">
-              Type a doctor's name to instantly search and add them to your system
-            </p>
-            <DoctorAutocomplete onFieldPopulate={handleFieldPopulate} onFormPopulate={handleFormPopulate} onClearForm={handleClearForm} clearTrigger={clearTrigger} />
-          </div>
-        </div> */}
 
          {/* Content */}
         {activeTab === 'search' ? (

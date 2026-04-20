@@ -30,6 +30,8 @@ interface AppointmentState {
 
 const initialState: AppointmentState = {
   appointments: [],
+  doctors: [],
+  patients: [],
   doctorSchedules: [],
   selectedDoctor: null,
   selectedWeek: startOfWeek(new Date()).toISOString(),
