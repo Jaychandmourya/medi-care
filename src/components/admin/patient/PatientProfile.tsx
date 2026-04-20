@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { getAllPatients } from "@/features/patient/patientThunk";
 import type { RootState } from "@/app/store";
-import type { PatientFormData } from "@/schema/patientValidation";
+import type { Patient } from "@/types/patients/patientType";
 import { Calendar, FileText, Activity, CreditCard, User, ArrowLeft, Edit } from "lucide-react";
 
 export default function PatientProfile() {
@@ -13,7 +13,7 @@ export default function PatientProfile() {
   const patients = useAppSelector((state: RootState) => state.patients.list);
 
   const [activeTab, setActiveTab] = useState<'overview' | 'appointments' | 'prescriptions' | 'vitals' | 'billing'>('overview');
-  const [patient, setPatient] = useState<PatientFormData | null>(null);
+  const [patient, setPatient] = useState<Patient | null>(null);
 
   useEffect(() => {
     dispatch(getAllPatients());
@@ -93,10 +93,10 @@ export default function PatientProfile() {
               </button>
               <div className="flex items-center gap-4">
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white text-xl font-bold">
-                  {patient.name.charAt(0).toUpperCase()}
+                  {(patient.name || 'P').charAt(0).toUpperCase()}
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-800">{patient.name}</h1>
+                  <h1 className="text-2xl font-bold text-gray-800">{patient.name || 'Unknown'}</h1>
                   <p className="text-gray-600">ID: {patient.patientId}</p>
                 </div>
               </div>
@@ -115,7 +115,7 @@ export default function PatientProfile() {
             <div className="space-y-3">
               <div>
                 <p className="text-sm text-gray-500">Age</p>
-                <p className="font-medium">{calculateAge(patient.dob)} years</p>
+                <p className="font-medium">{patient.dob ? calculateAge(patient.dob) : '-'} years</p>
               </div>
               <div>
                 <p className="text-sm text-gray-500">Gender</p>
@@ -127,7 +127,7 @@ export default function PatientProfile() {
               </div>
               <div>
                 <p className="text-sm text-gray-500">Date of Birth</p>
-                <p className="font-medium">{formatDate(patient.dob)}</p>
+                <p className="font-medium">{patient.dob ? formatDate(patient.dob) : '-'}</p>
               </div>
             </div>
           </div>

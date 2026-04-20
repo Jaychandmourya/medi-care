@@ -95,20 +95,25 @@ const NpiRegistryDialog = ({
     const primaryAddress = npiResult.addresses?.find(addr => addr.address_1)
     const primaryTaxonomy = npiResult.taxonomies?.find(tax => tax.primary)
 
+    const firstName = npiResult.basic.first_name?.trim() || '';
+    const lastName = npiResult.basic.last_name?.trim() || '';
+    const middleName = npiResult.basic.middle_name?.trim() || '';
+
     return {
       npi: npiResult.basic.npi,
-      firstName: npiResult.basic.first_name?.trim() || '',
-      lastName: npiResult.basic.last_name?.trim() || '',
-      middleName: npiResult.basic.middle_name?.trim() || '',
+      firstName,
+      lastName,
+      middleName,
+      fullName: `${firstName} ${middleName ? middleName + ' ' : ''}${lastName}`.trim(),
       credential: npiResult.basic.credential?.trim() || '',
       specialty: primaryTaxonomy?.desc?.trim() || '',
       city: primaryAddress?.city?.trim() || '',
       state: primaryAddress?.state?.trim() || '',
-      country: primaryAddress?.country?.trim() || 'US',
+      country: (primaryAddress as unknown as { country?: string })?.country?.trim() || npiResult.country || 'US',
       contact: primaryAddress?.telephone_number?.trim() || '',
       address: primaryAddress?.address_1?.trim() || '',
       postalCode: primaryAddress?.postal_code?.trim() || '',
-      gender: npiResult.basic.gender || ''
+      gender: npiResult.basic.gender || 'M'
     }
   }
 
@@ -199,6 +204,7 @@ const NpiRegistryDialog = ({
             <DoctorSearchResults
               onViewDetails={handleViewDetails}
               onAddToSystem={onAddToSystem}
+              searchPerformed={showResults}
             />
 
             {/* Pagination */}
@@ -225,7 +231,7 @@ const NpiRegistryDialog = ({
         selectedDoctor={selectedDoctor}
         showDetailsModal={showProfileModal}
         onCloseModal={handleCloseProfile}
-        onAddToSystem={onAddToSystem}
+        onAddToSystem={(doctor) => doctor && onAddToSystem(doctor as unknown as NPIResult)}
         adding={loading}
       />
     </div>

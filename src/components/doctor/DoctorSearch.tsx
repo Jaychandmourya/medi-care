@@ -139,10 +139,10 @@ function NPISearchSection() {
       const primaryTaxonomy = doctor.taxonomies?.find((tax: { primary?: boolean }) => tax.primary)
       const doctorData = {
         npi: npi,
-        firstName: doctor.basic.first_name ? doctor.basic.first_name : doctor.basic.authorized_official_first_name || '',
-        lastName: doctor.basic.last_name ?  doctor.basic.last_name : doctor.basic.authorized_official_last_name  || '',
+        firstName: doctor.basic.first_name || '',
+        lastName: doctor.basic.last_name || '',
         credential: doctor.basic.credential,
-        gender: doctor.basic.sex,
+        gender: doctor.basic.gender,
         specialty: primaryTaxonomy?.desc || 'General Practice',
         department: primaryTaxonomy?.desc || 'General Medicine',
         address: primaryAddress

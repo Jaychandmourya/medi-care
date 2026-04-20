@@ -1,9 +1,17 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { db } from '@/features/db/dexie';
 import { seedAllData } from '@/data/seedData';
 
+interface DataInfo {
+  doctorCount?: number;
+  scheduleCount?: number;
+  patientCount?: number;
+  appointmentCount?: number;
+  reseeded?: boolean;
+}
+
 const DataDebugger = () => {
-  const [dataInfo, setDataInfo] = useState<any>({});
+  const [dataInfo, setDataInfo] = useState<DataInfo>({});
   const [loading, setLoading] = useState(true);
 
   const checkData = async () => {
@@ -29,7 +37,7 @@ const DataDebugger = () => {
         await seedAllData();
         // Check again after seeding
         const newScheduleCount = await db.doctorSchedules.count();
-        setDataInfo(prev => ({ ...prev, scheduleCount: newScheduleCount, reseeded: true }));
+        setDataInfo((prev: DataInfo) => ({ ...prev, scheduleCount: newScheduleCount, reseeded: true }));
       }
     } catch (error) {
       console.error('Error checking data:', error);
@@ -45,12 +53,12 @@ const DataDebugger = () => {
   if (loading) return <div>Checking data...</div>;
 
   return (
-    <div style={{ 
-      position: 'fixed', 
-      top: '10px', 
-      right: '10px', 
-      background: 'white', 
-      padding: '10px', 
+    <div style={{
+      position: 'fixed',
+      top: '10px',
+      right: '10px',
+      background: 'white',
+      padding: '10px',
       border: '1px solid #ccc',
       borderRadius: '4px',
       fontSize: '12px',

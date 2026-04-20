@@ -10,7 +10,7 @@ import Input from '@/components/ui/Input'
 
 // Import Types files
 import type { RootState } from '@/app/store'
-import type { PatientFormData } from '@/schema/patientValidation'
+import type { Patient } from '@/types/patients/patientType'
 import type { Bed, BedStatus } from '@/types/bed/bedType'
 
 // Import form control, validation and zod
@@ -76,7 +76,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   const beds = useAppSelector((state: RootState) => state.beds.beds)
 
   // State
-  const [selectedPatient, setSelectedPatient] = useState<PatientFormData | null>(null)
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null)
   const [showPatientDropdown, setShowPatientDropdown] = useState(false)
   const [showAddPatientDialog, setShowAddPatientDialog] = useState(false)
 
@@ -155,7 +155,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   )
 
   // Handle patient selection
-  const handlePatientSelect = useCallback((patient: PatientFormData) => {
+  const handlePatientSelect = useCallback((patient: Patient) => {
     setSelectedPatient(patient)
     setValue('patientSearch', patient.name || '')
     setShowPatientDropdown(false)

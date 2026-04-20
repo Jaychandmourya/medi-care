@@ -1,8 +1,7 @@
-import { Menu, Bell, User, LogOut, Check, Clock, AlertCircle, Info, UserCog, Stethoscope, Activity, Sun, Moon, Users } from "lucide-react";
+import { Menu, Bell, LogOut, Check, Clock, AlertCircle, Info, UserCog, Stethoscope, Activity, Users } from "lucide-react";
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { login, logout } from "@/features/auth/authSlice"
-import { toggleTheme } from "@/features/theme/themeSlice"
 import { useNavigate, useLocation } from "react-router-dom"
 import type { Role } from "@/types/auth/auth"
 import { DoctorSelectionDialog } from "@/components/auth/login/DoctorSelectionDialog"
@@ -91,7 +90,6 @@ const Header = ({ setIsOpen }: HeaderProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const user = useAppSelector((state) => state.auth.user);
-  const theme = useAppSelector((state) => state.theme.theme);
 
   // Define available routes for each role
   const roleRoutes: Record<Role, string[]> = {
@@ -127,10 +125,10 @@ const Header = ({ setIsOpen }: HeaderProps) => {
   // Close dropdowns on outside click
   useEffect(() => {
     const handleClick = (e: MouseEvent) => {
-      if (!dropdownRef.current?.contains(e.target)) {
+      if (!dropdownRef.current?.contains(e.target as Node)) {
         setOpen(false);
       }
-      if (!notifDropdownRef.current?.contains(e.target)) {
+      if (!notifDropdownRef.current?.contains(e.target as Node)) {
         setNotifOpen(false);
       }
     };

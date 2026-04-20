@@ -123,8 +123,8 @@ const DoctorPatients = () => {
 
       // Search filter
       const searchMatch =
-        p.name.toLowerCase().includes(search.toLowerCase()) ||
-        p.phone.includes(search) ||
+        (p.name?.toLowerCase().includes(search.toLowerCase()) ?? false) ||
+        (p.phone?.includes(search) ?? false) ||
         p.patientId?.toLowerCase().includes(search.toLowerCase()) ||
         p.bloodGroup?.toLowerCase().includes(search.toLowerCase())
 
@@ -138,6 +138,7 @@ const DoctorPatients = () => {
 
       // Age range filter
       if (ageRange.min || ageRange.max) {
+        if (!p.dob) return false
         const patientAge = calculateAge(p.dob)
         if (ageRange.min && patientAge < parseInt(ageRange.min)) return false
         if (ageRange.max && patientAge > parseInt(ageRange.max)) return false
@@ -378,18 +379,18 @@ const DoctorPatients = () => {
                           <div className="flex items-center">
                             <div className="w-10 h-10 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold overflow-hidden">
                               {patient.photo ? (
-                                <img src={patient.photo} alt={patient.name} className="w-full h-full object-cover" />
+                                <img src={patient.photo} alt={patient.name || 'Patient'} className="w-full h-full object-cover" />
                               ) : (
-                                <span>{patient.name.charAt(0).toUpperCase()}</span>
+                                <span>{(patient.name || 'P').charAt(0).toUpperCase()}</span>
                               )}
                             </div>
                             <div className="ml-3">
-                              <div className="text-sm font-medium text-gray-900">{patient.name}</div>
+                              <div className="text-sm font-medium text-gray-900">{patient.name || 'Unknown'}</div>
                             </div>
                           </div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{patient.phone}</div>
+                          <div className="text-sm text-gray-900">{patient.phone || '-'}</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -402,7 +403,7 @@ const DoctorPatients = () => {
                           </span>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">{calculateAge(patient.dob)} years</div>
+                          <div className="text-sm text-gray-900">{patient.dob ? calculateAge(patient.dob) : '-'} years</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           {latestAppointment ? (
@@ -559,10 +560,10 @@ const DoctorPatients = () => {
               <div className="space-y-4">
                 <div className="flex items-center space-x-4">
                   <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-2xl">
-                    {selectedPatient.name.charAt(0).toUpperCase()}
+                    {(selectedPatient.name || 'P').charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <h3 className="text-xl font-semibold">{selectedPatient.name}</h3>
+                    <h3 className="text-xl font-semibold">{selectedPatient.name || 'Unknown'}</h3>
                     <p className="text-gray-600">ID: {selectedPatient.patientId}</p>
                   </div>
                 </div>
@@ -570,7 +571,7 @@ const DoctorPatients = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label>Age</Label>
-                    <p className="text-sm text-gray-900">{calculateAge(selectedPatient.dob)} years</p>
+                    <p className="text-sm text-gray-900">{selectedPatient.dob ? calculateAge(selectedPatient.dob) : '-'} years</p>
                   </div>
                   <div>
                     <Label>Gender</Label>

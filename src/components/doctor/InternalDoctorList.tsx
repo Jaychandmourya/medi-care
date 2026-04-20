@@ -343,7 +343,7 @@ export default function InternalDoctorList() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => toggleDropdown(doctor.id)}
+                            onClick={() => doctor.id && toggleDropdown(doctor.id)}
                             className="text-gray-600 hover:text-gray-800 p-2"
                           >
                             <MoreVertical className="w-4 h-4" />
@@ -380,7 +380,7 @@ export default function InternalDoctorList() {
                                   <Button
                                     variant="ghost"
                                     size="sm"
-                                    onClick={() => handleRemoveDoctor(doctor.id, formatFullName(doctor))}
+                                    onClick={() => doctor.id && handleRemoveDoctor(doctor.id, formatFullName(doctor))}
                                     className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mx-1"
                                   >
                                     <Trash2 className="w-4 h-4 mr-3 text-red-400" />

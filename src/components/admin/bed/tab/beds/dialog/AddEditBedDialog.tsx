@@ -16,8 +16,8 @@ interface AddEditBedDialogProps {
 // Zod validation schema
 const bedFormSchema = z.object({
   ward: z.string().min(1, 'Please select a ward'),
-  status: z.enum(['available', 'occupied', 'reserved', 'maintenance'], {
-    required_error: 'Please select a status'
+  status: z.enum(['available', 'occupied', 'reserved', 'maintenance']).refine((val) => val !== undefined, {
+    message: 'Please select a status'
   }),
   notes: z.string().optional()
 })
@@ -72,7 +72,7 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
       // Extract and set error messages
       const fieldErrors: Record<string, string> = {}
       result.error.issues.forEach((issue) => {
-        fieldErrors[issue.path[0]] = issue.message
+        fieldErrors[String(issue.path[0])] = issue.message
       })
       setErrors(fieldErrors)
       return

@@ -81,7 +81,7 @@ export function DoctorSchedule({
       setScheduleValue('workingDays', existingSchedule.workingDays)
       setScheduleValue('startTime', existingSchedule.startTime)
       setScheduleValue('endTime', existingSchedule.endTime)
-      setScheduleValue('slotDuration', existingSchedule.slotDuration.toString())
+      setScheduleValue('slotDuration', existingSchedule.slotDuration.toString() as '15' | '20' | '30')
       setScheduleValue('lunchBreakStart', existingSchedule.lunchBreakStart || '')
       setScheduleValue('lunchBreakEnd', existingSchedule.lunchBreakEnd || '')
     }

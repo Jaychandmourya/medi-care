@@ -158,17 +158,17 @@ const PatientDetailsDialog = ({
                   {selectedPatient.photo ? (
                     <img
                       src={selectedPatient.photo}
-                      alt={selectedPatient.name}
+                      alt={selectedPatient.name || 'Patient'}
                       className="w-full h-full object-cover"
                     />
                   ) : (
                     <span className="text-black text-2xl font-bold">
-                      {selectedPatient.name.charAt(0).toUpperCase()}
+                      {(selectedPatient.name || 'P').charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
                 <div>
-                  <h2 className={`text-2xl font-bold text-white`}>{selectedPatient.name}</h2>
+                  <h2 className={`text-2xl font-bold text-white`}>{selectedPatient.name || 'Unknown'}</h2>
                   <p className="text-blue-100">Patient Details</p>
                 </div>
               </div>
@@ -221,7 +221,7 @@ const PatientDetailsDialog = ({
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Full Name</p>
-                      <p className="font-semibold text-gray-800">{selectedPatient.name}</p>
+                      <p className="font-semibold text-gray-800">{selectedPatient.name || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Gender</p>
@@ -231,11 +231,11 @@ const PatientDetailsDialog = ({
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Age</p>
-                      <p className="font-semibold text-gray-800">{calculateAge(selectedPatient.dob)} years</p>
+                      <p className="font-semibold text-gray-800">{selectedPatient.dob ? calculateAge(selectedPatient.dob) : '-'} years</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Date of Birth</p>
-                      <p className="font-semibold text-gray-800">{new Date(selectedPatient.dob).toLocaleDateString()}</p>
+                      <p className="font-semibold text-gray-800">{selectedPatient.dob ? new Date(selectedPatient.dob).toLocaleDateString() : '-'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Blood Group</p>
@@ -290,7 +290,7 @@ const PatientDetailsDialog = ({
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Chronic Conditions</p>
-                      <p className="font-semibold text-gray-800">{selectedPatient.chronicConditions || 'None recorded'}</p>
+                      <p className="font-semibold text-gray-800">{selectedPatient.conditions || 'None recorded'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Current Medications</p>
@@ -298,7 +298,7 @@ const PatientDetailsDialog = ({
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Emergency Contact</p>
-                      <p className="font-semibold text-gray-800">{selectedPatient.emergencyContact || 'N/A'}</p>
+                      <p className="font-semibold text-gray-800">{selectedPatient.contactName || 'N/A'} ({selectedPatient.emergencyPhone || 'N/A'})</p>
                     </div>
                   </div>
                 </div>
@@ -366,7 +366,7 @@ const PatientDetailsDialog = ({
                                 {new Date(appointment.date).toLocaleDateString()}
                               </td>
                               <td className="px-4 py-3 text-sm text-gray-900">{appointment.slot}</td>
-                              <td className="px-4 py-3 text-sm text-gray-900">{appointment.doctorName || 'Not assigned'}</td>
+                              <td className="px-4 py-3 text-sm text-gray-900">{appointment.doctorId || 'Not assigned'}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{appointment.department}</td>
                               <td className="px-4 py-3 text-sm text-gray-900">{appointment.reason}</td>
                               <td className="px-4 py-3 text-sm">
@@ -404,7 +404,7 @@ const PatientDetailsDialog = ({
                       <div key={prescription.id} className="bg-white rounded-lg border border-gray-200 p-6">
                         <div className="flex justify-between items-start mb-4">
                           <div>
-                            <h4 className="font-semibold text-gray-900">{prescription.doctorName}</h4>
+                            <h4 className="font-semibold text-gray-900">{prescription.doctorName || prescription.doctorId || 'Unknown Doctor'}</h4>
                             <p className="text-sm text-gray-500">{new Date(prescription.createdAt).toLocaleDateString()}</p>
                           </div>
                           <FileText className="w-5 h-5 text-gray-400" />

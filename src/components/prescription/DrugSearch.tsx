@@ -3,7 +3,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { Search, Pill, Loader2 } from 'lucide-react'
 import { setSelectedDrug, searchDrugs } from '@/features/prescription/prescriptionSlice'
 import type { AppDispatch, RootState } from '@/app/store'
-import type { Drug } from '@/features/prescription/prescriptionSlice'
+import type { Drug } from '@/types/prescription/prescriptionType'
 import Input from '@/components/ui/Input'
 
 const DrugSearch = () => {

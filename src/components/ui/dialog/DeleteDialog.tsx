@@ -20,7 +20,7 @@ export default function DeleteDialog({
   description = "Are you sure you want to delete this item? This action cannot be undone.",
   itemName,
   deleteTitleClass = "text-gray-900",
-  confirmButtonClass = "bg-red-600 hover:bg-red-700",
+  confirmButtonClass,
 }: DeleteDialogProps) {
   if (!isOpenDelete) return null;
 
@@ -77,7 +77,7 @@ export default function DeleteDialog({
           <Button
             onClick={handleConfirm}
             variant="destructive"
-            className={`flex-1 order-1 sm:order-2`}
+            className={`flex-1 order-1 sm:order-2 ${confirmButtonClass || ''}`}
           >
             Delete
           </Button>

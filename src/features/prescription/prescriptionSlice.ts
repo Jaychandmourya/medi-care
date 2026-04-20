@@ -82,7 +82,8 @@ const prescriptionSlice = createSlice({
         if (state.selectedDrug) {
           state.selectedDrug.isRecalled = action.payload.isRecalled;
           state.selectedDrug.recallInfo = action.payload.recallInfo;
-          state.selectedDrug.adverseReactions = action.payload.adverseEvents?.map((event: { reaction?: string }) => event.reaction).filter(Boolean) || [];
+          const adverseEvents = (action.payload as { adverseEvents?: Array<{ reaction?: string }> }).adverseEvents;
+          state.selectedDrug.adverseReactions = adverseEvents?.map((event) => event.reaction).filter((r): r is string => Boolean(r)) || [];
         }
       })
       // Prescription history

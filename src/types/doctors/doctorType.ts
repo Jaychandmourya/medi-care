@@ -2,10 +2,13 @@ import type { NPIResult } from '@/types/doctors/NpiType'
 export interface Doctor {
   id: string;
   name: string;
+  npi?: string;
+  firstName?: string;
+  lastName?: string;
   department: string;
   specialization: string;
-  phone: string;
-  email: string;
+  phone?: string;
+  email?: string;
   contact?: string;
   city?: string;
   state?: string;
@@ -34,6 +37,7 @@ export interface DoctorSchedule {
 export interface LocalDoctor {
   id?: string
   npi: string
+  name?: string
   firstName: string
   lastName: string
   middleName?: string
@@ -78,6 +82,8 @@ export interface AutocompleteDoctor {
   country?: string
   contact?: string
   specialty?: string
+  department?: string
+  email?: string
   fullName: string
   gender: string
   address?: string

@@ -1,3 +1,7 @@
+import type { Appointment } from '@/types/appointment/appointmentType';
+import type { Vitals } from '@/types/vitals/vitalsType';
+import type { Prescription } from '@/types/prescription/prescriptionType';
+
 export interface Patient {
   id: string;
   patientId: string;
@@ -29,6 +33,17 @@ export interface AddPatientDialogProps {
   onClose: () => void;
   editData?: Partial<Patient>;
   titleClass?: string;
+}
+
+// BillingRecord type definition (not imported from elsewhere)
+export interface BillingRecord {
+  id: string;
+  patientId: string;
+  amount: number;
+  description: string;
+  status: 'pending' | 'paid' | 'cancelled';
+  createdAt: string;
+  updatedAt?: string;
 }
 
 export interface PatientDetailsDialogProps {

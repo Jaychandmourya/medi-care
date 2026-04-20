@@ -13,7 +13,6 @@ import { Label } from '@/components/ui/Label';
 import type { RootState } from "@/app/store";
 import type { Appointment } from '@/types/appointment/appointmentType'
 import type { Patient } from '@/types/patients/patientType'
-import type { Doctor } from '@/types/doctors/doctorType'
 
 // Import dispatch and selector for redux
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
@@ -70,7 +69,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
   }, [patients]);
 
   // Helper function to get doctor data
-  const getDoctor = useCallback((doctorId: string): Doctor | undefined => {
+  const getDoctor = useCallback((doctorId: string) => {
     return localDoctors.find(d => d.id === doctorId);
   }, [localDoctors]);
 
@@ -95,8 +94,8 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
   }, []);
 
   // Get patient and doctor data
-  const patient = useMemo(() => getPatient(selectedAppointment?.patientId), [getPatient, selectedAppointment?.patientId]);
-  const doctor = useMemo(() => getDoctor(selectedAppointment?.doctorId), [getDoctor, selectedAppointment?.doctorId]);
+  const patient = useMemo(() => selectedAppointment?.patientId ? getPatient(selectedAppointment.patientId) : undefined, [getPatient, selectedAppointment?.patientId]);
+  const doctor = useMemo(() => selectedAppointment?.doctorId ? getDoctor(selectedAppointment.doctorId) : undefined, [getDoctor, selectedAppointment?.doctorId]);
 
   // Handle reschedule click
   const handleRescheduleClick = useCallback(() => {
@@ -208,7 +207,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <Label className="text-sm text-gray-600">Name</Label>
-                  <p className="font-medium">Dr. {doctor.name}</p>
+                  <p className="font-medium">Dr. {doctor.name || `${doctor.firstName} ${doctor.lastName}`}</p>
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600">Department</Label>
@@ -216,7 +215,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600">Specialization</Label>
-                  <p className="font-medium">{doctor.specialization}</p>
+                  <p className="font-medium">{doctor.specialty || 'General Practice'}</p>
                 </div>
                 <div>
                   <Label className="text-sm text-gray-600">Phone</Label>

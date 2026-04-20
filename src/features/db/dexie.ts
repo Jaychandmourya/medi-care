@@ -31,7 +31,7 @@ class AppDB extends Dexie {
 export const db = new AppDB();
 
 // Re-export types for convenience
-export type { Bed, Ward } from '@/features/bed/bedSlice'
+export type { Bed, Ward } from '@/types/bed/bedType'
 export type { Appointment } from '@/types/appointment/appointmentType';
 export type { Patient } from '@/types/patients/patientType'
 export type { Vitals } from '@/types/vitals/vitalsType'
