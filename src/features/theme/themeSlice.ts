@@ -6,7 +6,7 @@ const getInitialTheme = (): Theme => {
   if (typeof window !== "undefined") {
     const stored = localStorage.getItem("theme") as Theme | null
     if (stored) return stored
-    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light"
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "light" : "light"
   }
   return "light"
 }
@@ -24,13 +24,13 @@ const themeSlice = createSlice({
   initialState,
   reducers: {
     toggleTheme: (state) => {
-      state.theme = state.theme === "light" ? "dark" : "light"
+      state.theme = state.theme === "light" ? "light" : "light"
       if (typeof window !== "undefined") {
         localStorage.setItem("theme", state.theme)
-        if (state.theme === "dark") {
-          document.documentElement.classList.add("dark")
+        if (state.theme === "light") {
+          document.documentElement.classList.add("light")
         } else {
-          document.documentElement.classList.remove("dark")
+          document.documentElement.classList.remove("light")
         }
       }
     },
@@ -38,10 +38,10 @@ const themeSlice = createSlice({
       state.theme = action.payload
       if (typeof window !== "undefined") {
         localStorage.setItem("theme", action.payload)
-        if (action.payload === "dark") {
-          document.documentElement.classList.add("dark")
+        if (action.payload === "light") {
+          document.documentElement.classList.add("light")
         } else {
-          document.documentElement.classList.remove("dark")
+          document.documentElement.classList.remove("light")
         }
       }
     },
