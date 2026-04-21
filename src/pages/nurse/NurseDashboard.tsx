@@ -160,7 +160,7 @@ const NurseDashboard = () => {
   const selectedWardInfo = wards.find(ward => ward.wardId === selectedWard)
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
         <h1 className="text-3xl font-bold text-gray-900 mb-2">Nurse Dashboard</h1>
         <p className="text-gray-600">Monitor ward status and patient vitals</p>

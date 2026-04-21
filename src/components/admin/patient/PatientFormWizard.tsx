@@ -1,8 +1,6 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, forwardRef, useImperativeHandle } from "react";
 import toast from "react-hot-toast"
 
-// Import UI components
-import { Button } from "@/components/ui/Button";
 
 // Import form, validation and zod files
 import { useForm, FormProvider } from "react-hook-form";
@@ -29,12 +27,14 @@ import StepMedical from "./step-components/StepMedical";
 import StepEmergency from "./step-components/StepEmergency";
 import StepReview from "./step-components/StepReview";
 
-export default function PatientFormWizard({ defaultData, onClose, onSafeCloseReady, openCloseConfirmation }: {
+const PatientFormWizard = forwardRef<any, {
   defaultData?: Partial<Patient>;
   onClose: () => void;
   onSafeCloseReady: (handleSafeClose: () => void) => void;
   openCloseConfirmation: () => void;
-}) {
+  onStepChange?: (step: number) => void;
+  onSubmittingChange?: (isSubmitting: boolean) => void;
+}>(({ defaultData, onClose, onSafeCloseReady, openCloseConfirmation, onStepChange, onSubmittingChange }, ref) => {
 
   const [step, setStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -68,14 +68,7 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
     mode: "onChange",
   });
 
-  const { formState: { errors, isValid, dirtyFields }, trigger } = methods;
-
-  // Check if current step has any errors
-  const hasStepErrors = () => {
-    const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
-    const currentStepFields = Object.keys(currentStepSchema?.shape || {});
-    return currentStepFields.some(field => errors[field as keyof Patient]);
-  };
+  const { formState: { dirtyFields, errors }, trigger } = methods;
 
   // Check if there are any unsaved changes
   const checkUnsavedChanges = useCallback(() => {
@@ -96,6 +89,20 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   useEffect(() => {
     onSafeCloseReady(handleSafeClose);
   }, [handleSafeClose, onSafeCloseReady]);
+
+  // Notify parent of step changes
+  useEffect(() => {
+    if (onStepChange) {
+      onStepChange(step);
+    }
+  }, [step, onStepChange]);
+
+  // Notify parent of submitting state changes
+  useEffect(() => {
+    if (onSubmittingChange) {
+      onSubmittingChange(isSubmitting);
+    }
+  }, [isSubmitting, onSubmittingChange]);
 
   //  Manage step
   const steps = useMemo(() => [
@@ -122,6 +129,26 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
   }, [step, trigger]);
 
   const handleBack = useCallback(() => setStep(prev => prev - 1), []);
+
+  // Handle direct step navigation (only available in edit mode)
+  const handleStepClick = useCallback(async (targetStep: number) => {
+    // Only allow direct navigation in edit mode (when defaultData has an id)
+    if (!defaultData?.id) {
+      return;
+    }
+
+    // Check if current step has any validation errors
+    const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
+    const fieldsToValidate = Object.keys(currentStepSchema?.shape || {});
+    const valid = await trigger(fieldsToValidate as (keyof Patient)[]);
+
+    // If current step has validation errors, prevent navigation
+    if (!valid) {
+      return;
+    }
+
+    setStep(targetStep);
+  }, [defaultData?.id, step, trigger]);
 
   //  Submit all data in database
   const onSubmit = useCallback(async (data: PatientFormData) => {
@@ -176,6 +203,15 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
     }
   }, [step, methods, onSubmit]);
 
+  // Expose methods via ref
+  useImperativeHandle(ref, () => ({
+    handleNext,
+    handleBack,
+    handleSubmit,
+    step,
+    isSubmitting
+  }), [handleNext, handleBack, handleSubmit, step, isSubmitting]);
+
   return (
     <FormProvider {...methods}>
       <form className="space-y-6" onSubmit={methods.handleSubmit(onSubmit)}>
@@ -189,16 +225,33 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
           />
         </div>
         <div className="flex justify-between mt-2">
-          {steps.map((stepName, index) => (
-            <div
-              key={index}
-              className={`text-xs font-medium ${
-                index + 1 <= step ? roleColors.text.replace('700', '600') : "text-gray-400"
-              }`}
-            >
-              {index + 1}. {stepName}
-            </div>
-          ))}
+          {steps.map((stepName, index) => {
+            const stepNumber = index + 1;
+            const currentStepSchema = stepSchemas[step as keyof typeof stepSchemas];
+            const currentStepFields = Object.keys(currentStepSchema?.shape || {});
+            const hasCurrentStepErrors = currentStepFields.some(field => errors[field as keyof Patient]);
+
+            const isClickable = defaultData?.id && stepNumber !== step && !hasCurrentStepErrors;
+            const isCompleted = stepNumber <= step;
+
+            return (
+              <div
+                key={index}
+                onClick={() => isClickable && handleStepClick(stepNumber)}
+                className={`text-xs font-medium transition-all duration-200 ${
+                  isCompleted
+                    ? roleColors.text.replace('700', '600')
+                    : "text-gray-400"
+                } ${
+                  isClickable
+                    ? "cursor-pointer hover:opacity-80 hover:scale-105"
+                    : "cursor-default"
+                }`}
+              >
+                {stepNumber}. {stepName}
+              </div>
+            );
+          })}
         </div>
       </div>
 
@@ -210,46 +263,11 @@ export default function PatientFormWizard({ defaultData, onClose, onSafeCloseRea
       {step === 2 && (<StepMedical />)}
       {step === 3 && (<StepEmergency />)}
       {step === 4 && <StepReview />}
-
-      {/*  Next, Back and Save Patient */}
-      <div className="flex justify-between pt-6 border-t border-gray-200">
-        <Button
-          type="button"
-          onClick={handleBack}
-          disabled={step === 1}
-          variant="secondary"
-          size="default"
-        >
-          ← Back
-        </Button>
-
-        {/* Next / Submit */}
-        {step < 4 ? (
-          <Button
-            type="button"
-            onClick={handleNext}
-            disabled={hasStepErrors()}
-            variant="default"
-            size="default"
-            customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
-          >
-            Next →
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={!isValid || isSubmitting}
-            variant="default"
-            size="default"
-            loading={isSubmitting}
-            customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
-          >
-            {isSubmitting ? "Saving..." : "Save Patient"}
-          </Button>
-        )}
-      </div>
       </form>
     </FormProvider>
   );
-}
+});
+
+PatientFormWizard.displayName = 'PatientFormWizard';
+
+export default PatientFormWizard;

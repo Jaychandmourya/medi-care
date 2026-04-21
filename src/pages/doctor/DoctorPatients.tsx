@@ -193,7 +193,7 @@ const DoctorPatients = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="space-y-6">
 
         {/* Header */}

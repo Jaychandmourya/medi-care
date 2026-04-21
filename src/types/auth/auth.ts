@@ -7,6 +7,7 @@ export interface User {
   id: number
   avatar: string
   token: string
+  doctorId?: string
 }
 
 export interface AuthState {

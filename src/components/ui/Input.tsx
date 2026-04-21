@@ -22,6 +22,7 @@ export interface InputProps {
   onChange?: (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   onClick?: () => void;
   onFocus?: () => void;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => void;
   step?: string | number;
   min?: string | number;
   max?: string | number;
@@ -46,6 +47,7 @@ const Input: React.FC<InputProps> = ({
   onChange,
   onClick,
   onFocus,
+  onKeyDown,
   step,
   min,
   max,
@@ -55,6 +57,13 @@ const Input: React.FC<InputProps> = ({
   } ${disabled ? 'opacity-50 cursor-not-allowed' : ''} ${className}`;
 
   const iconPadding = Icon ? (iconPosition === 'left' ? 'pl-12' : 'pr-12') : '';
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    if (type === 'tel' && e.key.length === 1 && !/[\d+]/.test(e.key)) {
+      e.preventDefault();
+    }
+    onKeyDown?.(e);
+  };
 
   const renderInput = () => {
     const commonProps = {
@@ -66,6 +75,7 @@ const Input: React.FC<InputProps> = ({
       onChange,
       onClick,
       onFocus,
+      onKeyDown: handleKeyDown,
       ...registration,
     };
 
@@ -90,7 +100,7 @@ const Input: React.FC<InputProps> = ({
         return (
           <input
             {...commonProps}
-            type={type}
+            type={type === 'tel' ? 'text' : type}
             autoComplete="off"
             step={step}
             min={min}

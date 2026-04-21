@@ -5,7 +5,7 @@ import QueueAnalytics from '@/components/opd/QueueAnalytics'
 
 const ReceptionistOpd = () => {
   return (
-    <div className="min-h-screen">
+    <div>
       <div>
         <div className="mb-8 bg-white rounded-lg p-4 lg:p-6 shadow-lg">
           <h1 className="text-3xl font-bold text-gray-900">OPD Token Management</h1>

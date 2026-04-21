@@ -26,7 +26,7 @@ const DoctorPrescriptions = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div>
         {/* Header */}
         <div className="mb-8 bg-white rounded-lg shadow-sm p-6">

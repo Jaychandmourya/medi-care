@@ -178,7 +178,7 @@ export default function PatientList() {
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className={`text-3xl font-bold ${themeColors.text}`}>
+              <h1 className={`text-2xl font-bold ${themeColors.text}`}>
                 Patients
               </h1>
               <p className="text-gray-600 mt-1">Manage your patient records</p>

@@ -196,11 +196,11 @@ const Login = () => {
             <div
               key={role.id}
               className="group rounded-2xl bg-white/70 backdrop-blur-md border border-gray-200 shadow-md
-              hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300"
+              hover:shadow-2xl transform hover:-translate-y-2 transition-all duration-300 overflow-hidden"
             >
               {/* Gradient Top Bar */}
               <div
-                className={`h-1.5 w-full rounded-t-2xl bg-gradient-to-r ${role.gradient}`}
+                className={`h-2 w-full rounded-t-2xl bg-gradient-to-r ${role.gradient}`}
               />
 
               {/* Content */}

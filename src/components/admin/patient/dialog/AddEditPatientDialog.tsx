@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 
 // Import UI components
 import { Button } from "@/components/ui/Button";
@@ -28,6 +28,13 @@ export default function AddPatientDialog({ isOpen, onClose, editData, titleClass
   // Variable
   const [safeCloseHandler, setSafeCloseHandler] = useState<(() => void) | null>(null);
   const [showCloseConfirmation, setShowCloseConfirmation] = useState<boolean>(false);
+  const wizardRef = useRef<{
+  handleNext: () => void;
+  handleBack: () => void;
+  handleSubmit: () => void;
+  step: number;
+  isSubmitting: boolean;
+} | null>(null);
 
 
   // Methods
@@ -58,6 +65,30 @@ export default function AddPatientDialog({ isOpen, onClose, editData, titleClass
   const handleCancelClose = useCallback(() => {
     setShowCloseConfirmation(false);
   }, []);
+
+
+  const handleBack = useCallback(() => {
+    if (wizardRef.current?.handleBack) {
+      wizardRef.current.handleBack();
+    }
+  }, []);
+
+  // State to track current step and submitting status
+  const [currentStep, setCurrentStep] = useState(1);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // Handle next/submit based on current step
+  const handleNextOrSubmit = useCallback(() => {
+    if (currentStep < 4) {
+      if (wizardRef.current?.handleNext) {
+        wizardRef.current.handleNext();
+      }
+    } else {
+      if (wizardRef.current?.handleSubmit) {
+        wizardRef.current.handleSubmit();
+      }
+    }
+  }, [currentStep]);
 
   if (!isOpen) return null;
 
@@ -105,26 +136,38 @@ export default function AddPatientDialog({ isOpen, onClose, editData, titleClass
 
           {/* Wizard */}
           <PatientFormWizard
+            ref={wizardRef}
             defaultData={editData}
             onClose={onClose}
             onSafeCloseReady={handleSafeCloseReady}
             openCloseConfirmation={ handleOpenCloseConfirmation }
+            onStepChange={setCurrentStep}
+            onSubmittingChange={setIsSubmitting}
           />
         </div>
 
         {/* Fixed Footer */}
         <div className="sticky bottom-0 bg-white border-t border-gray-200 rounded-b-3xl p-6 pt-4">
           <div className="flex justify-between items-center">
-            <p className="text-gray-500 text-sm">
-              Need help? Contact support
-            </p>
+            <Button
+              type="button"
+              onClick={handleBack}
+              variant="secondary"
+              size="default"
+            >
+              ← Back
+            </Button>
+
             <div className="flex space-x-3">
               <Button
-                variant="outline"
-                size="sm"
-                onClick={handleDialogClose}
+                type="button"
+                onClick={handleNextOrSubmit}
+                variant="default"
+                size="default"
+                loading={isSubmitting}
+                customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
               >
-                Cancel
+                {currentStep < 4 ? "Next →" : (isSubmitting ? "Saving..." : "Save Patient")}
               </Button>
             </div>
           </div>

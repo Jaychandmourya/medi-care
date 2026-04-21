@@ -126,7 +126,7 @@ const AdminBeds = () => {
 
   if (!isInitialized) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-full bg-gray-50">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Initializing bed management system...</p>
@@ -137,7 +137,7 @@ const AdminBeds = () => {
 
   if (error) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="flex items-center justify-center h-full bg-gray-50">
         <div className="text-center">
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-lg mb-4">
             <p className="font-medium">Error loading bed data</p>
@@ -152,7 +152,7 @@ const AdminBeds = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 rounded-md">
+    <div className="bg-gray-50 rounded-md">
       {/* Header */}
       <div className="border-b border-gray-200">
         <div className="max-w-7xl px-4 lg:px-6">

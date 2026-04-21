@@ -198,7 +198,7 @@ const AdminReports = () => {
 
   if (loading && opdTrend.length === 0) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center h-full">
         <div className="text-center">
           <RefreshCw className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
           <p className="text-gray-600">Loading reports...</p>
@@ -208,7 +208,7 @@ const AdminReports = () => {
   }
 
   return (
-    <div id="admin-reports-container" className="min-h-screen">
+    <div id="admin-reports-container">
       {/* Header */}
       <div className="mb-8">
         <div className="flex flex-wrap gap-2 justify-between items-center mb-6 bg-white p-6 rounded-lg shadow-sm">

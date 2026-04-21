@@ -4,6 +4,7 @@ import { Toaster } from "react-hot-toast"
 import "@/utils/fixDatabase" // Load database fix utility
 import { useEffect } from "react"
 import { useAppSelector } from "@/app/hooks"
+import ScrollToTop from "@/components/common/ScrollToTop"
 
 function App() {
   const theme = useAppSelector((state) => state.theme.theme)
@@ -19,6 +20,7 @@ function App() {
   return (
     <>
       <BrowserRouter>
+        <ScrollToTop />
         <AppRouter />
       </BrowserRouter>
       <Toaster

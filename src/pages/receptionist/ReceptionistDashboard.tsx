@@ -50,7 +50,7 @@ const ReceptionistDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div className="">
         {/* Header */}
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-purple-200 backdrop-blur-sm bg-opacity-90 mb-6 sm:mb-8">

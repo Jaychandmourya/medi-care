@@ -122,8 +122,8 @@ const AdminAppointments = () => {
       <div className="bg-white rounded-lg shadow-md p-6">
         <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-              <Calendar className="w-8 h-8 mr-3 text-blue-600" />
+            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
+              <Calendar className="w-6 h-6 mr-3 text-blue-600" />
               Appointments Management
             </h1>
             <p className="text-gray-600 mt-2">Manage and schedule patient appointments</p>

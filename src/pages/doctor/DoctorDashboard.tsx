@@ -205,7 +205,7 @@ const DoctorDashboard = () => {
 
   if (!doctorId) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="h-full bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <h2 className="text-2xl font-semibold text-gray-900 mb-2">Access Restricted</h2>
           <p className="text-gray-600">Please log in as a doctor to view the dashboard.</p>
@@ -215,7 +215,7 @@ const DoctorDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div>
       <div>
         {/* Header */}
         <div className="mb-8 bg-white rounded-xl shadow-sm p-6">

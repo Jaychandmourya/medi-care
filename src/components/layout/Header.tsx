@@ -346,6 +346,7 @@ const Header = ({ setIsOpen }: HeaderProps) => {
                 <div className="px-4 py-2">
                   <p className="text-xs font-semibold text-gray-400 dark:text-gray-500 uppercase tracking-wider mb-2">Switch Role</p>
                   <div className="space-y-1">
+                    {/* Show other roles (excluding current) */}
                     {roles.filter(r => r.role !== user?.role).map((role) => {
                       const IconComponent = role.icon;
                       return (
@@ -361,6 +362,36 @@ const Header = ({ setIsOpen }: HeaderProps) => {
                         </button>
                       );
                     })}
+
+                    {/* When user is doctor, also show option to switch to another doctor */}
+                    {user?.role === 'doctor' && (
+                      <button
+                        onClick={() => {
+                          setOpen(false);
+                          setLoadingDoctors(true);
+                          doctorDBOperations.getAll()
+                            .then(doctorList => {
+                              // Filter out the currently logged-in doctor
+                              const currentDoctorId = user?.name;
+                              const otherDoctors = doctorList.filter(d => d.name !== currentDoctorId);
+                              if (otherDoctors.length === 0) {
+                                toast.error('No other doctors available to switch to.');
+                                return;
+                              }
+                              setDoctors(otherDoctors);
+                              setShowDoctorModal(true);
+                            })
+                            .catch(() => toast.error('Error accessing doctor database.'))
+                            .finally(() => setLoadingDoctors(false));
+                        }}
+                        className="flex cursor-pointer items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 text-sm transition-colors group"
+                      >
+                        <div className="p-1.5 rounded-lg bg-gray-100 dark:bg-gray-800 group-hover:bg-blue-50 dark:group-hover:bg-gray-700 text-emerald-600">
+                          <Stethoscope size={14} />
+                        </div>
+                        <span className="text-gray-700 dark:text-gray-300 font-medium">Switch to Another Doctor</span>
+                      </button>
+                    )}
                   </div>
                 </div>
 

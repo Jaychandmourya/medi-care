@@ -161,13 +161,7 @@ export default function StepPersonal() {
             placeholder="Enter phone number"
             icon={Phone}
             iconPosition="left"
-            registration={register("phone", {
-              required: "Phone number is required",
-              pattern: {
-                value: /^\d{10,}$/,
-                message: "Please enter a valid phone number (at least 10 digits)"
-              }
-            })}
+            registration={register("phone")}
             error={errors.phone}
           />
         </div>
