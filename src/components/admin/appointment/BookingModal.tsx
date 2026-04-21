@@ -3,13 +3,13 @@ import { useEffect, useCallback, useMemo } from 'react';
 import toast from 'react-hot-toast';
 
 // Import icons file
-import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
 
 // Import UI components
-import { Button } from '@/components/common/Button';
 import Input from '@/components/common/Input';
 import DatePicker from '@/components/common/DatePicker';
 import { Label } from '@/components/common/Label';
+import FormDialog from '@/components/common/dialog/FormDialog';
 
 // Import form controller, zod, and validation
 import { useForm, Controller } from 'react-hook-form';
@@ -135,67 +135,44 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
     return localDoctors.filter((doctor: LocalDoctor) => doctor.department === department);
   }, [localDoctors]);
 
-  // Get role-based header class
-  const getHeaderClass = () => {
-    if (!roleColors) return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
-
-    switch (roleColors.header) {
-      case 'bg-purple-600':
-        return 'bg-gradient-to-r from-purple-600 to-purple-700 text-white p-6 rounded-t-lg';
-      case 'bg-blue-600':
-        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
-      case 'bg-green-600':
-        return 'bg-gradient-to-r from-green-600 to-green-700 text-white p-6 rounded-t-lg';
-      case 'bg-pink-600':
-        return 'bg-gradient-to-r from-pink-600 to-pink-700 text-white p-6 rounded-t-lg';
-      default:
-        return 'bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg';
-    }
-  };
-
-  // Get role-based button hover class
-  const getButtonHoverClass = () => {
-    if (!roleColors) return 'hover:bg-blue-500';
-
-    switch (roleColors.header) {
-      case 'bg-purple-600':
-        return 'hover:bg-purple-500';
-      case 'bg-blue-600':
-        return 'hover:bg-blue-500';
-      case 'bg-green-600':
-        return 'hover:bg-green-500';
-      case 'bg-pink-600':
-        return 'hover:bg-pink-500';
-      default:
-        return 'hover:bg-blue-500';
-    }
-  };
-
-  if (!showBookingModal) return null;
+  // Custom header with icon and role-based styling
+  const customHeader = (
+    <div className="flex justify-between items-center">
+      <div className="flex items-center space-x-3">
+        <Calendar className={`w-6 h-6 ${roleColors?.header === 'bg-purple-600' ? 'text-purple-600' :
+          roleColors?.header === 'bg-blue-600' ? 'text-blue-600' :
+          roleColors?.header === 'bg-green-600' ? 'text-green-600' :
+          roleColors?.header === 'bg-pink-600' ? 'text-pink-600' :
+          'text-blue-600'}`} />
+        <h2 className={`text-2xl font-bold ${roleColors?.header === 'bg-purple-600' ? 'bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent' :
+          roleColors?.header === 'bg-blue-600' ? 'bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent' :
+          roleColors?.header === 'bg-green-600' ? 'bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent' :
+          roleColors?.header === 'bg-pink-600' ? 'bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent' :
+          'bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent'}`}>
+          Book New Appointment
+        </h2>
+      </div>
+    </div>
+  );
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className={getHeaderClass()}>
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Calendar className="w-6 h-6" />
-              <h2 className="text-xl font-semibold">Book New Appointment</h2>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={handleCloseModal}
-              className={`text-white ${getButtonHoverClass()}`}
-            >
-              <X className="w-5 h-5" />
-            </Button>
-          </div>
-        </div>
-
-        {/* Form */}
-        <form onSubmit={handleSubmit(onSubmit)} className="p-6 space-y-6">
+    <FormDialog
+      isOpen={showBookingModal}
+      onClose={handleCloseModal}
+      header={customHeader}
+      showFooter={true}
+      showDefaultButtons={true}
+      cancelButtonText="Cancel"
+      saveButtonText="Book Appointment"
+      onCancel={handleCloseModal}
+      onSave={handleSubmit(onSubmit)}
+      saveButtonLoading={loading}
+      saveButtonDisabled={loading}
+      maxWidth="max-w-2xl"
+      maxHeight="max-h-[90vh]"
+      dialogClass="rounded-lg shadow-xl"
+    >
+      <div className="space-y-6">
           {/* Patient Selection */}
           <Controller
             name="patientId"
@@ -414,27 +391,8 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               />
             )}
           />
-
-          {/* Actions */}
-          <div className="flex justify-end space-x-3 pt-4 border-t border-gray-200">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCloseModal}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              loading={loading}
-              disabled={loading}
-            >
-              Book Appointment
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        </div>
+    </FormDialog>
   );
 });
 

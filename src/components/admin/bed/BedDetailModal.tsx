@@ -1,12 +1,13 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react'
 
 // Import icons file
-import { X, User, Calendar, Clock, FileText, Save, UserPlus, LogOut, Plus, ChevronDown } from 'lucide-react'
+import { X, User, Calendar, Clock, FileText, UserPlus, LogOut, Plus, ChevronDown } from 'lucide-react'
 
 // Import UI components
 import { Button } from '@/components/common/Button'
 import { Label } from '@/components/common/Label'
 import Input from '@/components/common/Input'
+import FormDialog from '@/components/common/dialog/FormDialog'
 
 // Import Types files
 import type { RootState } from '@/app/store'
@@ -246,25 +247,21 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   if (!bed) return null
 
   return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] flex flex-col">
-        {/* Fixed Header */}
-        <div className="flex items-center justify-between p-6 border-b bg-white rounded-t-xl shrink-0">
-          <Label className="text-2xl font-bold text-gray-800">Bed Details</Label>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-
-        {/* Scrollable Content */}
-        <div className="flex-1 overflow-y-auto">
-          <form onSubmit={handleSubmit(handleUpdateStatus)}>
-            <div className="p-6 space-y-6">
+    <>
+      <FormDialog
+        isOpen={true}
+        onClose={onClose}
+        title="Bed Details"
+        maxWidth="max-w-md"
+        showDefaultButtons={true}
+        cancelButtonText="Cancel"
+        saveButtonText="Save Changes"
+        onSave={handleSubmit(handleUpdateStatus)}
+        saveButtonDisabled={shouldDisableSaveChanges}
+        saveButtonLoading={isSubmitting}
+      >
+        <form onSubmit={handleSubmit(handleUpdateStatus)}>
+          <div className="space-y-6">
 
           {/* Bed Info */}
           <div className="space-y-4">
@@ -558,41 +555,16 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
           )}
             </div>
           </form>
-        </div>
+        </FormDialog>
 
-        {/* Fixed Footer */}
-        <div className="flex justify-end space-x-3 p-6 border-t bg-gray-50 rounded-b-xl shrink-0">
-          <Button
-            type="button"
-            onClick={onClose}
-            variant="outline"
-            size="default"
-            className="px-4 py-2"
-          >
-            Cancel
-          </Button>
-          <Button
-            type="submit"
-            onClick={handleSubmit(handleUpdateStatus)}
-            variant="default"
-            size="default"
-            className="px-4 py-2 flex items-center space-x-2"
-            disabled={shouldDisableSaveChanges}
-          >
-            <Save className="w-4 h-4" />
-            <span>Save Changes</span>
-          </Button>
-        </div>
-      </div>
-
-      {/* Add Patient Dialog */}
-      <React.Suspense fallback={null}>
-        <AddPatientDialog
-          isOpen={showAddPatientDialog}
-          onClose={() => setShowAddPatientDialog(false)}
-        />
-      </React.Suspense>
-    </div>
+        {/* Add Patient Dialog */}
+        <React.Suspense fallback={null}>
+          <AddPatientDialog
+            isOpen={showAddPatientDialog}
+            onClose={() => setShowAddPatientDialog(false)}
+          />
+        </React.Suspense>
+    </>
   )
 }
 

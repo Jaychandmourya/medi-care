@@ -1,11 +1,11 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, useRef } from 'react'
 
 // Import toast
 import toast from 'react-hot-toast'
 
 // Import components
-import { Button } from '@/components/common/Button'
 import Input from '@/components/common/Input'
+import FormDialog from '@/components/common/dialog/FormDialog'
 
 // Import types
 import type { AppDispatch } from '@/app/store'
@@ -21,7 +21,6 @@ import { createWard, updateWard } from '@/features/bed/bedThunk'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
-import { X } from 'lucide-react'
 
 // Zod schema for ward validation
 const wardSchema = z.object({
@@ -114,69 +113,59 @@ const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogPr
     onClose()
   }, [onClose])
 
-  if (!isOpen) return null
+  // Use hidden form submission to connect FormDialog's save button with react-hook-form
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const handleSave = useCallback(() => {
+    formRef.current?.requestSubmit()
+  }, [])
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
-        <div className="p-6 border-b border-gray-300 flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-gray-900">
-            {editingWard ? 'Edit Ward' : 'Add New Ward'}
-          </h3>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </Button>
-        </div>
-        <form onSubmit={handleFormSubmit(onSubmit)} className="p-6 space-y-4">
-          <Input
-            id="ward-name"
-            label="Ward Name"
-            type="text"
-            placeholder="e.g., Cardiology Ward"
-            required
-            registration={register('name')}
-            error={errors.name ? { message: errors.name.message } : undefined}
-          />
-          <Input
-            id="ward-floor"
-            label="Floor"
-            type="text"
-            placeholder="e.g., 1, 2, Ground"
-            required
-            registration={register('floor')}
-            error={errors.floor ? { message: errors.floor.message } : undefined}
-          />
-          <div>
-            <Input
-              id="ward-beds"
-              label="Total Beds Capacity"
-              type="number"
-              required
-              registration={register('totalBeds', { valueAsNumber: true })}
-              error={errors.totalBeds ? { message: errors.totalBeds.message } : undefined}
-            />
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              onClick={handleCloseModal}
-              variant="secondary"
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1" disabled={isSubmitting}>
-              {isSubmitting ? 'Saving...' : (editingWard ? 'Update' : 'Create')}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+    <FormDialog
+      isOpen={isOpen}
+      onClose={handleCloseModal}
+      title={editingWard ? 'Edit Ward' : 'Add New Ward'}
+      maxWidth="max-w-md"
+      cancelButtonText="Cancel"
+      saveButtonText={isSubmitting ? 'Saving...' : (editingWard ? 'Update' : 'Create')}
+      saveButtonLoading={isSubmitting}
+      saveButtonDisabled={isSubmitting}
+      onCancel={handleCloseModal}
+      onSave={handleSave}
+    >
+      <form
+        ref={formRef}
+        onSubmit={handleFormSubmit(onSubmit)}
+        className="space-y-4"
+      >
+        <Input
+          id="ward-name"
+          label="Ward Name"
+          type="text"
+          placeholder="e.g., Cardiology Ward"
+          required
+          registration={register('name')}
+          error={errors.name ? { message: errors.name.message } : undefined}
+        />
+        <Input
+          id="ward-floor"
+          label="Floor"
+          type="text"
+          placeholder="e.g., 1, 2, Ground"
+          required
+          registration={register('floor')}
+          error={errors.floor ? { message: errors.floor.message } : undefined}
+        />
+        <Input
+          id="ward-beds"
+          label="Total Beds Capacity"
+          type="number"
+          required
+          registration={register('totalBeds', { valueAsNumber: true })}
+          error={errors.totalBeds ? { message: errors.totalBeds.message } : undefined}
+        />
+      </form>
+    </FormDialog>
   )
 }
 

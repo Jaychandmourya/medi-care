@@ -30,9 +30,9 @@ import {
 
 // Lazy loading components
 const WeeklyCalendar = lazy(() => import('@/components/admin/appointment/WeeklyCalendar'));
-const BookingModal = lazy(() => import('@/components/admin/appointment/dialog/BookingModal'));
-const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/dialog/AppointmentDetailModal'));
-const RescheduleModal = lazy(() => import('@/components/admin/appointment/dialog/RescheduleModal'));
+const BookingModal = lazy(() => import('@/components/admin/appointment/BookingModal'));
+const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/AppointmentDetailModal'));
+const RescheduleModal = lazy(() => import('@/components/admin/appointment/RescheduleModal'));
 
 // Role-based color configuration
 const roleColors = {

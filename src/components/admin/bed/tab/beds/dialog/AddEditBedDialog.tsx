@@ -1,9 +1,8 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import type { Bed, BedStatus, BedFormData } from '@/types/bed/bedType'
-import { Button } from '@/components/common/Button'
 import Input from '@/components/common/Input'
-import { X } from 'lucide-react'
+import FormDialog from '@/components/common/dialog/FormDialog'
 
 // Interface
 interface AddEditBedDialogProps {
@@ -44,9 +43,6 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
   const [formData, setFormData] = useState<BedFormData>(() => getInitialFormData(editingBed, wards))
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [touched, setTouched] = useState(false)
-
-  // Early return if dialog is not open
-  if (!isOpen) return null
 
   const validateField = (name: string, value: string | BedStatus) => {
     try {
@@ -90,108 +86,96 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
     setErrors({})
   }
 
+  const handleSave = () => {
+    // Trigger form validation and submission
+    const formEvent = new Event('submit', { cancelable: true }) as unknown as React.FormEvent
+    handleSubmit(formEvent)
+  }
+
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
-        <div className="p-6 border-b border-gray-300 flex justify-between items-center">
-          <h3 className="text-xl font-semibold text-gray-900">
-            {editingBed ? 'Edit Bed' : 'Add New Bed'}
-          </h3>
-          <Button
-            onClick={onClose}
-            variant="ghost"
-            size="icon"
-            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+    <FormDialog
+      isOpen={isOpen}
+      onClose={onClose}
+      title={editingBed ? 'Edit Bed' : 'Add New Bed'}
+      maxWidth="max-w-md"
+      showDefaultButtons={true}
+      cancelButtonText="Cancel"
+      saveButtonText={editingBed ? 'Update' : 'Create'}
+      onCancel={onClose}
+      onSave={handleSave}
+    >
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <Input
+            id="ward"
+            label="Ward"
+            as="select"
+            value={formData.ward}
+            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+              const value = e.target.value
+              setFormData({ ...formData, ward: value })
+              // Validate field on change if touched
+              if (touched) {
+                validateField('ward', value)
+              }
+            }}
+            error={touched && errors.ward ? { message: errors.ward } : undefined}
+            required
+            disabled={!!editingBed}
           >
-            <X className="w-5 h-5" />
-          </Button>
+            <option value="">Select Ward</option>
+            {wards.map(ward => (
+              <option key={ward.wardId} value={ward.wardId}>{ward.name}</option>
+            ))}
+          </Input>
+          {editingBed && (
+            <p className="text-xs text-gray-500 mt-1">Ward cannot be changed after creation</p>
+          )}
         </div>
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <Input
-              id="ward"
-              label="Ward"
-              as="select"
-              value={formData.ward}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-                const value = e.target.value
-                setFormData({ ...formData, ward: value })
-                // Validate field on change if touched
-                if (touched) {
-                  validateField('ward', value)
-                }
-              }}
-              error={touched && errors.ward ? { message: errors.ward } : undefined}
-              required
-              disabled={!!editingBed}
-            >
-              <option value="">Select Ward</option>
-              {wards.map(ward => (
-                <option key={ward.wardId} value={ward.wardId}>{ward.name}</option>
-              ))}
-            </Input>
-            {editingBed && (
-              <p className="text-xs text-gray-500 mt-1">Ward cannot be changed after creation</p>
-            )}
-          </div>
-          <div>
-            <Input
-              id="status"
-              label="Status"
-              as="select"
-              value={formData.status}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-                const value = e.target.value as BedStatus
-                setFormData({ ...formData, status: value })
-                // Validate field on change if touched
-                if (touched) {
-                  validateField('status', value)
-                }
-              }}
-              error={touched && errors.status ? { message: errors.status } : undefined}
-              required
-            >
-              <option value="available">Available</option>
-              <option value="occupied">Occupied</option>
-              <option value="reserved">Reserved</option>
-              <option value="maintenance">Maintenance</option>
-            </Input>
-          </div>
-          <div>
-            <Input
-              id="notes"
-              label="Notes"
-              as="textarea"
-              value={formData.notes}
-              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-                const value = e.target.value
-                setFormData({ ...formData, notes: value })
-                // Validate field on change if touched
-                if (touched) {
-                  validateField('notes', value)
-                }
-              }}
-              placeholder="Optional notes..."
-              rows={3}
-              error={touched && errors.notes ? { message: errors.notes } : undefined}
-            />
-          </div>
-          <div className="flex gap-3 pt-4">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="secondary"
-              className="flex-1"
-            >
-              Cancel
-            </Button>
-            <Button type="submit" className="flex-1">
-              {editingBed ? 'Update' : 'Create'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+        <div>
+          <Input
+            id="status"
+            label="Status"
+            as="select"
+            value={formData.status}
+            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+              const value = e.target.value as BedStatus
+              setFormData({ ...formData, status: value })
+              // Validate field on change if touched
+              if (touched) {
+                validateField('status', value)
+              }
+            }}
+            error={touched && errors.status ? { message: errors.status } : undefined}
+            required
+          >
+            <option value="available">Available</option>
+            <option value="occupied">Occupied</option>
+            <option value="reserved">Reserved</option>
+            <option value="maintenance">Maintenance</option>
+          </Input>
+        </div>
+        <div>
+          <Input
+            id="notes"
+            label="Notes"
+            as="textarea"
+            value={formData.notes}
+            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+              const value = e.target.value
+              setFormData({ ...formData, notes: value })
+              // Validate field on change if touched
+              if (touched) {
+                validateField('notes', value)
+              }
+            }}
+            placeholder="Optional notes..."
+            rows={3}
+            error={touched && errors.notes ? { message: errors.notes } : undefined}
+          />
+        </div>
+      </form>
+    </FormDialog>
   )
 }
 

@@ -26,8 +26,8 @@ import {
 
 // Import lazy loading
 const WeeklyCalendar = lazy(() => import('@/components/admin/appointment/WeeklyCalendar'));
-const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/dialog/AppointmentDetailModal'));
-const RescheduleModal = lazy(() => import('@/components/admin/appointment/dialog/RescheduleModal'));
+const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/AppointmentDetailModal'));
+const RescheduleModal = lazy(() => import('@/components/admin/appointment/RescheduleModal'));
 
 const DoctorAppointments = () => {
 

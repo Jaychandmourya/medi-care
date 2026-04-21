@@ -2,10 +2,11 @@ import { useState, useCallback, useMemo } from 'react';
 import { format } from 'date-fns';
 
 // Import icons file
-import { X, User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucide-react';
+import { User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucide-react';
 
 // Import UI components
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog';
+import FormDialog from '@/components/common/dialog/FormDialog';
 import { Button } from '@/components/common/Button';
 import { Label } from '@/components/common/Label';
 
@@ -126,38 +127,32 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
     selectedAppointment ? getStatusColor(selectedAppointment.status) : '',
     [selectedAppointment, getStatusColor]);
 
-  // Check if modal should be shown
-  if (!showDetailModal || !selectedAppointment) return null;
-
   return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-3xl max-h-[90vh] overflow-y-auto">
-        {/* Header */}
-        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white p-6 rounded-t-lg">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <Calendar className="w-6 h-6" />
-              <h2 className="text-xl font-semibold">Appointment Details</h2>
+    <>
+      <FormDialog
+        isOpen={showDetailModal && !!selectedAppointment}
+        onClose={handleClose}
+        maxWidth="max-w-3xl"
+        title="Appointment Details"
+        subtitle={`ID: ${appointmentId}`}
+        showDefaultButtons={false}
+        header={
+          <div className="flex items-center space-x-3">
+            <Calendar className="w-6 h-6 text-blue-600" />
+            <div>
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                Appointment Details
+              </h2>
+              <p className="text-gray-500 text-sm mt-1">ID: {appointmentId}</p>
             </div>
-            <Button
-              onClick={handleClose}
-              variant="ghost"
-              size="icon"
-              className="p-2 hover:bg-blue-500 rounded-md transition-colors text-white"
-            >
-              <X className="w-5 h-5" />
-            </Button>
           </div>
-        </div>
-
-        <div className="p-6 space-y-6">
+        }
+      >
+        <div className="space-y-6">
           {/* Status Badge */}
           <div className="flex items-center justify-between">
             <div className={`px-4 py-2 rounded-full border text-sm font-medium ${statusColorClass}`}>
               {statusText}
-            </div>
-            <div className="text-sm text-gray-500">
-              ID: {appointmentId}
             </div>
           </div>
 
@@ -248,11 +243,11 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   <Clock className="w-4 h-4 mr-1" />
                   Time
                 </Label>
-                <p className="font-medium">{selectedAppointment.slot}</p>
+                <p className="font-medium">{selectedAppointment?.slot}</p>
               </div>
               <div>
                 <Label className="text-sm text-gray-600">Duration</Label>
-                <p className="font-medium">{selectedAppointment.duration} minutes</p>
+                <p className="font-medium">{selectedAppointment?.duration} minutes</p>
               </div>
             </div>
           </div>
@@ -267,10 +262,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               <div>
                 <Label className="text-sm text-gray-600 mb-1">Reason for Visit</Label>
                 <p className="bg-white p-3 rounded border border-gray-200">
-                  {selectedAppointment.reason}
+                  {selectedAppointment?.reason}
                 </p>
               </div>
-              {selectedAppointment.notes && (
+              {selectedAppointment?.notes && (
                 <div>
                   <Label className="text-sm text-gray-600 mb-1">Additional Notes</Label>
                   <p className="bg-white p-3 rounded border border-gray-200">
@@ -301,15 +296,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* Scheduled */}
               <Button
                 onClick={() => handleStatusChange('scheduled')}
-                disabled={selectedAppointment.status === 'scheduled'}
+                disabled={selectedAppointment?.status === 'scheduled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'scheduled'
+                  selectedAppointment?.status === 'scheduled'
                     ? 'bg-blue-100 text-blue-800 border-2 border-blue-300 cursor-not-allowed'
                     : 'bg-blue-600 text-white hover:bg-blue-700 border-2 border-blue-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'scheduled' ? 'bg-blue-600' : 'bg-white'
+                  selectedAppointment?.status === 'scheduled' ? 'bg-blue-600' : 'bg-white'
                 }`}></div>
                 Scheduled
               </Button>
@@ -317,15 +312,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* Confirmed */}
               <Button
                 onClick={() => handleStatusChange('confirmed')}
-                disabled={selectedAppointment.status === 'confirmed'}
+                disabled={selectedAppointment?.status === 'confirmed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'confirmed'
+                  selectedAppointment?.status === 'confirmed'
                     ? 'bg-green-100 text-green-800 border-2 border-green-300 cursor-not-allowed'
                     : 'bg-green-600 text-white hover:bg-green-700 border-2 border-green-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'confirmed' ? 'bg-green-600' : 'bg-white'
+                  selectedAppointment?.status === 'confirmed' ? 'bg-green-600' : 'bg-white'
                 }`}></div>
                 Confirmed
               </Button>
@@ -333,15 +328,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* In Progress */}
               <Button
                 onClick={() => handleStatusChange('in_progress')}
-                disabled={selectedAppointment.status === 'in_progress'}
+                disabled={selectedAppointment?.status === 'in_progress'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'in_progress'
+                  selectedAppointment?.status === 'in_progress'
                     ? 'bg-yellow-100 text-yellow-800 border-2 border-yellow-300 cursor-not-allowed'
                     : 'bg-yellow-600 text-white hover:bg-yellow-700 border-2 border-yellow-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'in_progress' ? 'bg-yellow-600 animate-pulse' : 'bg-white'
+                  selectedAppointment?.status === 'in_progress' ? 'bg-yellow-600 animate-pulse' : 'bg-white'
                 }`}></div>
                 In Progress
               </Button>
@@ -349,15 +344,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* Completed */}
               <Button
                 onClick={() => handleStatusChange('completed')}
-                disabled={selectedAppointment.status === 'completed'}
+                disabled={selectedAppointment?.status === 'completed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'completed'
+                  selectedAppointment?.status === 'completed'
                     ? 'bg-gray-100 text-gray-800 border-2 border-gray-300 cursor-not-allowed'
                     : 'bg-gray-600 text-white hover:bg-gray-700 border-2 border-gray-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'completed' ? 'bg-gray-600' : 'bg-white'
+                  selectedAppointment?.status === 'completed' ? 'bg-gray-600' : 'bg-white'
                 }`}></div>
                 Completed
               </Button>
@@ -365,15 +360,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* Cancelled */}
               <Button
                 onClick={() => handleStatusChange('cancelled')}
-                disabled={selectedAppointment.status === 'cancelled'}
+                disabled={selectedAppointment?.status === 'cancelled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'cancelled'
+                  selectedAppointment?.status === 'cancelled'
                     ? 'bg-red-100 text-red-800 border-2 border-red-300 cursor-not-allowed'
                     : 'bg-red-600 text-white hover:bg-red-700 border-2 border-red-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'cancelled' ? 'bg-red-600' : 'bg-white'
+                  selectedAppointment?.status === 'cancelled' ? 'bg-red-600' : 'bg-white'
                 }`}></div>
                 Cancelled
               </Button>
@@ -381,15 +376,15 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               {/* No Show */}
               <Button
                 onClick={() => handleStatusChange('no_show')}
-                disabled={selectedAppointment.status === 'no_show'}
+                disabled={selectedAppointment?.status === 'no_show'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
-                  selectedAppointment.status === 'no_show'
+                  selectedAppointment?.status === 'no_show'
                     ? 'bg-orange-100 text-orange-800 border-2 border-orange-300 cursor-not-allowed'
                     : 'bg-orange-600 text-white hover:bg-orange-700 border-2 border-orange-600'
                 }`}
               >
                 <div className={`w-2 h-2 rounded-full mr-2 ${
-                  selectedAppointment.status === 'no_show' ? 'bg-orange-600' : 'bg-white'
+                  selectedAppointment?.status === 'no_show' ? 'bg-orange-600' : 'bg-white'
                 }`}></div>
                 No Show
               </Button>
@@ -406,18 +401,8 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
               </Button>
             </div>
           </div>
-
-          {/* Close Button */}
-          <div className="flex justify-end pt-4 border-t border-gray-200">
-            <Button
-              onClick={handleClose}
-              className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-            >
-              Close
-            </Button>
-          </div>
         </div>
-      </div>
+      </FormDialog>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog
@@ -428,7 +413,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
         onConfirm={confirmationDialog.onConfirm}
         onCancel={handleConfirmationCancel}
       />
-    </div>
+    </>
   );
 };
 

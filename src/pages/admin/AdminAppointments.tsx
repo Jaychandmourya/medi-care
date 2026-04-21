@@ -34,9 +34,9 @@ import CalendarSkeleton from '@/components/admin/appointment/CalendarSkeleton';
 
 // Lazy loaded components
 const WeeklyCalendar = lazy(() => import('@/components/admin/appointment/WeeklyCalendar'));
-const BookingModal = lazy(() => import('@/components/admin/appointment/dialog/BookingModal'));
-const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/dialog/AppointmentDetailModal'));
-const RescheduleModal = lazy(() => import('@/components/admin/appointment/dialog/RescheduleModal'));
+const BookingModal = lazy(() => import('@/components/admin/appointment/BookingModal'));
+const AppointmentDetailModal = lazy(() => import('@/components/admin/appointment/AppointmentDetailModal'));
+const RescheduleModal = lazy(() => import('@/components/admin/appointment/RescheduleModal'));
 
 const AdminAppointments = () => {
 
