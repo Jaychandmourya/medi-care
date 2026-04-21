@@ -26,8 +26,6 @@ const authSlice = createSlice({
   reducers: {
     login: (state, action: PayloadAction<LoginPayload>) => {
       const { role, name, id, avatar, doctorId } = action.payload
-      console.log("role111", role)
-
       const userData: User = {
         role,
         name,

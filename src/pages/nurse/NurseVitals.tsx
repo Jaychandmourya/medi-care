@@ -192,17 +192,16 @@ const NurseVitals = () => {
           />
         </Suspense>
 
-        {showForm && (
-          <Suspense fallback={<div className="text-center py-8">Loading form...</div>}>
-            <AddEditVitalsDialog
-              vitals={editingVitals}
-              patients={patients}
-              existingVitals={vitals}
-              onSubmit={handleFormSubmit}
-              onCancel={handleFormCancel}
-            />
-          </Suspense>
-        )}
+        <Suspense fallback={<div className="text-center py-8">Loading form...</div>}>
+          <AddEditVitalsDialog
+            isOpen={showForm}
+            vitals={editingVitals}
+            patients={patients}
+            existingVitals={vitals}
+            onSubmit={handleFormSubmit}
+            onClose={handleFormCancel}
+          />
+        </Suspense>
       </div>
     </div>
   );

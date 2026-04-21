@@ -150,10 +150,6 @@ export default function InternalDoctorList() {
     setActiveDropdown(null)
   }, [])
 
-  const toggleDropdown = useCallback((doctorId: string) => {
-    setActiveDropdown(activeDropdown === doctorId ? null : doctorId)
-  }, [activeDropdown])
-
   const handleSaveEdit = useCallback(async (data: DoctorFormData, shouldCloseDialog: boolean = true): Promise<void> => {
     if (!editingDoctor?.id) return
     try {
@@ -211,7 +207,7 @@ export default function InternalDoctorList() {
   }, [])
 
   return (
-    <div className="min-h-screen lg:p-6">
+    <div className="min-h-screen">
       <div className="space-y-6">
 
         {/* Header */}
@@ -340,56 +336,68 @@ export default function InternalDoctorList() {
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <div className="relative">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => doctor.id && toggleDropdown(doctor.id)}
-                            className="text-gray-600 hover:text-gray-800 p-2"
-                          >
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
+                          <div className="el-dropdown relative ml-3">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                if (doctor.id) {
+                                  setActiveDropdown(activeDropdown === doctor.id ? null : doctor.id)
+                                }
+                              }}
+                            >
+                              <span className="sr-only">Open actions menu</span>
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
 
-                          {activeDropdown === doctor.id && (
-                            <>
-                              {/* Backdrop to close dropdown when clicking outside */}
-                              <div
-                                className="fixed inset-0 z-10"
-                                onClick={() => setActiveDropdown(null)}
-                              />
-                              {/* Dropdown menu */}
-                              <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-20 animate-in slide-in-from-right-2 duration-200">
-                                <div className="py-2">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleViewDoctor(doctor)}
-                                    className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
-                                  >
-                                    <Eye className="w-4 h-4 mr-3 text-gray-400" />
-                                    View Details
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleEditDoctor(doctor)}
-                                    className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
-                                  >
-                                    <Edit className="w-4 h-4 mr-3 text-blue-400" />
-                                    Edit Doctor
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => doctor.id && handleRemoveDoctor(doctor.id, formatFullName(doctor))}
-                                    className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mx-1"
-                                  >
-                                    <Trash2 className="w-4 h-4 mr-3 text-red-400" />
-                                    Delete Doctor
-                                  </Button>
-                                </div>
+                            {activeDropdown === doctor.id && (
+                              <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setActiveDropdown(null)
+                                    handleViewDoctor(doctor)
+                                  }}
+                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
+                                >
+                                  <Eye className="w-4 h-4" />
+                                  View Details
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setActiveDropdown(null)
+                                    handleEditDoctor(doctor)
+                                  }}
+                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
+                                >
+                                  <Edit className="w-4 h-4" />
+                                  Edit Doctor
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setActiveDropdown(null)
+                                    if (doctor.id) {
+                                      handleRemoveDoctor(doctor.id, formatFullName(doctor))
+                                    }
+                                  }}
+                                  className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete Doctor
+                                </Button>
                               </div>
-                            </>
-                          )}
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
