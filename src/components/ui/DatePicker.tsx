@@ -9,6 +9,7 @@ interface DatePickerProps {
   className?: string;
   disablePastDates?: boolean;
   disableFutureDates?: boolean;
+  minDate?: string;
   onBlur?: () => void;
 }
 
@@ -19,6 +20,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
   className = '',
   disablePastDates = false,
   disableFutureDates = false,
+  minDate,
   onBlur
 }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -65,6 +67,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
       today.setHours(0, 0, 0, 0);
       if (date > today) {
         return; // Don't allow selection of future dates
+      }
+    }
+
+    // Check if minDate should be enforced
+    if (minDate) {
+      const minDateObj = new Date(minDate);
+      minDateObj.setHours(0, 0, 0, 0);
+      if (date < minDateObj) {
+        return; // Don't allow selection of dates before minDate
       }
     }
 
@@ -195,14 +206,15 @@ const DatePicker: React.FC<DatePickerProps> = ({
             const today = new Date(new Date().setHours(0, 0, 0, 0));
             const isPastDate = disablePastDates && day < today;
             const isFutureDate = disableFutureDates && day > today;
-            const isDisabled = isPastDate || isFutureDate;
+            const isBeforeMinDate = minDate && day < new Date(new Date(minDate).setHours(0, 0, 0, 0));
+            const isDisabled = isPastDate || isFutureDate || isBeforeMinDate;
 
             return (
               <button
                 key={day.toISOString()}
                 type="button"
                 onClick={() => handleDateSelect(day)}
-                disabled={isDisabled}
+                disabled={!!isDisabled}
                 className={`
                   p-2 text-sm rounded transition-colors
                   ${isSelected ? 'bg-blue-500 text-white hover:bg-blue-600' : ''}
@@ -230,15 +242,9 @@ const DatePicker: React.FC<DatePickerProps> = ({
           onFocus={() => setIsOpen(true)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className={`w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm ${className}`}
+          className={`${className} w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300`}
         />
-        <button
-          type="button"
-          onClick={() => setIsOpen(!isOpen)}
-          className="absolute right-2 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-        >
-          <Calendar className="w-4 h-4" />
-        </button>
+        <Calendar className="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
       </div>
       {isOpen && renderCalendar()}
     </div>

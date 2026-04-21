@@ -133,6 +133,12 @@ export const appointmentServices = {
 
       console.log('Booked slots for doctor:', doctorId, bookedSlots);
 
+      // Check if the selected date is today
+      const today = new Date();
+      const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
+      const currentTimeStr = format(today, 'HH:mm');
+      console.log('Is today:', isToday, 'Current time:', currentTimeStr);
+
       // Generate time slots based on doctor's schedule
       const allSlots: string[] = [];
       const startTime = parse(doctorSchedule.startTime, 'HH:mm', date);
@@ -152,6 +158,12 @@ export const appointmentServices = {
             currentTime = addMinutes(currentTime, slotDuration);
             continue;
           }
+        }
+
+        // For today, filter out slots that have already passed
+        if (isToday && slotTime <= currentTimeStr) {
+          currentTime = addMinutes(currentTime, slotDuration);
+          continue;
         }
 
         if (!bookedSlots.includes(slotTime)) {

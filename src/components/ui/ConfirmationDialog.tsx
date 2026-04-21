@@ -79,12 +79,14 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
 
         {/* Actions */}
         <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
-          <Button
-            variant="outline"
-            onClick={onCancel}
-          >
-            {cancelText}
-          </Button>
+          {cancelText && (
+            <Button
+              variant="outline"
+              onClick={onCancel}
+            >
+              {cancelText}
+            </Button>
+          )}
           <Button
             variant={type === 'danger' ? 'destructive' : type === 'info' ? 'default' : 'default'}
             onClick={onConfirm}

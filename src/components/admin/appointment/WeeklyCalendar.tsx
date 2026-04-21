@@ -12,6 +12,7 @@ import type { WeeklyCalendarProps, Appointment } from '@/types/appointment/appoi
 import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
+import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
@@ -33,6 +34,8 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   const [draggedAppointment, setDraggedAppointment] = useState<Appointment | null>(null);
   const [hoveredSlot, setHoveredSlot] = useState<{ date: string; time: string; appointmentId: string } | null>(null);
   const [dragOverSlot, setDragOverSlot] = useState<{ date: string; time: string } | null>(null);
+  const [showPastDateDialog, setShowPastDateDialog] = useState(false);
+  const [showPastTimeDialog, setShowPastTimeDialog] = useState(false);
 
   // Sync currentWeek with Redux selectedWeek
   useEffect(() => {
@@ -70,6 +73,33 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   const handleSlotDrop = useCallback((e: React.DragEvent, newDate: string, newTime: string) => {
     e.preventDefault();
     if (draggedAppointment) {
+      // Check if the target date is in the past
+      const targetDate = parse(newDate, 'yyyy-MM-dd', new Date());
+      const today = new Date();
+      today.setHours(0, 0, 0, 0); // Set to start of day for accurate comparison
+
+      if (isBefore(targetDate, today)) {
+        setShowPastDateDialog(true);
+        return;
+      }
+
+      // Check if the target is today and the time slot is in the past
+      const now = new Date();
+      const todayStr = format(now, 'yyyy-MM-dd');
+
+      if (newDate === todayStr) {
+        // Parse the target time
+        const [targetHours, targetMinutes] = newTime.split(':').map(Number);
+        const targetTime = new Date();
+        targetTime.setHours(targetHours, targetMinutes, 0, 0);
+
+        // If target time is before current time, prevent the drop
+        if (isBefore(targetTime, now)) {
+          setShowPastTimeDialog(true);
+          return;
+        }
+      }
+
       const hasConflict = appointments.some(
         (apt) => apt.id !== draggedAppointment.id &&
                 apt.doctorId === draggedAppointment.doctorId &&
@@ -89,6 +119,34 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
     setDraggedAppointment(null);
     setDragOverSlot(null);
   }, [draggedAppointment, appointments, onUpdateAppointment]);
+
+  // Handle dialog confirmation for past date
+  const handlePastDateDialogConfirm = useCallback(() => {
+    setShowPastDateDialog(false);
+    setDraggedAppointment(null);
+    setDragOverSlot(null);
+  }, []);
+
+  // Handle dialog cancellation for past date
+  const handlePastDateDialogCancel = useCallback(() => {
+    setShowPastDateDialog(false);
+    setDraggedAppointment(null);
+    setDragOverSlot(null);
+  }, []);
+
+  // Handle dialog confirmation for past time
+  const handlePastTimeDialogConfirm = useCallback(() => {
+    setShowPastTimeDialog(false);
+    setDraggedAppointment(null);
+    setDragOverSlot(null);
+  }, []);
+
+  // Handle dialog cancellation for past time
+  const handlePastTimeDialogCancel = useCallback(() => {
+    setShowPastTimeDialog(false);
+    setDraggedAppointment(null);
+    setDragOverSlot(null);
+  }, []);
 
   // Helper functions
   const generateTimeSlotsForDoctor = useCallback((doctorId: string) => {
@@ -244,6 +302,30 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
           <p className="text-gray-600 text-sm">Loading appointments...</p>
         </div>
       </div>
+
+      {/* Past Date Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showPastDateDialog}
+        title="Cannot Move to Past Date"
+        message="Appointments cannot be moved to past dates. Please select today's date or a future date."
+        confirmText="OK"
+        cancelText=""
+        type="warning"
+        onConfirm={handlePastDateDialogConfirm}
+        onCancel={handlePastDateDialogCancel}
+      />
+
+      {/* Past Time Confirmation Dialog */}
+      <ConfirmationDialog
+        isOpen={showPastTimeDialog}
+        title="Cannot Move to Past Time"
+        message="Appointments cannot be moved to earlier time slots on the same day. Please select a current or future time slot."
+        confirmText="OK"
+        cancelText=""
+        type="warning"
+        onConfirm={handlePastTimeDialogConfirm}
+        onCancel={handlePastTimeDialogCancel}
+      />
     </div>
   );
 });

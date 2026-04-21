@@ -128,12 +128,6 @@ export default function AddPatientDialog({ isOpen, onClose, editData, titleClass
 
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto p-6 pt-4">
-          <div className={`${roleColors.light} rounded-xl p-4 mb-6`}>
-            <p className={`${roleColors.text} text-sm`}>
-              <span className="font-semibold">Required fields:</span> All fields marked with <span className="text-red-500">*</span> are required to proceed.
-            </p>
-          </div>
-
           {/* Wizard */}
           <PatientFormWizard
             ref={wizardRef}
@@ -154,6 +148,7 @@ export default function AddPatientDialog({ isOpen, onClose, editData, titleClass
               onClick={handleBack}
               variant="secondary"
               size="default"
+              disabled={ currentStep === 1}
             >
               ← Back
             </Button>

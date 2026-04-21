@@ -299,12 +299,15 @@ export default function PatientList() {
                     onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, start: value }))}
                     placeholder="Start date"
                     className="flex-1"
+                    disableFutureDates
                   />
                   <DatePicker
                     value={registrationDateRange.end}
                     onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, end: value }))}
                     placeholder="End date"
                     className="flex-1"
+                    disableFutureDates
+                    minDate={registrationDateRange.start}
                   />
                 </div>
               </div>
