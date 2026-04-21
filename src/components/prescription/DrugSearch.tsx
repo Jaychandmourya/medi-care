@@ -4,7 +4,7 @@ import { Search, Pill, Loader2 } from 'lucide-react'
 import { setSelectedDrug, searchDrugs } from '@/features/prescription/prescriptionSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Drug } from '@/types/prescription/prescriptionType'
-import Input from '@/components/ui/Input'
+import Input from '@/components/common/Input'
 
 const DrugSearch = () => {
 

@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { Country, State, City } from 'country-state-city'
-import { Label } from '@/components/ui/Label'
+import { Label } from '@/components/common/Label'
 
 interface CountryStateCitySelectorProps {
   selectedCountry: string
@@ -58,7 +58,7 @@ const CountryStateCitySelector = ({
         <select
           value={selectedCountry}
           onChange={handleCountryChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200"
         >
           <option value="">Select Country</option>
           {countries.map((country) => (

@@ -2,7 +2,7 @@ import { memo } from 'react'
 import { User, X, Building2, Plus, CheckCircle2, Briefcase, MapPin, Phone } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import Types files
 import type { NPIResult } from '@/types/doctors/NpiType'

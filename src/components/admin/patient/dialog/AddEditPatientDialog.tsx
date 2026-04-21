@@ -1,8 +1,8 @@
 import { useState, useCallback, useRef } from "react";
 
 // Import UI components
-import { Button } from "@/components/ui/Button";
-import ConfirmationDialog from "@/components/ui/ConfirmationDialog";
+import { Button } from "@/components/common/Button";
+import ConfirmationDialog from "@/components/common/dialog/ConfirmationDialog";
 
 // Import Types files
 import type { AddPatientDialogProps } from '@/types/patients/patientType'

@@ -12,7 +12,7 @@ import type { WeeklyCalendarProps, Appointment } from '@/types/appointment/appoi
 import CalendarHeader from './CalendarHeader';
 import DayHeaders from './DayHeaders';
 import TimeSlotColumn from './TimeSlotColumn';
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog';
 
 const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
   doctorId,
@@ -249,7 +249,7 @@ const WeeklyCalendar: React.FC<WeeklyCalendarProps> = React.memo(({
           />
 
           {/* Time Slots */}
-          <div className="max-h-150 overflow-y-auto">
+          <div className="max-h-150">
             {timeSlots.map((time, timeIndex) => (
               <div key={time} className={`grid grid-cols-8 border-b border-gray-200 transition-all duration-200 ${
                 timeIndex % 2 === 0 ? 'bg-white' : 'bg-gray-50'

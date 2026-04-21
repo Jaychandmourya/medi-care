@@ -1,8 +1,8 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
+import { Button } from '@/components/common/Button'
+import { Label } from '@/components/common/Label'
 
 // Import Types files
 import type { RootState } from '@/app/store'

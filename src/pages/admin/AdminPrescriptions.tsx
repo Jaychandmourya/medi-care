@@ -32,7 +32,7 @@ const AdminPrescriptions = () => {
       <div className="">
         {/* Header */}
         <div className="bg-white mb-8 p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Prescription Management</h1>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">Prescription Management</h1>
           <p className="text-gray-600">Create and manage digital prescriptions with OpenFDA integration</p>
         </div>
 

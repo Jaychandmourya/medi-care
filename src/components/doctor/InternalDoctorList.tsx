@@ -5,7 +5,7 @@ import toast from 'react-hot-toast'
 import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Building, Plus } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import Types files
 import { type AppDispatch, type RootState } from '@/app/store'
@@ -21,7 +21,7 @@ import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor, addLocalDoctor
 // Lazy loaded components
 const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorAddEditFormDialog'))
 const DoctorViewModal = lazy(() => import('@/components/doctor/dialog/DoctorViewModal'))
-const DeleteDialog = lazy(() => import('@/components/ui/dialog/DeleteDialog'))
+const ConfirmationDialog = lazy(() => import('@/components/common/dialog/ConfirmationDialog'))
 
 export default function InternalDoctorList() {
   const dispatch = useDispatch<AppDispatch>()
@@ -461,13 +461,15 @@ export default function InternalDoctorList() {
 
         {/* Delete Confirmation Dialog */}
         <Suspense fallback={<div>Loading...</div>}>
-          <DeleteDialog
-            isOpenDelete={deleteDialog.isOpen}
-            onClose={handleCloseDeleteDialog}
+          <ConfirmationDialog
+            isOpen={deleteDialog.isOpen}
+            title="Delete Doctor"
+            message={`Are you sure you want to delete ${deleteDialog.doctorName}? This action cannot be undone.`}
+            confirmText="Delete"
+            cancelText="Cancel"
+            type="danger"
             onConfirm={handleConfirmDelete}
-            deleteTitle="Delete Doctor"
-            description={`Are you sure you want to delete ${deleteDialog.doctorName}? This action cannot be undone.`}
-            itemName={deleteDialog.doctorName}
+            onCancel={handleCloseDeleteDialog}
           />
         </Suspense>
       </div>

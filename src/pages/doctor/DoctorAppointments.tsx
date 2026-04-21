@@ -123,7 +123,7 @@ const DoctorAppointments = () => {
       <div className="mb-8 bg-white rounded-lg p-6 shadow-sm">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">My Appointments</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">My Appointments</h1>
             <p className="text-gray-600">Manage and view your upcoming appointments</p>
           </div>
           <div className="flex items-center space-x-2">

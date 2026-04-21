@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/common/Button';
 import type { RoleColors } from '@/types/appointment/appointmentType';
 
 interface CalendarHeaderProps {

@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import Types files
 import type { RootState, AppDispatch } from '@/app/store'
@@ -162,7 +162,7 @@ const NurseDashboard = () => {
   return (
     <div>
       <div className="mb-8 bg-white p-6 rounded-lg shadow-md">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Nurse Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-2">Nurse Dashboard</h1>
         <p className="text-gray-600">Monitor ward status and patient vitals</p>
       </div>
 

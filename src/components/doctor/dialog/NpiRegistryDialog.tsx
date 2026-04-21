@@ -1,9 +1,9 @@
 import { useState } from 'react'
 import { X } from 'lucide-react'
 
-import { Button } from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { Label } from '@/components/ui/Label'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
+import { Label } from '@/components/common/Label'
 
 import type { NPIResult } from '@/types/doctors/NpiType'
 import type{ AutocompleteDoctor } from '@/types/doctors/doctorType'

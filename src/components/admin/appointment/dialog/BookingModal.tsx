@@ -6,10 +6,10 @@ import toast from 'react-hot-toast';
 import { X, Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
 
 // Import UI components
-import { Button } from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
-import DatePicker from '@/components/ui/DatePicker';
-import { Label } from '@/components/ui/Label';
+import { Button } from '@/components/common/Button';
+import Input from '@/components/common/Input';
+import DatePicker from '@/components/common/DatePicker';
+import { Label } from '@/components/common/Label';
 
 // Import form controller, zod, and validation
 import { useForm, Controller } from 'react-hook-form';

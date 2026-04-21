@@ -5,9 +5,9 @@ import { format } from 'date-fns';
 import { X, User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucide-react';
 
 // Import UI components
-import ConfirmationDialog from '@/components/ui/ConfirmationDialog';
-import { Button } from '@/components/ui/Button';
-import { Label } from '@/components/ui/Label';
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog';
+import { Button } from '@/components/common/Button';
+import { Label } from '@/components/common/Label';
 
 // Import Types files
 import type { RootState } from "@/app/store";

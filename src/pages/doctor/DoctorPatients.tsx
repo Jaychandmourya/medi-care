@@ -5,10 +5,10 @@ import toast from 'react-hot-toast'
 import { Search, Filter, Edit, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
-import Input from '@/components/ui/Input'
-import ThreeDotMenu from '@/components/ui/ThreeDotMenu'
+import { Button } from '@/components/common/Button'
+import { Label } from '@/components/common/Label'
+import Input from '@/components/common/Input'
+import ThreeDotMenu from '@/components/common/ThreeDotMenu'
 
 // Import utile file
 import { ROLE_THEME } from '@/utils/theme'
@@ -200,7 +200,7 @@ const DoctorPatients = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-              <h1 className={`text-3xl font-bold ${themeColors.text}`}>
+              <h1 className={`text-2xl font-bold ${themeColors.text}`}>
                 My Patients
               </h1>
               <p className="text-gray-600 mt-1">Manage your patient records</p>

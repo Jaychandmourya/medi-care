@@ -4,7 +4,7 @@ import { useEffect, useState, useCallback, Suspense, lazy } from 'react'
 import { LayoutGrid, Building2, BedDouble } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import Types files
 import type { RootState, AppDispatch } from '@/app/store'

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 import { type AppDispatch } from '@/app/store'
 import { type DoctorSchedule } from '@/features/db/dexie'

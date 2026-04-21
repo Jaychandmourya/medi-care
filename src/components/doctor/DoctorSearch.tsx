@@ -3,9 +3,9 @@ import toast from 'react-hot-toast'
 import { Search, X } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
-import { Label } from '@/components/ui/Label'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
+import { Label } from '@/components/common/Label'
 // Lazy load heavy components
 const CountryStateCitySelector = lazy(() => import('@/components/doctor/CountryStateCitySelector'))
 

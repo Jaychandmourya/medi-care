@@ -9,8 +9,8 @@ import type { AppDispatch, RootState } from '@/app/store'
 import type { Medicine } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import Input from '@/components/common/Input'
+import { Button } from '@/components/common/Button'
 
 // Import form, validation and zod
 import { useForm } from 'react-hook-form'

@@ -59,7 +59,6 @@ export default function BedOccupancyChart({
             outerRadius={70}
             paddingAngle={2}
             cornerRadius={8}
-            label={({ name, value }) => `${name}: ${value}`}
             labelLine={false}
           />
           <Tooltip

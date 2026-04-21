@@ -4,9 +4,9 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { X, User, Calendar, Clock, FileText, Save, UserPlus, LogOut, Plus, ChevronDown } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
-import Input from '@/components/ui/Input'
+import { Button } from '@/components/common/Button'
+import { Label } from '@/components/common/Label'
+import Input from '@/components/common/Input'
 
 // Import Types files
 import type { RootState } from '@/app/store'
@@ -331,7 +331,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
             />
           </div>
             {/* Patient Actions */}
-          {((bed?.status === 'available') || (watchedStatus === 'available' || watchedStatus === 'occupied')) && (
+          {((bed?.status === 'available') && (watchedStatus === 'available' || watchedStatus === 'occupied')) && (
               <div className="space-y-3">
               <div className='flex justify-between items-center'>
                 <Label className="block text-sm font-medium text-gray-700">
@@ -340,7 +340,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                   </Label>
                   <button
                   onClick={() => setShowAddPatientDialog(true)}
-                  className="flex items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium"
+                  className="flex cursor-pointer items-center gap-1 px-3 py-1.5 text-sm bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 transition-colors duration-200 font-medium"
                 >
                   <Plus className="w-3.5 h-3.5" /> Add New Patient
                   </button>

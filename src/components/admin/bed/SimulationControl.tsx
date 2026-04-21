@@ -1,6 +1,6 @@
 import React from 'react'
 import { Play, Pause, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 interface SimulationControlProps {
   isEnabled: boolean

@@ -1,10 +1,11 @@
 import { useState, useCallback } from 'react'
 
 // Import icons file
-import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle, MoreVertical } from 'lucide-react'
 
 // Import components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
 
 // Import types
 import type { RootState, AppDispatch } from '@/app/store'
@@ -18,7 +19,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import { deleteWard } from '@/features/bed/bedThunk'
 
 // Import components
-import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
 import AddEditWardDialog from './dialog/AddEditWardDialog'
 
 // Import toast
@@ -38,6 +39,7 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [editingWard, setEditingWard] = useState<Ward | null>(null)
   const [wardToDelete, setWardToDelete] = useState<Ward | null>(null)
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
 
   const filteredWards = wards.filter(ward =>
     ward.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -51,6 +53,13 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const getOccupiedCountForWard = useCallback((wardId: string) => {
     return beds.filter(bed => bed.ward === wardId && bed.status === 'occupied').length
   }, [beds])
+
+  const truncateWardName = useCallback((name: string, maxLength: number = 15) => {
+    if (!name || name.length <= maxLength) {
+      return name
+    }
+    return name.substring(0, maxLength) + '...'
+  }, [])
 
   const handleOpenModal = useCallback((ward?: Ward) => {
     if (ward) {
@@ -106,16 +115,15 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
 
         {/* Search */}
         <div className="mt-4 sm:mt-6">
-          <div className="relative">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search wards..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            />
-          </div>
+          <Input
+            type="text"
+            placeholder="Search wards..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            icon={Search}
+            iconPosition="left"
+            className="text-sm border-gray-200"
+          />
         </div>
       </div>
 
@@ -150,33 +158,56 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
                       <Building2 className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="font-semibold text-gray-900">{ward.name}</h3>
+                      <h3 className="font-semibold text-gray-900">
+                        {truncateWardName(ward.name)}
+                      </h3>
                       <p className="text-xs sm:text-sm text-gray-500">Floor {ward.floor}</p>
                     </div>
                   </div>
-                  <div className="flex gap-1">
+                  <div className="el-dropdown relative ml-3">
                     <Button
                       variant="ghost"
                       size="icon"
+                      className="w-8 h-8"
                       onClick={(e) => {
                         e.stopPropagation()
-                        handleOpenModal(ward)
+                        setOpenDropdownId(openDropdownId === ward.wardId ? null : ward.wardId)
                       }}
-                      className="text-blue-600 hover:bg-blue-50"
                     >
-                      <Edit2 className="w-4 h-4" />
+                      <span className="sr-only">Open actions menu</span>
+                      <MoreVertical className="w-4 h-4" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteClick(ward)
-                      }}
-                      className="text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
+
+                    {openDropdownId === ward.wardId && (
+                      <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenDropdownId(null)
+                            handleOpenModal(ward)
+                          }}
+                          className="w-full justify-start text-gray-700 gap-1 rounded-md"
+                        >
+                          <Edit2 className="w-4 h-4" />
+                          Edit
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setOpenDropdownId(null)
+                            handleDeleteClick(ward)
+                          }}
+                          className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                          Delete
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -254,13 +285,15 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
       />
 
       {/* Delete Confirmation */}
-      <DeleteDialog
-        isOpenDelete={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        deleteTitle="Delete Ward"
-        itemName={wardToDelete?.name}
-        description={`Are you sure you want to delete this ward? This will also delete ${getBedCountForWard(wardToDelete?.wardId || '')} bed(s) in this ward. This action cannot be undone.`}
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Ward"
+        message={`Are you sure you want to delete ${wardToDelete?.name}? This will also delete ${getBedCountForWard(wardToDelete?.wardId || '')} bed(s) in this ward. This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
         onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteDialogOpen(false)}
       />
     </div>
   )

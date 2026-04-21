@@ -5,12 +5,12 @@ import toast from "react-hot-toast";
 import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight, Eye } from "lucide-react";
 
 // Import UI components
-import DeleteDialog from "@/components/ui/dialog/DeleteDialog";
-import { Button } from "@/components/ui/Button";
-import { Label } from "@/components/ui/Label";
-import Input from "@/components/ui/Input";
-import DatePicker from "@/components/ui/DatePicker";
-import ThreeDotMenu from "@/components/ui/ThreeDotMenu";
+import ConfirmationDialog from "@/components/common/dialog/ConfirmationDialog";
+import { Button } from "@/components/common/Button";
+import { Label } from "@/components/common/Label";
+import Input from "@/components/common/Input";
+import DatePicker from "@/components/common/DatePicker";
+import ThreeDotMenu from "@/components/common/ThreeDotMenu";
 
 // Import Types files
 import type { RootState } from "@/app/store";
@@ -531,16 +531,18 @@ export default function PatientList() {
         </Suspense>
 
         {/* Delete Confirmation Dialog */}
-        <DeleteDialog
-          isOpenDelete={isOpenDelete}
-          onClose={() => {
+        <ConfirmationDialog
+          isOpen={isOpenDelete}
+          title="Delete Patient"
+          message={`Are you sure you want to delete ${selectedPatient?.name}? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+          onConfirm={confirmDelete}
+          onCancel={() => {
             setIsOpenDelete(false);
             setSelectedPatient(null);
           }}
-          deleteTitle={`Delete Patient`}
-          deleteTitleClass={themeColors.text}
-          confirmButtonClass={themeColors.button}
-          onConfirm={confirmDelete}
         />
 
         {/* Patients View Dialog */}

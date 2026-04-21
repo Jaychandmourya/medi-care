@@ -5,9 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { X, Calendar, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
-import { Button } from '@/components/ui/Button';
-import { Label } from '@/components/ui/Label';
-import  DatePicker from '@/components/ui/DatePicker';
+import { Button } from '@/components/common/Button';
+import { Label } from '@/components/common/Label';
+import  DatePicker from '@/components/common/DatePicker';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { updateAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
 import { rescheduleSchema } from '@/schema/appointmentSchema'

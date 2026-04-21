@@ -1,7 +1,7 @@
 import React from 'react';
 import type { UseFormRegisterReturn, FieldError } from 'react-hook-form';
 import type { LucideIcon } from 'lucide-react';
-import { Label } from '@/components/ui/Label';
+import { Label } from '@/components/common/Label';
 
 export interface InputProps {
   id?: string;

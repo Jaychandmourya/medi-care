@@ -1,13 +1,14 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 import toast from 'react-hot-toast'
 import type { RootState, AppDispatch } from '@/app/store'
 import { createBed, updateBed, deleteBed } from '@/features/bed/bedThunk'
 import type { Bed, BedStatus } from '@/types/bed/bedType'
-import { Button } from '@/components/ui/Button'
-import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
 import AddEditBedDialog from './dialog/AddEditBedDialog'
-import { Plus, Search, Edit2, Trash2, Bed as BedIcon, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Bed as BedIcon, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
 
 interface BedFormData {
   ward: string
@@ -34,6 +35,7 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
   const [editingBed, setEditingBed] = useState<Bed | null>(null)
   const [bedToDelete, setBedToDelete] = useState<Bed | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const ITEMS_PER_PAGE = 10
 
   // Filter beds based on search, ward, and status
@@ -138,6 +140,19 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
     }
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element
+      if (!target.closest('.el-dropdown')) {
+        setOpenDropdownId(null)
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [])
+
   return (
     <div className="space-y-6">
       {/* Header & Filters */}
@@ -158,38 +173,38 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
 
         {/* Filters */}
         <div className="mt-4 sm:mt-6 flex flex-col gap-3 sm:gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
-            <input
-              type="text"
-              placeholder="Search beds..."
-              value={searchQuery}
-              onChange={(e) => handleSearchChange(e.target.value)}
-              className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
-            />
-          </div>
+          <Input
+            type="text"
+            placeholder="Search beds..."
+            value={searchQuery}
+            onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => handleSearchChange(e.target.value)}
+            icon={Search}
+            className="flex-1"
+          />
           <div className="flex flex-col sm:flex-row gap-3">
-            <select
+            <Input
+              as="select"
               value={filterWard}
-              onChange={(e) => handleFilterWardChange(e.target.value)}
-              className="w-full sm:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => handleFilterWardChange(e.target.value)}
+              className="w-full sm:w-auto"
             >
               <option value="all">All Wards</option>
               {wards.map(ward => (
                 <option key={ward.wardId} value={ward.wardId}>{ward.name}</option>
               ))}
-            </select>
-            <select
+            </Input>
+            <Input
+              as="select"
               value={filterStatus}
-              onChange={(e) => handleFilterStatusChange(e.target.value)}
-              className="w-full sm:w-auto px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-white text-sm"
+              onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => handleFilterStatusChange(e.target.value)}
+              className="w-full sm:w-auto"
             >
               <option value="all">All Status</option>
               <option value="available">Available</option>
               <option value="occupied">Occupied</option>
               <option value="reserved">Reserved</option>
               <option value="maintenance">Maintenance</option>
-            </select>
+            </Input>
           </div>
         </div>
       </div>
@@ -246,29 +261,52 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
                         {bed.admittedAt ? new Date(bed.admittedAt).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-4 lg:px-6 py-4 text-right whitespace-nowrap">
-                        <div className="flex items-center justify-end gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleOpenModal(bed)
-                            }}
-                            className="text-blue-600 hover:text-blue-700 hover:bg-blue-50"
-                          >
-                            <Edit2 className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              handleDeleteClick(bed)
-                            }}
-                            className="text-red-600 hover:text-red-700 hover:bg-red-50"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
+                        <div className="relative">
+                          <div className="el-dropdown relative ml-3">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="w-8 h-8"
+                              onClick={(e) => {
+                                e.stopPropagation()
+                                setOpenDropdownId(openDropdownId === bed.bedId ? null : bed.bedId)
+                              }}
+                            >
+                              <span className="sr-only">Open actions menu</span>
+                              <MoreVertical className="w-4 h-4" />
+                            </Button>
+
+                            {openDropdownId === bed.bedId && (
+                              <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setOpenDropdownId(null)
+                                    handleOpenModal(bed)
+                                  }}
+                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
+                                >
+                                  <Edit2 className="w-4 h-4" />
+                                  Edit
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  onClick={(e) => {
+                                    e.stopPropagation()
+                                    setOpenDropdownId(null)
+                                    handleDeleteClick(bed)
+                                  }}
+                                  className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                  Delete
+                                </Button>
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </td>
                     </tr>
@@ -346,13 +384,15 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
       />
 
       {/* Delete Confirmation */}
-      <DeleteDialog
-        isOpenDelete={isDeleteDialogOpen}
-        onClose={() => setIsDeleteDialogOpen(false)}
-        deleteTitle="Delete Bed"
-        itemName={bedToDelete?.bedId}
-        description="Are you sure you want to delete this bed? This action cannot be undone and any patient assigned will be removed."
+      <ConfirmationDialog
+        isOpen={isDeleteDialogOpen}
+        title="Delete Bed"
+        message={`Are you sure you want to delete bed ${bedToDelete?.bedId}? This action cannot be undone and any patient assigned will be removed.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
         onConfirm={handleConfirmDelete}
+        onCancel={() => setIsDeleteDialogOpen(false)}
       />
     </div>
   )

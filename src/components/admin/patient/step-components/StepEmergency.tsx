@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { User, Phone, Link } from "lucide-react";
-import Input from "@/components/ui/Input";
+import Input from "@/components/common/Input";
 
 export default function StepEmergency() {
   const { register, formState: { errors } } = useFormContext();

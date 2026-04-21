@@ -10,8 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'

@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Users, Calendar, Plus, Ticket, TrendingUp, Activity } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import types file
 import type { RootState } from '@/app/store'
@@ -56,13 +56,13 @@ const ReceptionistDashboard = () => {
         <div className="bg-white rounded-xl shadow-lg p-4 sm:p-6 border border-purple-200 backdrop-blur-sm bg-opacity-90 mb-6 sm:mb-8">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
-              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-purple-900 flex items-center gap-3">
+              <h1 className="text-xl lg:text-2xl font-bold text-purple-900 flex items-center gap-3">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg">
-                  <Users className="w-5 h-5 sm:w-6 sm:h-6 text-white" />
+                  <Users className="w-4 h-4 sm:w-5 sm:h-5 text-white" />
                 </div>
                 Receptionist Dashboard
               </h1>
-              <p className="text-purple-700 mt-2 text-sm sm:text-base lg:text-lg">
+              <p className="text-purple-700 mt-2 text-sm sm:text-base">
                 Welcome back, {user?.name || 'Receptionist'} • {currentTime.toLocaleDateString()} • {currentTime.toLocaleTimeString()}
               </p>
             </div>

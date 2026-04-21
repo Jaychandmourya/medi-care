@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import { Button } from './Button';
+import { Button } from '../Button';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -53,8 +53,8 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
   const Icon = currentStyle.icon;
 
   return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
+    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50 p-4 animate-fade-in">
+      <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden transform transition-all duration-300 scale-100 opacity-100 animate-slide-up">
         {/* Header */}
         <div className={`${currentStyle.bgColor} ${currentStyle.borderColor} border-b p-4`}>
           <div className="flex items-center justify-between">

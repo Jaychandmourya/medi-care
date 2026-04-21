@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
 // Import icons file
-import { Calendar, User, FileText, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Calendar, User, FileText, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -10,8 +10,8 @@ import type { Appointment } from '@/features/db/dexie'
 import type { Prescription } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/ui/Input'
-import { Button } from '@/components/ui/Button'
+import Input from '@/components/common/Input'
+import { Button } from '@/components/common/Button'
 
 // Import dispatch and selector for redux
 import { useSelector, useDispatch } from 'react-redux'
@@ -24,7 +24,7 @@ import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/featur
 
 // Import Dialog components
 import PrescriptionDetailsDialog from '@/components/prescription/dialog/PrescriptionDetailsDialog'
-import DeleteDialog from '@/components/ui/dialog/DeleteDialog'
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
 
 const PrescriptionHistory = () => {
 
@@ -46,6 +46,7 @@ const PrescriptionHistory = () => {
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
   const [prescriptionToDelete, setPrescriptionToDelete] = useState<Prescription | null>(null)
   const [currentPage, setCurrentPage] = useState<number>(1)
+  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const ITEMS_PER_PAGE = 5
 
   // Get current doctor's ID from localStorage
@@ -457,34 +458,63 @@ const PrescriptionHistory = () => {
                           )}
                         </div>
 
-                        <div className="flex gap-2 sm:ml-4 mt-3 sm:mt-0">
+                        <div className="el-dropdown relative ml-3">
                           <Button
                             variant="ghost"
                             size="icon"
-                            onClick={() => handleViewPrescription(prescription)}
-                            className="p-2 text-blue-600 hover:bg-blue-50"
-                            title="View Prescription"
+                            className="w-8 h-8"
+                            onClick={(e) => {
+                              e.stopPropagation()
+                              setOpenDropdownId(openDropdownId === prescription.id ? null : prescription.id)
+                            }}
                           >
-                            <Eye className="h-4 w-4" />
+                            <span className="sr-only">Open actions menu</span>
+                            <MoreVertical className="w-4 h-4" />
                           </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDownloadPrescription(prescription)}
-                            className="p-2 text-green-600 hover:bg-green-50"
-                            title="Download PDF"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() => handleDeletePrescription(prescription)}
-                            className="p-2 text-red-600 hover:bg-red-50"
-                            title="Delete Prescription"
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
+
+                          {openDropdownId === prescription.id && (
+                            <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setOpenDropdownId(null)
+                                  handleViewPrescription(prescription)
+                                }}
+                                className="w-full justify-start text-gray-700 gap-1 rounded-md"
+                              >
+                                <Eye className="w-4 h-4" />
+                                View
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setOpenDropdownId(null)
+                                  handleDownloadPrescription(prescription)
+                                }}
+                                className="w-full justify-start text-green-600 cursor-pointer gap-1 rounded-md"
+                              >
+                                <Download className="w-4 h-4" />
+                                Download
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  setOpenDropdownId(null)
+                                  handleDeletePrescription(prescription)
+                                }}
+                                className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                                Delete
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -582,13 +612,15 @@ const PrescriptionHistory = () => {
       />
 
       {/* Delete Confirmation Modal */}
-      <DeleteDialog
-        isOpenDelete={showDeleteModal}
-        onClose={cancelDelete}
+      <ConfirmationDialog
+        isOpen={showDeleteModal}
+        title="Delete Prescription"
+        message={`Are you sure you want to delete this prescription for ${prescriptionToDelete?.patientName || 'Unknown Patient'}? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="danger"
         onConfirm={confirmDeletePrescription}
-        deleteTitle="Delete Prescription"
-        itemName={prescriptionToDelete?.patientName || 'Unknown Patient'}
-        description={`Are you sure you want to delete this prescription for ${prescriptionToDelete?.patientName || 'Unknown Patient'}? This action cannot be undone.`}
+        onCancel={cancelDelete}
       />
     </div>
   )

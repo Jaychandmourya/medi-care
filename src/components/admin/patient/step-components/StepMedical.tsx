@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { AlertTriangle, Hospital, Activity, Pill } from "lucide-react";
-import Input from "@/components/ui/Input";
+import Input from "@/components/common/Input";
 
 export default function StepMedical() {
   const { register, formState: { errors } } = useFormContext();

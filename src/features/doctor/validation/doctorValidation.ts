@@ -5,13 +5,13 @@ export const doctorFormSchema = z.object({
   id: z.string().optional(),
   firstName: z.string()
     .min(1, 'First name is required')
-    .max(50, 'First name must be less than 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'First name can only contain letters, spaces, hyphens and apostrophes'),
+    .max(15, 'First name must be less than 15 characters')
+    .regex(/^[a-zA-Z][a-zA-Z\s'-]*$/, 'First name can only contain letters, hyphens and apostrophes'),
 
   lastName: z.string()
     .min(1, 'Last name is required')
-    .max(50, 'Last name must be less than 50 characters')
-    .regex(/^[a-zA-Z\s'-]+$/, 'Last name can only contain letters, spaces, hyphens and apostrophes'),
+    .max(15, 'Last name must be less than 15 characters')
+    .regex(/^[a-zA-Z][a-zA-Z\s'-]*$/, 'Last name can only contain letters, hyphens and apostrophes'),
 
   middleName: z.string()
     .max(50, 'Middle name must be less than 50 characters')

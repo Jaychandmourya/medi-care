@@ -28,18 +28,41 @@ const BedGrid: React.FC<BedGridProps> = React.memo(({ beds, onBedClick }) => {
 
   const [patientNames, setPatientNames] = useState<Map<string, string>>(new Map())
 
-  // Effect
+  // Effect to fetch patient names and handle instant cleanup when patients are discharged
   useEffect(() => {
-    const fetchPatientNames = async () => {
-      const names = await getPatientNamesForBeds(beds)
-      setPatientNames(names)
+    const fetchAndUpdateNames = async () => {
+      // First, immediately clear names for beds that are no longer occupied (using setTimeout to avoid React linting error)
+      setTimeout(() => {
+        setPatientNames(prev => {
+          const newMap = new Map()
+          // Only keep names for beds that are currently occupied
+          beds.forEach(bed => {
+            if (bed.patientId && bed.status === 'occupied') {
+              const existingName = prev.get(bed.patientId)
+              if (existingName) {
+                newMap.set(bed.patientId, existingName)
+              }
+            }
+          })
+          return newMap
+        })
+      }, 0)
+
+      // Then fetch fresh names for occupied beds
+      const occupiedBeds = beds.filter(bed => bed.patientId && bed.status === 'occupied')
+      const names = await getPatientNamesForBeds(occupiedBeds)
+
+      // Update state with fresh patient names
+      setPatientNames(new Map(names))
     }
-    fetchPatientNames()
+
+    fetchAndUpdateNames()
   }, [beds])
 
   const handleBedClick = useCallback((bed: Bed) => {
     onBedClick(bed)
   }, [onBedClick])
+
 
   const bedElements = useMemo(() => {
     return beds.map((bed) => {

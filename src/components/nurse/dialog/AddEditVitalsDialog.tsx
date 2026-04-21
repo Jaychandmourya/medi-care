@@ -5,8 +5,8 @@ import toast from 'react-hot-toast';
 import { X } from 'lucide-react';
 
 // Import UI components
-import { Button } from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/common/Button';
+import Input from '@/components/common/Input';
 
 // Import Schema file
 import { vitalsSchema } from '@/schema/vitalsSchema'
@@ -44,6 +44,7 @@ export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, on
     reset
   } = useForm<VitalsFormData>({
     resolver: zodResolver(vitalsSchema),
+    mode: 'onChange',
     defaultValues: vitals ? {
       patientId: vitals.patientId,
       bp: vitals.bp,
@@ -75,6 +76,7 @@ export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, on
     }
   }, [isEditing, vitals, onSubmit, reset]);
 
+
   // Memoize available patients calculation to avoid filtering on every render
   const availablePatients = useMemo(() => {
     if (isEditing) return patients;
@@ -89,12 +91,13 @@ export const VitalsForm = ({ vitals, patients, existingVitals = [], onSubmit, on
             <h3 className="text-xl font-bold text-gray-900">
               {isEditing ? 'Edit Vitals' : 'Record New Vitals'}
             </h3>
-            <button
+            <Button
               onClick={onCancel}
-              className="text-gray-400 hover:text-gray-600 transition-colors"
+              variant="ghost"
+              size="icon"
             >
               <X className="w-5 h-5" />
-            </button>
+            </Button>
           </div>
 
           <form onSubmit={handleSubmit(onFormSubmit)} className="space-y-4">

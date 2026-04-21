@@ -4,8 +4,8 @@ import { useCallback, useMemo } from 'react'
 import toast from 'react-hot-toast'
 
 // Import components
-import { Button } from '@/components/ui/Button'
-import Input from '@/components/ui/Input'
+import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
 
 // Import types
 import type { AppDispatch } from '@/app/store'
@@ -21,12 +21,13 @@ import { createWard, updateWard } from '@/features/bed/bedThunk'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
+import { X } from 'lucide-react'
 
 // Zod schema for ward validation
 const wardSchema = z.object({
   name: z.string()
     .min(1, 'Ward name is required')
-    .min(2, 'Ward name must be at least 2 characters'),
+    .max(15, 'Ward name must not exceed 15 characters'),
   floor: z.string()
     .min(1, 'Floor is required'),
   totalBeds: z.number()
@@ -54,6 +55,7 @@ const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogPr
     formState: { errors, isSubmitting }
   } = useForm<WardFormDataWithZod>({
     resolver: zodResolver(wardSchema),
+    mode: 'onChange',
     defaultValues: {
       name: '',
       floor: '',
@@ -117,10 +119,18 @@ const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogPr
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-white w-full max-w-md rounded-2xl shadow-2xl border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
+        <div className="p-6 border-b border-gray-300 flex justify-between items-center">
           <h3 className="text-xl font-semibold text-gray-900">
             {editingWard ? 'Edit Ward' : 'Add New Ward'}
           </h3>
+          <Button
+            onClick={onClose}
+            variant="ghost"
+            size="icon"
+            className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </Button>
         </div>
         <form onSubmit={handleFormSubmit(onSubmit)} className="p-6 space-y-4">
           <Input

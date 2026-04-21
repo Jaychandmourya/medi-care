@@ -3,7 +3,7 @@ import { useAppSelector, useAppDispatch } from '@/app/hooks'
 import { getAllPatients } from '@/features/patient/patientThunk'
 import type { Patient } from '@/types/patients/patientType'
 import { Search, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 import AddEditPatientDialog from '@/components/admin/patient/dialog/AddEditPatientDialog'
 
 interface PatientSearchDropdownProps {

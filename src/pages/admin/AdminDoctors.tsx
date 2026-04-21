@@ -31,7 +31,7 @@ const AdminDoctorsComponent = () => {
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
             Doctor Directory
           </h1>
           <p className="text-gray-600">

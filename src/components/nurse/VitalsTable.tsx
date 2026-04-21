@@ -1,11 +1,11 @@
-import { useState, useCallback, Suspense, lazy } from 'react';
+import { useState, useCallback } from 'react';
 import { format } from 'date-fns';
 
 // Import icons file
 import { Edit2, Trash2, Plus, MoreVertical } from 'lucide-react';
 
 // Import UI components file
-import { Button } from '@/components/ui/Button';
+import { Button } from '@/components/common/Button';
 
 // Import utils file
 import { getRoleColors } from '@/utils/roleColors';
@@ -13,8 +13,7 @@ import { getRoleColors } from '@/utils/roleColors';
 // Import type file
 import type { Vitals, Patient } from '@/types/vitals/vitalsType';
 
-// Lazy load DeleteDialog
-const DeleteDialog = lazy(() => import('@/components/ui/dialog/DeleteDialog'));
+import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog';
 
 type VitalsTableProps = {
   vitals: Vitals[];
@@ -245,16 +244,16 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
       </div>
 
       {/* Delete Confirmation dialog */}
-      <Suspense fallback={<div className="p-4 text-center text-gray-500">Loading...</div>}>
-        <DeleteDialog
-          isOpenDelete={deleteDialogOpen}
-          onClose={handleCloseDeleteDialog}
-          deleteTitle="Delete Vitals"
+        <ConfirmationDialog
+          isOpen={deleteDialogOpen}
+          title="Delete Vitals"
+          message="Are you sure you want to delete these vitals? This action cannot be undone."
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
           onConfirm={handleConfirmDelete}
-          description="Are you sure you want to delete these vitals? This action cannot be undone."
-          itemName="Vitals Record"
+          onCancel={handleCloseDeleteDialog}
         />
-      </Suspense>
     </div>
   );
 };

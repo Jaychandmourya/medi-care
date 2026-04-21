@@ -3,9 +3,9 @@ import { useFormContext } from "react-hook-form";
 // Import icons file
 import {Phone, Mail} from 'lucide-react'
 // Import UI components
-import { Label } from "@/components/ui/Label";
-import DatePicker from "@/components/ui/DatePicker";
-import Input from "@/components/ui/Input";
+import { Label } from "@/components/common/Label";
+import DatePicker from "@/components/common/DatePicker";
+import Input from "@/components/common/Input";
 
 // Import utils file
 import { getRoleColors } from "@/utils/roleColors";

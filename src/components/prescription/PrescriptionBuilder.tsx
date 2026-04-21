@@ -10,10 +10,10 @@ import type { Appointment } from '@/features/db/dexie'
 import type { Medicine } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/ui/Input'
-import DatePicker from '@/components/ui/DatePicker'
-import { Button } from '@/components/ui/Button'
-import { Label } from '@/components/ui/Label'
+import Input from '@/components/common/Input'
+import DatePicker from '@/components/common/DatePicker'
+import { Button } from '@/components/common/Button'
+import { Label } from '@/components/common/Label'
 
 // Import form control, validation and zod
 import { useForm } from 'react-hook-form'
@@ -36,6 +36,7 @@ import {
 
 //  Lazy loading components
 const AddMedicineDialog = lazy(() => import('./dialog/AddMedicineDialog'))
+const ConfirmationDialog = lazy(() => import('@/components/common/dialog/ConfirmationDialog'))
 
 // Schema
 import { prescriptionSchema } from '@/schema/prescriptionSchema'
@@ -56,6 +57,8 @@ const PrescriptionBuilder = () => {
   // State management
   const [showMedicineForm, setShowMedicineForm] = useState<boolean>(false)
   const [editingMedicine, setEditingMedicine] = useState<Medicine | null>(null)
+  const [showDeleteDialog, setShowDeleteDialog] = useState<boolean>(false)
+  const [medicineToDelete, setMedicineToDelete] = useState<Medicine | null>(null)
 
   // Effect
   useEffect(() => {
@@ -211,9 +214,30 @@ const PrescriptionBuilder = () => {
     setShowMedicineForm(true)
   }, [])
 
+  const medicines = useMemo(() => {
+    return currentPrescription?.medicines || []
+  }, [currentPrescription?.medicines])
+
   const handleRemoveMedicine = useCallback((medicineId: string) => {
-    dispatch(removeMedicine(medicineId))
-  }, [dispatch])
+    const medicine = medicines.find(m => m.id === medicineId)
+    if (medicine) {
+      setMedicineToDelete(medicine)
+      setShowDeleteDialog(true)
+    }
+  }, [medicines])
+
+  const handleConfirmDelete = useCallback(() => {
+    if (medicineToDelete) {
+      dispatch(removeMedicine(medicineToDelete.id))
+      setShowDeleteDialog(false)
+      setMedicineToDelete(null)
+    }
+  }, [medicineToDelete, dispatch])
+
+  const handleCloseDeleteDialog = useCallback(() => {
+    setShowDeleteDialog(false)
+    setMedicineToDelete(null)
+  }, [])
 
   const handleAddMedicine = useCallback(() => {
     setEditingMedicine(null)
@@ -242,10 +266,6 @@ const PrescriptionBuilder = () => {
     setShowMedicineForm(false)
     setEditingMedicine(null)
   }, [])
-
-  const medicines = useMemo(() => {
-    return currentPrescription?.medicines || []
-  }, [currentPrescription?.medicines])
 
   return (
     <div className="space-y-6">
@@ -420,6 +440,20 @@ const PrescriptionBuilder = () => {
           editingMedicine={editingMedicine}
           onClose={handleCloseMedicineForm}
           currentPrescription={currentPrescription}
+        />
+      </Suspense>
+
+      {/* Delete Confirmation Dialog */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <ConfirmationDialog
+          isOpen={showDeleteDialog}
+          title="Delete Medicine"
+          message={`Are you sure you want to delete "${medicineToDelete?.name}"? This action cannot be undone.`}
+          confirmText="Delete"
+          cancelText="Cancel"
+          type="danger"
+          onConfirm={handleConfirmDelete}
+          onCancel={handleCloseDeleteDialog}
         />
       </Suspense>
     </div>

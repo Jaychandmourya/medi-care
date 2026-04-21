@@ -4,7 +4,7 @@ import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipForward, RotateCcw, Clock } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -95,6 +95,12 @@ const QueueControlPanel = () => {
     [queue]
   )
 
+  // Check if there are any tokens in the queue
+  const hasTokens = useMemo(() =>
+    queue.length > 0,
+    [queue]
+  )
+
   // Handlers to prevent unnecessary function recreation
   const handleAdvance = useCallback(() => {
     dispatch(advanceQueue())
@@ -129,8 +135,9 @@ const QueueControlPanel = () => {
           <Button
             onClick={toggleSimulationHandler}
             variant={simulationRunning ? 'destructive' : 'default'}
-            className="w-full sm:w-auto justify-center"
+            className={`w-full sm:w-auto justify-center ${!hasTokens ? '!opacity-50 !cursor-disabled !transform-none !scale-100 !transition-none hover:!opacity-50 hover:!transform-none hover:!scale-100' : ''}`}
             size="sm"
+            disabled={!hasTokens}
           >
             {simulationRunning ? (
               <>
@@ -148,11 +155,11 @@ const QueueControlPanel = () => {
           </Button>
         </div>
 
-        {simulationRunning && (
+        {simulationRunning && hasTokens && (
           <div className="bg-green-50 border border-green-200 rounded-md p-2.5 sm:p-3 text-xs sm:text-sm text-green-700">
             <div className="flex flex-col xs:flex-row xs:items-center xs:justify-between gap-2 xs:gap-0">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shrink-0"></div>
+                <div className="w-2 h-2 bg-green-500 rounded-full shrink-0 animate-pulse"></div>
                 <span className="truncate">Auto-advancing queue</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
@@ -178,7 +185,7 @@ const QueueControlPanel = () => {
             onClick={handleAdvance}
             disabled={!currentToken}
             variant="default"
-            className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2"
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 ${!currentToken ? '!opacity-50 !cursor-disabled !transform-none !scale-100 !transition-none hover:!opacity-50 hover:!transform-none hover:!scale-100' : ''}`}
             size="sm"
           >
             <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -189,7 +196,7 @@ const QueueControlPanel = () => {
             onClick={handleSkip}
             disabled={!currentToken}
             variant="destructive"
-            className="flex-1 flex items-center justify-center gap-1.5 sm:gap-2"
+            className={`flex-1 flex items-center justify-center gap-1.5 sm:gap-2 ${!currentToken ? '!opacity-50 !cursor-disabled !transform-none !scale-100 !transition-none hover:!opacity-50 hover:!transform-none hover:!scale-100' : ''}`}
             size="sm"
           >
             <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />

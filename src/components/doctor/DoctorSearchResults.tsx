@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 
 import { User, Briefcase, Eye, Plus, Loader2 } from 'lucide-react'
 
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 
 import { type RootState } from '@/app/store'
 import type { NPIResult } from '@/types/doctors/NpiType'

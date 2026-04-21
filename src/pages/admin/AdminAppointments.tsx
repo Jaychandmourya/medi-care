@@ -5,8 +5,8 @@ import { startOfWeek } from 'date-fns';
 import { Plus, Filter, Calendar, Printer, Search } from 'lucide-react';
 
 // Import UI components
-import { Button } from '@/components/ui/Button';
-import Input from '@/components/ui/Input';
+import { Button } from '@/components/common/Button';
+import Input from '@/components/common/Input';
 
 //  Import dispatch and selector type for redux
 import { useAppDispatch, useAppSelector } from '@/app/hooks';

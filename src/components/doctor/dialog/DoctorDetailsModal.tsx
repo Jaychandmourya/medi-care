@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { User, MapPin, Phone, Briefcase, Calendar, Clock, CheckCircle, AlertCircle, Hash, X, Plus } from 'lucide-react'
-import { Button } from '@/components/ui/Button'
+import { Button } from '@/components/common/Button'
 import type { AutocompleteDoctor } from '@/types/doctors/doctorType'
 
 // Interface
