@@ -5,7 +5,6 @@ import { store } from './app/store'
 import App from './App.tsx'
 import './index.css'
 import { seedAllData } from './data/seedData.ts'
-import './utils/resetData.ts'
 import { Toaster } from 'react-hot-toast'
 
 // Initialize seed data

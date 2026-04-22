@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from "react
 import toast from "react-hot-toast";
 
 // Import icons file
-import { Plus, Search, Filter, Edit, Trash2, ChevronLeft, ChevronRight, Eye } from "lucide-react";
+import { Plus, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
 
 // Import UI components
 import ConfirmationDialog from "@/components/common/dialog/ConfirmationDialog";
@@ -11,6 +11,7 @@ import { Label } from "@/components/common/Label";
 import Input from "@/components/common/Input";
 import DatePicker from "@/components/common/DatePicker";
 import ThreeDotMenu from "@/components/common/ThreeDotMenu";
+import Pagination from "@/components/common/Pagination";
 
 // Import Types files
 import type { RootState } from "@/app/store";
@@ -26,8 +27,8 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { getAllPatients, deletePatient } from "@/features/patient/patientThunk";
 
 // Lazy loaded components
-const AddPatientDialog = lazy(() => import('@/components/admin/patient/dialog/AddEditPatientDialog'));
-const PatientDetailsDialog = lazy(() => import('@/components/admin/patient/dialog/PatientDetailsDialog'));
+const AddEditPatient = lazy(() => import('@/components/admin/patient/AddEditPatient'));
+const PatientDetails = lazy(() => import('@/components/admin/patient/PatientDetails'));
 
 export default function PatientList() {
   // Redux dispatch and selector
@@ -52,6 +53,7 @@ export default function PatientList() {
   const [ageRange, setAgeRange] = useState<{ min: string; max: string }>({ min: "", max: "" });
   const [registrationDateRange, setRegistrationDateRange] = useState<{ start: string; end: string }>({ start: "", end: "" });
   const [showFilters, setShowFilters] = useState<boolean>(false);
+  const perPage = 10;
 
   // Get all patients on component mount
   useEffect(() => {
@@ -109,7 +111,6 @@ export default function PatientList() {
     });
   }, [patients, search, genderFilter, bloodGroupFilter, ageRange, registrationDateRange, calculateAge]);
 
-  const perPage = 10;
 
   // Pagination Filter
   const paginated = useMemo(() => {
@@ -277,6 +278,7 @@ export default function PatientList() {
                     type="number"
                     placeholder="Min"
                     value={ageRange.min}
+                    min={0}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, min: e.target.value }))}
                     className="flex-1"
                   />
@@ -284,6 +286,7 @@ export default function PatientList() {
                     type="number"
                     placeholder="Max"
                     value={ageRange.max}
+                    min={0}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, max: e.target.value }))}
                     className="flex-1"
                   />
@@ -430,96 +433,17 @@ export default function PatientList() {
         )}
 
         {/* Pagination */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 backdrop-blur-sm bg-opacity-95">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1">
-              Showing <span className="font-medium text-gray-900">{((page - 1) * perPage) + 1}</span> to <span className="font-medium text-gray-900">{Math.min(page * perPage, filtered.length)}</span> of <span className="font-medium text-gray-900">{filtered.length}</span> patients
-            </div>
-            <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-              </Button>
-
-              {/* Page Numbers - Hidden on mobile, shown on tablet+ */}
-              <div className="hidden md:flex items-center gap-1">
-                {Array.from({ length: Math.min(5, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
-                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (page <= 3) {
-                    pageNum = i + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = page - 2 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(pageNum)}
-                      className="h-10 w-10 p-0"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              {/* Compact page numbers for mobile/tablet */}
-              <div className="flex items-center gap-1 md:hidden">
-                {Array.from({ length: Math.min(3, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
-                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
-                  let pageNum;
-                  if (totalPages <= 3) {
-                    pageNum = i + 1;
-                  } else if (page === 1) {
-                    pageNum = i + 1;
-                  } else if (page === totalPages) {
-                    pageNum = totalPages - 2 + i;
-                  } else {
-                    pageNum = page - 1 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(pageNum)}
-                      className="h-10 w-10 p-0 font-semibold"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.min(Math.ceil(filtered.length / perPage), page + 1))}
-                disabled={page >= Math.ceil(filtered.length / perPage)}
-                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          totalItems={filtered.length}
+          perPage={perPage}
+          itemName="patients"
+        />
 
         {/* Add Patient Dialog */}
         <Suspense fallback={<div>Loading...</div>}>
-          <AddPatientDialog
+          <AddEditPatient
             isOpen={isOpenDialog}
             onClose={() => {
               setIsOpenDialog(false);
@@ -547,13 +471,12 @@ export default function PatientList() {
 
         {/* Patients View Dialog */}
         <Suspense fallback={<div>Loading...</div>}>
-          <PatientDetailsDialog
+          <PatientDetails
             isOpen={isOpenViewDialog}
             onClose={() => { setIsOpenViewDialog(false); setSelectedPatient(null) }}
             selectedPatient={selectedPatient}
             calculateAge={calculateAge}
             titleClass={themeColors.text}
-            headerClass={themeColors.header}
           />
         </Suspense>
       </div>

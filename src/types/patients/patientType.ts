@@ -52,7 +52,6 @@ export interface PatientDetailsDialogProps {
   selectedPatient: Patient | null;
   calculateAge: (dob: string) => number;
   titleClass?: string;
-  headerClass?: string;
   appointments?: Appointment[];
   vitals?: Vitals[];
   prescriptions?: Prescription[];

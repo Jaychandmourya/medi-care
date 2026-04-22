@@ -6,7 +6,7 @@ export const patientSchema = z.object({
   name: z.string()
     .min(1, "Full name is required")
     .max(30, "Name must be at most 30 characters")
-    .refine((val) => !val.startsWith(" "), "Name cannot start with a space"),
+    .transform((val) => val.trim()),
   dob: z.string().min(1, "Date of birth is required"),
   gender: z.enum(["Male", "Female", "Other"], { message: "Gender is required" }),
   bloodGroup: z.enum(["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"], { message: "Blood group is required" }),
@@ -14,14 +14,14 @@ export const patientSchema = z.object({
     .min(1, "Phone number is required")
     .regex(/^\+?\d{10,}$/, "Please enter a valid phone number (at least 10 digits)"),
   email: z.string().email("Please enter a valid email address").optional().or(z.literal("")),
-  address: z.string().optional(),
+  address: z.string().max(150, "Address must be at most 150 characters").optional(),
   city: z.string().optional(),
   state: z.string().optional(),
   pin: z.string().regex(/^\d{6}$/, "PIN code must be 6 digits").optional().or(z.literal("")),
   allergies: z.string().min(1, "Allergies information is required"),
-  conditions: z.string().min(1, "Medical conditions information is required"),
-  surgeries: z.string().optional(),
-  medications: z.string().optional(),
+  conditions: z.string().min(1, "Medical conditions information is required").max(150, "Conditions must be at most 150 characters"),
+  surgeries: z.string().max(200, "Surgeries must be at most 150 characters").optional(),
+  medications: z.string().max(200, "Medications must be at most 150 characters").optional(),
   contactName: z.string().min(1, "Emergency contact name is required").max(30, "Name must be at most 30 characters"),
   emergencyPhone: z.string()
     .min(1, "Emergency phone number is required")

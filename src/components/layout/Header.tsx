@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from "@/app/hooks"
 import { login, logout } from "@/features/auth/authSlice"
 import { useNavigate, useLocation } from "react-router-dom"
 import type { Role } from "@/types/auth/auth"
-import { DoctorSelectionDialog } from "@/components/auth/login/DoctorSelectionDialog"
+import { DoctorSelection } from "@/components/auth/login/DoctorSelection"
 import { doctorDBOperations } from "@/services/doctorServices"
 import type { LocalDoctor } from "@/types/doctors/doctorType"
 import toast from "react-hot-toast"
@@ -415,7 +415,7 @@ const Header = ({ setIsOpen }: HeaderProps) => {
         </div>
       </div>
 
-      <DoctorSelectionDialog
+      <DoctorSelection
         isOpen={showDoctorModal}
         onClose={() => setShowDoctorModal(false)}
         onSelectDoctor={handleDoctorSelect}

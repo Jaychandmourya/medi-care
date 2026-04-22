@@ -35,9 +35,7 @@ export default function PatientsTodayCard({
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      whileHover={{ scale: 1.02, y: -2 }}
-      transition={{ duration: 0.2 }}
-      className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 text-white rounded-3xl p-6 sm:p-8 shadow-xl hover:shadow-2xl overflow-hidden group"
+      className="relative bg-gradient-to-br from-blue-600 via-blue-500 to-indigo-600 text-white rounded-3xl p-6 sm:p-8 shadow-xl overflow-hidden group"
     >
       {/* Background pattern */}
       <div className="absolute inset-0 opacity-10">
@@ -107,7 +105,7 @@ export default function PatientsTodayCard({
       </div>
 
       {/* Hover effect overlay */}
-      <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-3xl"></div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/0 to-black/5 opacity-0 rounded-3xl"></div>
     </motion.div>
   );
 }

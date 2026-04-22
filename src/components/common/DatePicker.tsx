@@ -238,11 +238,12 @@ const DatePicker: React.FC<DatePickerProps> = ({
         <input
           type="text"
           value={value || ''}
+          readOnly
           onChange={handleInputChange}
           onFocus={() => setIsOpen(true)}
           onBlur={onBlur}
           placeholder={placeholder}
-          className={`${className} w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300`}
+          className={`${className} w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300 cursor-pointer`}
         />
         <Calendar className="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
       </div>

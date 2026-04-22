@@ -27,13 +27,7 @@ export default function StepEmergency() {
         placeholder="Enter emergency contact phone number"
         required
         icon={Phone}
-        registration={register("emergencyPhone", {
-          required: "Emergency phone number is required",
-          pattern: {
-            value: /^\d{10,}$/,
-            message: "Please enter a valid emergency phone number (at least 10 digits)"
-          }
-        })}
+        registration={register("emergencyPhone")}
         error={errors.emergencyPhone}
       />
       <p className="text-xs text-gray-500">This contact will be notified in case of emergency.</p>
@@ -43,8 +37,9 @@ export default function StepEmergency() {
         id="relationship"
         label="Relationship to Patient"
         as="select"
+        required
         icon={Link}
-        registration={register("relationship")}
+        registration={register("relationship", { required: "Relationship is required" })}
         error={errors.relationship}
       >
         <option value="">Select relationship</option>

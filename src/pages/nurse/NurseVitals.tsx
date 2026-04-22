@@ -9,7 +9,7 @@ import { VitalsService } from '@/services/vitalsService';
 
 // Lazy load components
 const VitalsTable = lazy(() => import('@/components/nurse/VitalsTable').then(m => ({ default: m.VitalsTable })));
-const AddEditVitalsDialog = lazy(() => import('@/components/nurse/dialog/AddEditVitalsDialog').then(m => ({ default: m.VitalsForm })));
+const AddEditVitals = lazy(() => import('@/components/nurse/AddEditVitals').then(m => ({ default: m.VitalsForm })));
 
 
 
@@ -193,7 +193,7 @@ const NurseVitals = () => {
         </Suspense>
 
         <Suspense fallback={<div className="text-center py-8">Loading form...</div>}>
-          <AddEditVitalsDialog
+          <AddEditVitals
             isOpen={showForm}
             vitals={editingVitals}
             patients={patients}

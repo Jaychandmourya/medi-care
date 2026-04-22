@@ -47,6 +47,8 @@ export interface NPIResult {
     credential?: string
     gender?: string
     status?: string
+    enumeration_date?: string
+    last_updated?: string
   }
   addresses?: Array<{
     address_1?: string

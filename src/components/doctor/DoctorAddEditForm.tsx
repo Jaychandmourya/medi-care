@@ -1,7 +1,7 @@
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState, useEffect, useRef, useMemo } from 'react'
-import { X, ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Clock, User } from 'lucide-react'
 import { Country, State } from 'country-state-city'
 import { doctorFormSchema, type DoctorFormData } from '@/features/doctor/validation/doctorValidation'
 import type { LocalDoctor } from '@/types/doctors/doctorType'
@@ -11,12 +11,14 @@ import { type AppDispatch } from '@/app/store'
 import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
 import { type DoctorSchedule as DoctorScheduleType } from '@/features/db/dexie'
 import Input from '@/components/common/Input'
-import CountryStateCitySelector from '../CountryStateCitySelector'
+import CountryStateCitySelector from './CountryStateCitySelector'
 import { Button } from '@/components/common/Button'
-import { DoctorSchedule as DoctorScheduleComponent } from '../DoctorSchedule'
+import { DoctorSchedule as DoctorScheduleComponent } from './DoctorSchedule'
+import FormDialog from '@/components/common/dialog/FormDialog'
 import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {
+  isOpen: boolean
   doctor?: LocalDoctor
   mode?: 'add' | 'edit'
   onSave: (data: DoctorFormData, shouldCloseDialog?: boolean) => Promise<void | LocalDoctor>
@@ -44,7 +46,7 @@ const defaultDoctor: Partial<LocalDoctor> = {
   addedAt: new Date().toISOString(),
 }
 
-export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel, onComplete }: DoctorEditFormProps) {
+export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, onCancel, onComplete }: DoctorEditFormProps) {
   const dispatch = useDispatch<AppDispatch>()
 
   const currentDoctor = doctor || defaultDoctor as LocalDoctor
@@ -270,6 +272,30 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
     }
   }
 
+  const handleStepClick = (stepKey: Step) => {
+    // In edit mode, allow direct navigation to any step
+    // In add mode, only allow navigation back to doctor-info from schedule
+    if (mode === 'edit') {
+      if (stepKey === 'schedule' && currentStep !== 'schedule') {
+        // When clicking schedule in edit mode, load existing schedule data
+        setLoadingSchedule(true)
+        setCurrentStep('schedule')
+        if (currentDoctor.id) {
+          loadExistingSchedule(currentDoctor.id)
+        } else {
+          setLoadingSchedule(false)
+        }
+      } else if (stepKey === 'doctor-info' && currentStep !== 'doctor-info') {
+        setCurrentStep('doctor-info')
+      }
+    } else {
+      // Add mode: only allow going back to doctor-info
+      if (stepKey === 'doctor-info' && currentStep === 'schedule') {
+        setCurrentStep('doctor-info')
+      }
+    }
+  }
+
   const handleSave = async (data: DoctorFormData) => {
     setSaving(true)
     try {
@@ -328,28 +354,46 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
       { key: 'schedule', label: 'Schedule', icon: Clock }
     ]
 
+    // Determine if a step is clickable
+    const isStepClickable = (stepKey: Step) => {
+      if (mode === 'edit') {
+        // In edit mode, both steps are clickable
+        return stepKey !== currentStep
+      } else {
+        // In add mode, only allow going back to doctor-info
+        return stepKey === 'doctor-info' && currentStep === 'schedule'
+      }
+    }
+
     return (
-      <div className="flex items-center justify-center mb-8">
+      <div className="flex items-center justify-center mb-6">
         <div className="flex items-center space-x-4">
           {steps.map((step, index) => {
             const Icon = step.icon
             const isActive = currentStep === step.key
             const isCompleted = currentStep === 'schedule' || (currentStep === 'doctor-info' && index === 0)
+            const clickable = isStepClickable(step.key as Step)
 
             return (
               <div key={step.key} className="flex items-center">
-                <div className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 ${
-                  isActive
-                    ? 'bg-blue-600 border-blue-600 text-white'
-                    : isCompleted
-                    ? 'bg-green-600 border-green-600 text-white'
-                    : 'bg-gray-100 border-gray-300 text-gray-500'
-                }`}>
+                <div
+                  onClick={() => clickable && handleStepClick(step.key as Step)}
+                  className={`flex items-center justify-center w-10 h-10 rounded-full border-2 transition-all duration-200 ${
+                    isActive
+                      ? 'bg-blue-600 border-blue-600 text-white'
+                      : isCompleted
+                      ? 'bg-green-600 border-green-600 text-white'
+                      : 'bg-gray-100 border-gray-300 text-gray-500'
+                  } ${clickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                >
                   <Icon className="w-5 h-5" />
                 </div>
-                <span className={`ml-2 text-sm font-medium ${
-                  isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
-                }`}>
+                <span
+                  onClick={() => clickable && handleStepClick(step.key as Step)}
+                  className={`ml-2 text-sm font-medium ${
+                    isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'
+                  } ${clickable ? 'cursor-pointer hover:opacity-80' : 'cursor-default'}`}
+                >
                   {step.label}
                 </span>
                 {index < steps.length - 1 && (
@@ -365,29 +409,62 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
     )
   }
 
-  return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="flex items-center justify-between p-6 border-b border-gray-200">
-          <h2 className="text-xl font-semibold text-gray-900">
-            {mode === 'add' ? 'Add New Doctor' : 'Edit Doctor Information'}
-          </h2>
+  // Custom footer based on current step
+  const renderFooter = () => {
+    if (currentStep === 'doctor-info') {
+      return (
+        <div className="flex items-center justify-between gap-3">
           <Button
-            variant="ghost"
-            size="icon"
+            type="button"
+            variant="secondary"
             onClick={onCancel}
           >
-            <X className="w-6 h-6" />
+            Cancel
+          </Button>
+          <Button
+            type="button"
+            onClick={handleNextStep}
+            disabled={saving}
+            className="flex items-center gap-2"
+          >
+            Next: Schedule
+            <ChevronRight className="w-4 h-4" />
           </Button>
         </div>
+      )
+    }
 
-        <div className="p-6">
-          {renderStepIndicator()}
+    // Schedule step - navigation is inside DoctorScheduleComponent, but we need a back button
+    return (
+      <div className="flex items-center justify-between gap-3">
+        <Button
+          type="button"
+          variant="secondary"
+          onClick={handlePreviousStep}
+          className="flex items-center gap-2"
+        >
+          <ChevronLeft className="w-4 h-4" />
+          Back to Doctor Info
+        </Button>
+        <div /> {/* Spacer for alignment */}
+      </div>
+    )
+  }
 
-          {currentStep === 'doctor-info' && (
-            <form onSubmit={handleSubmit(handleSave)}>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+  return (
+    <FormDialog
+      isOpen={isOpen}
+      onClose={onCancel}
+      title={mode === 'add' ? 'Add New Doctor' : 'Edit Doctor Information'}
+      maxWidth="max-w-4xl"
+      showDefaultButtons={false}
+      footer={renderFooter()}
+    >
+      {renderStepIndicator()}
 
+      {currentStep === 'doctor-info' && (
+        <form onSubmit={handleSubmit(handleSave)}>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* First Name */}
             <Input
               id="firstName"
@@ -445,11 +522,11 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
               )}
             </div>
 
-
             {/* Contact */}
             <Input
               id="contact"
               label="Phone"
+              type="tel"
               required
               registration={register('contact')}
               error={errors.contact}
@@ -530,46 +607,26 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
               rows={3}
             />
           </div>
+        </form>
+      )}
 
-          {/* Action Buttons for Doctor Info Step */}
-          <div className="flex items-center justify-between gap-3 pt-6 border-t border-gray-200">
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={onCancel}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="button"
-              onClick={handleNextStep}
-              disabled={saving}
-              className="flex items-center gap-2"
-            >
-              Next: Schedule
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-            </form>
-          )}
-
-          {currentStep === 'schedule' && (
+      {currentStep === 'schedule' && (
+        <div>
+          {loadingSchedule ? (
+            <div className="flex items-center justify-center py-12">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              <span className="ml-3 text-gray-600">Loading schedule data...</span>
+            </div>
+          ) : (
             <div>
-              {loadingSchedule ? (
-                <div className="flex items-center justify-center py-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-                  <span className="ml-3 text-gray-600">Loading schedule data...</span>
-                </div>
-              ) : (
-                <div>
-                  {/* Create a temp doctor from pending data for display before save */}
-                  {(() => {
-                    const displayDoctor = newlySavedDoctor
-                      ? newlySavedDoctor
-                      : mode === 'add' && pendingDoctorData
-                        ? { ...currentDoctor, ...pendingDoctorData, id: 'temp-id' } as LocalDoctor
-                        : currentDoctor as LocalDoctor
-                    return (
+              {/* Create a temp doctor from pending data for display before save */}
+              {(() => {
+                const displayDoctor = newlySavedDoctor
+                  ? newlySavedDoctor
+                  : mode === 'add' && pendingDoctorData
+                    ? { ...currentDoctor, ...pendingDoctorData, id: 'temp-id' } as LocalDoctor
+                    : currentDoctor as LocalDoctor
+                return (
                   <DoctorScheduleComponent
                     lastAddedDoctor={displayDoctor}
                     doctors={[displayDoctor]}
@@ -580,27 +637,12 @@ export default function DoctorEditForm({ doctor, mode = 'edit', onSave, onCancel
                     existingSchedule={existingSchedule}
                     isNewDoctor={mode === 'add' && !newlySavedDoctor}
                   />
-                    )
-                  })()}
-
-                  {/* Navigation buttons for schedule step */}
-                  <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-gray-200">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={handlePreviousStep}
-                      className="flex items-center gap-2"
-                    >
-                      <ChevronLeft className="w-4 h-4" />
-                      Back to Doctor Info
-                    </Button>
-                  </div>
-                </div>
-              )}
+                )
+              })()}
             </div>
           )}
         </div>
-      </div>
-    </div>
+      )}
+    </FormDialog>
   )
 }

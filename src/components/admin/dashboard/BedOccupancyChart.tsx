@@ -62,7 +62,7 @@ export default function BedOccupancyChart({
             labelLine={false}
           />
           <Tooltip
-            formatter={(value) => [`${value} beds`, ""]}
+            formatter={(value) => `${value} beds`}
             contentStyle={{
               backgroundColor: "rgba(255, 255, 255, 0.95)",
               border: "1px solid #e5e7eb",

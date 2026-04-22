@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom'
 
 // Import UI components
 import { Button } from '@/components/common/Button'
+import Input from '@/components/common/Input'
 
 // Import Types files
 import type { RootState, AppDispatch } from '@/app/store'
@@ -122,13 +123,13 @@ const NurseDashboard = () => {
   const getStatusColor = (status: BedStatus): string => {
     switch (status) {
       case 'available':
-        return 'bg-green-100 border-green-300 text-green-800 hover:bg-green-200'
+        return 'bg-green-100 border-green-300 text-green-800'
       case 'occupied':
-        return 'bg-red-100 border-red-300 text-red-800 hover:bg-red-200'
+        return 'bg-red-100 border-red-300 text-red-800'
       case 'reserved':
-        return 'bg-yellow-100 border-yellow-300 text-yellow-800 hover:bg-yellow-200'
+        return 'bg-yellow-100 border-yellow-300 text-yellow-800'
       case 'maintenance':
-        return 'bg-gray-100 border-gray-300 text-gray-800 hover:bg-gray-200'
+        return 'bg-gray-100 border-gray-300 text-gray-800'
       default:
         return 'bg-white border-gray-200'
     }
@@ -171,17 +172,18 @@ const NurseDashboard = () => {
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Ward Bed Status</h2>
-            <select
+            <Input
+              as="select"
               value={selectedWard}
-              onChange={(e) => dispatch(setSelectedWard(e.target.value))}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              onChange={(e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => dispatch(setSelectedWard(e.target.value))}
+              className="py-2"
             >
               {wards.map(ward => (
                 <option key={ward.wardId} value={ward.wardId}>
                   {ward.name} (Floor {ward.floor})
                 </option>
               ))}
-            </select>
+            </Input>
           </div>
 
           {selectedWardInfo && (
@@ -225,7 +227,7 @@ const NurseDashboard = () => {
             {selectedWardBeds.map(bed => (
               <div
                 key={bed.bedId}
-                className={`relative p-2 sm:p-3 border-2 rounded-lg cursor-pointer transition-all duration-200 ${getStatusColor(bed.status)}`}
+                className={`relative p-2 sm:p-3 border-2 rounded-lg ${getStatusColor(bed.status)}`}
                 title={`Bed ${bed.bedId} - ${bed.status}${bed.patientId ? ` - Patient ${bed.patientId}` : ''}`}
               >
                 <div className="text-center">
@@ -250,7 +252,7 @@ const NurseDashboard = () => {
               pendingVitals.map(patient => (
                 <div
                   key={patient.id}
-                  className="p-3 border border-orange-200 rounded-lg bg-orange-50 hover:bg-orange-100 transition-colors cursor-pointer"
+                  className="p-3 border border-orange-200 rounded-lg bg-orange-50"
                 >
                   <div className="flex justify-between items-start">
                     <div>

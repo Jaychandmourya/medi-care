@@ -76,7 +76,7 @@ const CountryStateCitySelector = ({
           value={selectedState}
           onChange={handleStateChange}
           disabled={!selectedCountry}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">{selectedCountry ? 'Select State' : 'Select Country First'}</option>
           {states.map((state) => (
@@ -94,7 +94,7 @@ const CountryStateCitySelector = ({
           value={selectedCity}
           onChange={handleCityChange}
           disabled={!selectedState}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           <option value="">{selectedState ? 'Select City' : 'Select State First'}</option>
           {cities.map((city) => (

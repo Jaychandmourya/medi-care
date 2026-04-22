@@ -2,6 +2,8 @@ import { useCallback, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 
 import { Button } from '@/components/common/Button'
+import  Input  from '@/components/common/Input'
+import { Label } from '@/components/common/Label'
 
 import { type AppDispatch } from '@/app/store'
 import { type DoctorSchedule } from '@/features/db/dexie'
@@ -213,15 +215,13 @@ export function DoctorSchedule({
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Doctor Name
-              </label>
-              <input
+              <Label className="font-semibold">Doctor Name</Label>
+              <Input
                 type="text"
                 value={lastAddedDoctor ? `Dr. ${lastAddedDoctor.firstName} ${lastAddedDoctor.lastName}` :
                       doctors.length > 0 ? `Dr. ${doctors[0].firstName} ${doctors[0].lastName}` : 'No doctor available'}
                 disabled
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium shadow-sm cursor-not-allowed"
+                className="bg-white border-gray-200 text-gray-800 font-medium cursor-not-allowed"
                 placeholder="Doctor name will appear here"
               />
               <input
@@ -237,28 +237,24 @@ export function DoctorSchedule({
               )}
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Specialization
-              </label>
-              <input
+              <Label className="font-semibold">Specialization</Label>
+              <Input
                 type="text"
                 value={lastAddedDoctor ? lastAddedDoctor.specialty || lastAddedDoctor.department || 'General Practice' :
                       doctors.length > 0 ? doctors[0].specialty || doctors[0].department || 'General Practice' : 'No specialization'}
                 disabled
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium shadow-sm cursor-not-allowed"
+                className="bg-white border-gray-200 text-gray-800 font-medium cursor-not-allowed"
                 placeholder="Specialization will appear here"
               />
             </div>
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-2">
-                Contact Information
-              </label>
-              <input
+              <Label className="font-semibold">Contact Information</Label>
+              <Input
                 type="text"
                 value={lastAddedDoctor ? lastAddedDoctor.contact || lastAddedDoctor.email || 'No contact info' :
                       doctors.length > 0 ? doctors[0].contact || doctors[0].email || 'No contact info' : 'No contact info'}
                 disabled
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-lg text-gray-800 font-medium shadow-sm cursor-not-allowed"
+                className="bg-white border-gray-200 text-gray-800 font-medium cursor-not-allowed"
                 placeholder="Contact information will appear here"
               />
             </div>
@@ -285,13 +281,11 @@ export function DoctorSchedule({
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Start Time */}
             <div className="space-y-2">
-              <label htmlFor="startTime" className="block text-sm font-medium text-gray-700">
-                Start Time <span className="text-red-500">*</span>
-              </label>
-              <select
+              <Label htmlFor="startTime" required>Start Time</Label>
+              <Input
                 id="startTime"
-                {...registerSchedule('startTime')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:border-gray-400"
+                as="select"
+                registration={registerSchedule('startTime')}
               >
                 <option value="">Select start time</option>
                 {TIME_SLOTS.map((slot) => (
@@ -299,7 +293,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </select>
+              </Input>
               {scheduleErrors.startTime && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -312,13 +306,11 @@ export function DoctorSchedule({
 
             {/* End Time */}
             <div className="space-y-2">
-              <label htmlFor="endTime" className="block text-sm font-medium text-gray-700">
-                End Time <span className="text-red-500">*</span>
-              </label>
-              <select
+              <Label htmlFor="endTime" required>End Time</Label>
+              <Input
                 id="endTime"
-                {...registerSchedule('endTime')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:border-gray-400"
+                as="select"
+                registration={registerSchedule('endTime')}
               >
                 <option value="">Select end time</option>
                 {TIME_SLOTS.map((slot) => (
@@ -326,7 +318,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </select>
+              </Input>
               {scheduleErrors.endTime && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -339,20 +331,18 @@ export function DoctorSchedule({
 
             {/* Slot Duration */}
             <div className="space-y-2">
-              <label htmlFor="slotDuration" className="block text-sm font-medium text-gray-700">
-                Slot Duration <span className="text-red-500">*</span>
-              </label>
-              <select
+              <Label htmlFor="slotDuration" required>Slot Duration</Label>
+              <Input
                 id="slotDuration"
-                {...registerSchedule('slotDuration')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-all duration-200 bg-white shadow-sm hover:border-gray-400"
+                as="select"
+                registration={registerSchedule('slotDuration')}
               >
                 {SLOT_DURATIONS.map((duration) => (
                   <option key={duration.value} value={duration.value}>
                     {duration.label}
                   </option>
                 ))}
-              </select>
+              </Input>
               {scheduleErrors.slotDuration && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -376,13 +366,11 @@ export function DoctorSchedule({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Lunch Break Start */}
             <div className="space-y-2">
-              <label htmlFor="lunchBreakStart" className="block text-sm font-medium text-gray-700">
-                Lunch Start
-              </label>
-              <select
+              <Label htmlFor="lunchBreakStart">Lunch Start</Label>
+              <Input
                 id="lunchBreakStart"
-                {...registerSchedule('lunchBreakStart')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm hover:border-gray-400"
+                as="select"
+                registration={registerSchedule('lunchBreakStart')}
               >
                 <option value="">Select lunch start</option>
                 {TIME_SLOTS.map((slot) => (
@@ -390,7 +378,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </select>
+              </Input>
               {scheduleErrors.lunchBreakStart && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -403,13 +391,11 @@ export function DoctorSchedule({
 
             {/* Lunch Break End */}
             <div className="space-y-2">
-              <label htmlFor="lunchBreakEnd" className="block text-sm font-medium text-gray-700">
-                Lunch End
-              </label>
-              <select
+              <Label htmlFor="lunchBreakEnd">Lunch End</Label>
+              <Input
                 id="lunchBreakEnd"
-                {...registerSchedule('lunchBreakEnd')}
-                className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-orange-500 transition-all duration-200 bg-white shadow-sm hover:border-gray-400"
+                as="select"
+                registration={registerSchedule('lunchBreakEnd')}
               >
                 <option value="">Select lunch end</option>
                 {TIME_SLOTS.map((slot) => (
@@ -417,7 +403,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </select>
+              </Input>
               {scheduleErrors.lunchBreakEnd && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">

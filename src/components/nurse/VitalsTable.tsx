@@ -2,10 +2,11 @@ import { useState, useCallback } from 'react';
 import { format } from 'date-fns';
 
 // Import icons file
-import { Edit2, Trash2, Plus, MoreVertical } from 'lucide-react';
+import { Edit2, Trash2, Plus } from 'lucide-react';
 
 // Import UI components file
 import { Button } from '@/components/common/Button';
+import ThreeDotMenu from '@/components/common/ThreeDotMenu';
 
 // Import utils file
 import { getRoleColors } from '@/utils/roleColors';
@@ -29,7 +30,6 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
 
   // State
   const [deleteDialogOpen, setDeleteDialogOpen] = useState<boolean>(false);
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [vitalToDelete, setVitalToDelete] = useState<string | null>(null);
 
   // Methods
@@ -55,19 +55,13 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
     return issues;
   };
 
-  const toggleDropdown = useCallback((vitalId: string) => {
-    setActiveDropdown(activeDropdown === vitalId ? null : vitalId);
-  }, [activeDropdown]);
-
   const handleEdit = useCallback((vital: Vitals) => {
     onEdit(vital);
-    setActiveDropdown(null);
   }, [onEdit]);
 
   const handleDelete = useCallback((vitalId: string) => {
     setVitalToDelete(vitalId);
     setDeleteDialogOpen(true);
-    setActiveDropdown(null);
   }, []);
 
   const handleConfirmDelete = useCallback(() => {
@@ -191,49 +185,22 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
                       )}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <div className="relative">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => toggleDropdown(vital.id)}
-                          className="text-gray-600 hover:text-gray-800 p-2"
-                        >
-                          <MoreVertical className="w-4 h-4" />
-                        </Button>
-
-                        {activeDropdown === vital.id && (
-                          <>
-                            {/* Backdrop to close dropdown when clicking outside */}
-                            <div
-                              className="fixed inset-0 z-10"
-                              onClick={() => setActiveDropdown(null)}
-                            />
-                            {/* Dropdown menu */}
-                            <div className="fixed right-4 top-1/2 transform -translate-y-1/2 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-20 animate-in slide-in-from-right-2 duration-200">
-                              <div className="py-2">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleEdit(vital)}
-                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-md mx-1"
-                                >
-                                  <Edit2 className="w-4 h-4 mr-3 text-blue-400" />
-                                  Edit Vitals
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDelete(vital.id)}
-                                  className="flex items-center w-full justify-start px-4 py-2 text-sm text-red-600 hover:bg-red-50 rounded-md mx-1"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-3 text-red-400" />
-                                  Delete Vitals
-                                </Button>
-                              </div>
-                            </div>
-                          </>
-                        )}
-                      </div>
+                      <ThreeDotMenu
+                        items={[
+                          {
+                            label: 'Edit Vitals',
+                            onClick: () => handleEdit(vital),
+                            icon: <Edit2 className="w-4 h-4 text-blue-400" />,
+                            className: 'text-gray-700'
+                          },
+                          {
+                            label: 'Delete Vitals',
+                            onClick: () => handleDelete(vital.id),
+                            icon: <Trash2 className="w-4 h-4 text-red-400" />,
+                            className: 'text-red-600'
+                          }
+                        ]}
+                      />
                     </td>
                   </tr>
                 );

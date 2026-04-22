@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { MoreVertical } from 'lucide-react'
 import { Button } from './Button'
 
@@ -16,11 +17,15 @@ interface ThreeDotMenuProps {
 
 export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenuProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [menuPosition, setMenuPosition] = useState({ top: 0, left: 0, right: 0 })
+  const triggerRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+      const clickedTrigger = triggerRef.current?.contains(event.target as Node)
+      const clickedMenu = menuRef.current?.contains(event.target as Node)
+      if (!clickedTrigger && !clickedMenu) {
         setIsOpen(false)
       }
     }
@@ -29,22 +34,57 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
 
-  const positionClasses = position === 'right' ? 'right-0' : 'left-0'
+  useEffect(() => {
+    if (isOpen && triggerRef.current) {
+      const rect = triggerRef.current.getBoundingClientRect()
+      const menuWidth = 192
+      const viewportWidth = window.innerWidth
+
+      let left = rect.left
+      if (position === 'right') {
+        left = rect.right - menuWidth
+      }
+
+      if (left + menuWidth > viewportWidth) {
+        left = rect.right - menuWidth
+      }
+      if (left < 0) {
+        left = rect.left
+      }
+
+      setMenuPosition({
+        top: rect.bottom + window.scrollY + 4,
+        left: left + window.scrollX,
+        right: rect.right + window.scrollX
+      })
+    }
+  }, [isOpen, position])
+
+  const handleToggle = () => {
+    setIsOpen(!isOpen)
+  }
 
   return (
-    <div className="relative" ref={menuRef}>
+    <div className="relative" ref={triggerRef}>
       <Button
         variant="ghost"
         size="icon"
-        onClick={() => setIsOpen(!isOpen)}
+        onClick={handleToggle}
         title="More options"
         className="p-1"
       >
         <MoreVertical className="w-4 h-4 text-gray-600" />
       </Button>
 
-      {isOpen && (
-        <div className={`absolute top-full mt-1 w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50 ${positionClasses}`}>
+      {isOpen && createPortal(
+        <div
+          ref={menuRef}
+          className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999]"
+          style={{
+            top: `${menuPosition.top}px`,
+            left: `${menuPosition.left}px`
+          }}
+        >
           {items.map((item, index) => (
             <button
               key={index}
@@ -58,7 +98,8 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
               <span className="flex-1">{item.label}</span>
             </button>
           ))}
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   )

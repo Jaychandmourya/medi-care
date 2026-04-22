@@ -19,7 +19,7 @@ const bedFormSchema = z.object({
   status: z.enum(['available', 'occupied', 'reserved', 'maintenance']).refine((val) => val !== undefined, {
     message: 'Please select a status'
   }),
-  notes: z.string().optional()
+  notes: z.string().max(150, 'Notes must be at most 150 characters').optional()
 })
 
 const getInitialFormData = (editingBed: Bed | null, wards: Array<{ wardId: string; name: string }>): BedFormData => {
@@ -38,11 +38,10 @@ const getInitialFormData = (editingBed: Bed | null, wards: Array<{ wardId: strin
   }
 }
 
-const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBedDialogProps) => {
+const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBedDialogProps) => {
 
   const [formData, setFormData] = useState<BedFormData>(() => getInitialFormData(editingBed, wards))
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [touched, setTouched] = useState(false)
 
   const validateField = (name: string, value: string | BedStatus) => {
     try {
@@ -60,7 +59,6 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    setTouched(true)
 
     // Validate form with Zod
     const result = bedFormSchema.safeParse(formData)
@@ -82,7 +80,6 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
     // Reset form after successful submission
     const resetFormData = getInitialFormData(null, wards)
     setFormData(resetFormData)
-    setTouched(false)
     setErrors({})
   }
 
@@ -114,12 +111,9 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
             onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
               const value = e.target.value
               setFormData({ ...formData, ward: value })
-              // Validate field on change if touched
-              if (touched) {
-                validateField('ward', value)
-              }
+              validateField('ward', value)
             }}
-            error={touched && errors.ward ? { message: errors.ward } : undefined}
+            error={errors.ward ? { message: errors.ward } : undefined}
             required
             disabled={!!editingBed}
           >
@@ -141,12 +135,9 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
             onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
               const value = e.target.value as BedStatus
               setFormData({ ...formData, status: value })
-              // Validate field on change if touched
-              if (touched) {
-                validateField('status', value)
-              }
+              validateField('status', value)
             }}
-            error={touched && errors.status ? { message: errors.status } : undefined}
+            error={errors.status ? { message: errors.status } : undefined}
             required
           >
             <option value="available">Available</option>
@@ -164,14 +155,11 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
             onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
               const value = e.target.value
               setFormData({ ...formData, notes: value })
-              // Validate field on change if touched
-              if (touched) {
-                validateField('notes', value)
-              }
+              validateField('notes', value)
             }}
             placeholder="Optional notes..."
             rows={3}
-            error={touched && errors.notes ? { message: errors.notes } : undefined}
+            error={errors.notes ? { message: errors.notes } : undefined}
           />
         </div>
       </form>
@@ -179,4 +167,4 @@ const AddEditBedDialog = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddE
   )
 }
 
-export default AddEditBedDialog
+export default AddEditBed

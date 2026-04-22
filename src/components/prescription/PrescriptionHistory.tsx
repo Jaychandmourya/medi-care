@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useCallback } from 'react'
 import toast from 'react-hot-toast'
 
 // Import icons file
-import { Calendar, User, FileText, Search, Eye, Download, Trash2, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
+import { Calendar, User, FileText, Search, Eye, Download, Trash2 } from 'lucide-react'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -11,7 +11,8 @@ import type { Prescription } from '@/types/prescription/prescriptionType'
 
 // Import UI components
 import Input from '@/components/common/Input'
-import { Button } from '@/components/common/Button'
+import Pagination from '@/components/common/Pagination'
+import ThreeDotMenu from '@/components/common/ThreeDotMenu'
 
 // Import dispatch and selector for redux
 import { useSelector, useDispatch } from 'react-redux'
@@ -23,7 +24,7 @@ import { getAllPatients } from '@/features/patient/patientThunk'
 import { loadPrescriptionHistory, deletePrescriptionFromHistory } from '@/features/prescription/prescriptionSlice'
 
 // Import Dialog components
-import PrescriptionDetailsDialog from '@/components/prescription/dialog/PrescriptionDetailsDialog'
+import PrescriptionDetails from '@/components/prescription/PrescriptionDetails'
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
 
 const PrescriptionHistory = () => {
@@ -46,7 +47,6 @@ const PrescriptionHistory = () => {
   const [selectedPrescription, setSelectedPrescription] = useState<Prescription | null>(null)
   const [prescriptionToDelete, setPrescriptionToDelete] = useState<Prescription | null>(null)
   const [currentPage, setCurrentPage] = useState<number>(1)
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const ITEMS_PER_PAGE = 5
 
   // Get current doctor's ID from localStorage
@@ -383,11 +383,6 @@ const PrescriptionHistory = () => {
           </div>
         ) : (
           <>
-            {/* Results info */}
-            <div className="text-sm text-gray-500">
-              Showing {Math.min((paginatedGroupedPrescriptions.safePage - 1) * ITEMS_PER_PAGE + 1, filteredPrescriptions.length)}–{Math.min(paginatedGroupedPrescriptions.safePage * ITEMS_PER_PAGE, filteredPrescriptions.length)} of {filteredPrescriptions.length} prescriptions
-            </div>
-
             {Object.entries(paginatedGroupedPrescriptions.grouped).map(([date, datePrescriptions]) => (
               <div key={date} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                 {/* Date Header */}
@@ -458,63 +453,29 @@ const PrescriptionHistory = () => {
                           )}
                         </div>
 
-                        <div className="el-dropdown relative ml-3">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="w-8 h-8"
-                            onClick={(e) => {
-                              e.stopPropagation()
-                              setOpenDropdownId(openDropdownId === prescription.id ? null : prescription.id)
-                            }}
-                          >
-                            <span className="sr-only">Open actions menu</span>
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-
-                          {openDropdownId === prescription.id && (
-                            <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setOpenDropdownId(null)
-                                  handleViewPrescription(prescription)
-                                }}
-                                className="w-full justify-start text-gray-700 gap-1 rounded-md"
-                              >
-                                <Eye className="w-4 h-4" />
-                                View
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setOpenDropdownId(null)
-                                  handleDownloadPrescription(prescription)
-                                }}
-                                className="w-full justify-start text-green-600 cursor-pointer gap-1 rounded-md"
-                              >
-                                <Download className="w-4 h-4" />
-                                Download
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={(e) => {
-                                  e.stopPropagation()
-                                  setOpenDropdownId(null)
-                                  handleDeletePrescription(prescription)
-                                }}
-                                className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
-                              >
-                                <Trash2 className="w-4 h-4" />
-                                Delete
-                              </Button>
-                            </div>
-                          )}
+                        <div className="ml-3" onClick={(e) => e.stopPropagation()}>
+                          <ThreeDotMenu
+                            items={[
+                              {
+                                label: 'View',
+                                onClick: () => handleViewPrescription(prescription),
+                                icon: <Eye className="w-4 h-4" />,
+                                className: 'text-gray-700'
+                              },
+                              {
+                                label: 'Download',
+                                onClick: () => handleDownloadPrescription(prescription),
+                                icon: <Download className="w-4 h-4" />,
+                                className: 'text-green-600'
+                              },
+                              {
+                                label: 'Delete',
+                                onClick: () => handleDeletePrescription(prescription),
+                                icon: <Trash2 className="w-4 h-4" />,
+                                className: 'text-red-600'
+                              }
+                            ]}
+                          />
                         </div>
                       </div>
                     </div>
@@ -525,82 +486,20 @@ const PrescriptionHistory = () => {
 
             {/* Pagination */}
             {paginatedGroupedPrescriptions.totalPages > 1 && (
-              <div className="bg-white border border-gray-200 rounded-lg shadow-sm px-4 py-3">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-3">
-                  {/* Previous button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={paginatedGroupedPrescriptions.safePage === 1}
-                    className="flex items-center gap-1 w-full sm:w-auto"
-                  >
-                    <ChevronLeft className="h-4 w-4" />
-                    Previous
-                  </Button>
-
-                  {/* Page numbers */}
-                  <div className="flex items-center gap-1 flex-wrap justify-center">
-                    {(() => {
-                      const total = paginatedGroupedPrescriptions.totalPages
-                      const current = paginatedGroupedPrescriptions.safePage
-                      const pages: (number | string)[] = []
-
-                      if (total <= 7) {
-                        for (let i = 1; i <= total; i++) pages.push(i)
-                      } else {
-                        pages.push(1)
-                        if (current > 3) pages.push('start-ellipsis')
-                        const start = Math.max(2, current - 1)
-                        const end = Math.min(total - 1, current + 1)
-                        for (let i = start; i <= end; i++) pages.push(i)
-                        if (current < total - 2) pages.push('end-ellipsis')
-                        pages.push(total)
-                      }
-
-                      return pages.map((page, idx) => {
-                        if (typeof page === 'string') {
-                          return (
-                            <span key={page} className="px-2 py-1 text-gray-400 select-none">…</span>
-                          )
-                        }
-                        return (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentPage(page)}
-                            className={`min-w-9 h-9 px-3 rounded-md text-sm font-medium transition-colors ${
-                              page === current
-                                ? 'bg-blue-600 text-white shadow-sm'
-                                : 'text-gray-700 hover:bg-gray-100'
-                            }`}
-                          >
-                            {page}
-                          </button>
-                        )
-                      })
-                    })()}
-                  </div>
-
-                  {/* Next button */}
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setCurrentPage(p => Math.min(paginatedGroupedPrescriptions.totalPages, p + 1))}
-                    disabled={paginatedGroupedPrescriptions.safePage === paginatedGroupedPrescriptions.totalPages}
-                    className="flex items-center gap-1 w-full sm:w-auto"
-                  >
-                    Next
-                    <ChevronRight className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+              <Pagination
+                page={paginatedGroupedPrescriptions.safePage}
+                setPage={setCurrentPage}
+                totalItems={filteredPrescriptions.length}
+                perPage={ITEMS_PER_PAGE}
+                itemName="prescriptions"
+              />
             )}
           </>
         )}
       </div>
 
       {/* Prescription Details Modal */}
-      <PrescriptionDetailsDialog
+      <PrescriptionDetails
         prescription={selectedPrescription}
         isOpen={showDetailsModal}
         onClose={() => {

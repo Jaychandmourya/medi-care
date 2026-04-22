@@ -26,7 +26,7 @@ import { setCurrentPage, clearSearchResults } from '@/features/doctor/doctorSlic
 const SearchPagination = lazy(() => import('@/components/doctor/SearchPagination'))
 const TaxonomyFilter = lazy(() => import('@/components/doctor/TaxonomyFilter'))
 const DoctorSearchResults = lazy(() => import('@/components/doctor/DoctorSearchResults'))
-const DoctorDetailsModal = lazy(() => import('@/components/doctor/DoctorDetailsModel'))
+const DoctorSearchDetails = lazy(() => import('@/components/doctor/DoctorSearchDetails'))
 
 // NPI Search Section Component
 function NPISearchSection() {
@@ -178,7 +178,7 @@ function NPISearchSection() {
   }, [dispatch, localDoctors])
 
   return (
-    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 border border-blue-100 rounded-2xl overflow-hidden">
+    <div className="bg-gradient-to-br from-slate-50 to-blue-50/30 border border-blue-100 rounded-2xl">
       <div className="p-4 sm:p-6 space-y-5 sm:space-y-6">
           <div className="bg-white rounded-xl p-4 sm:p-5 shadow-sm border border-gray-100">
             <div className="flex items-center justify-between mb-4">
@@ -186,12 +186,6 @@ function NPISearchSection() {
                 <Search className="w-4 h-4 text-blue-500" />
                 Search Filters
               </h4>
-              {hasActiveFilters && (
-                <button onClick={handleClearFilters} className="text-xs sm:text-sm text-gray-500 cursor-pointer hover:text-red-600 flex items-center gap-1 transition-colors">
-                  <X className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
-                  Clear all
-                </button>
-              )}
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               <Input
@@ -271,11 +265,12 @@ function NPISearchSection() {
       </div>
       {viewingDoctor && (
         <Suspense fallback={<div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50"><div className="bg-white p-6 rounded-lg">Loading...</div></div>}>
-          <DoctorDetailsModal
-            doctor={viewingDoctor}
-            onClose={() => setViewingDoctor(null)}
-            onAddToInternal={handleAddToInternal}
-            isAdded={viewingDoctor?.basic?.npi ? addedDoctorNpis.has(viewingDoctor.basic.npi) : false}
+          <DoctorSearchDetails
+            selectedDoctor={viewingDoctor}
+            showDetailsModal={!!viewingDoctor}
+            onCloseModal={() => setViewingDoctor(null)}
+            onAddToSystem={handleAddToInternal}
+            adding={viewingDoctor?.basic?.npi ? addedDoctorNpis.has(viewingDoctor.basic.npi) : false}
           />
         </Suspense>
       )}

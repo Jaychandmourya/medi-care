@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 
 // Import icons file
-import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle, MoreVertical } from 'lucide-react'
+import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle } from 'lucide-react'
 
 // Import components
 import { Button } from '@/components/common/Button'
@@ -20,7 +20,8 @@ import { deleteWard } from '@/features/bed/bedThunk'
 
 // Import components
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
-import AddEditWardDialog from './dialog/AddEditWardDialog'
+import AddEditWard from '@/components/admin/bed/tab/wards/AddEditWard'
+import ThreeDotMenu from '@/components/common/ThreeDotMenu'
 
 // Import toast
 import toast from 'react-hot-toast'
@@ -39,7 +40,6 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState<boolean>(false)
   const [editingWard, setEditingWard] = useState<Ward | null>(null)
   const [wardToDelete, setWardToDelete] = useState<Ward | null>(null)
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
 
   const filteredWards = wards.filter(ward =>
     ward.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -164,50 +164,23 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
                       <p className="text-xs sm:text-sm text-gray-500">Floor {ward.floor}</p>
                     </div>
                   </div>
-                  <div className="el-dropdown relative ml-3">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="w-8 h-8"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        setOpenDropdownId(openDropdownId === ward.wardId ? null : ward.wardId)
-                      }}
-                    >
-                      <span className="sr-only">Open actions menu</span>
-                      <MoreVertical className="w-4 h-4" />
-                    </Button>
-
-                    {openDropdownId === ward.wardId && (
-                      <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setOpenDropdownId(null)
-                            handleOpenModal(ward)
-                          }}
-                          className="w-full justify-start text-gray-700 gap-1 rounded-md"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                          Edit
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            setOpenDropdownId(null)
-                            handleDeleteClick(ward)
-                          }}
-                          className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                          Delete
-                        </Button>
-                      </div>
-                    )}
+                  <div className="relative ml-3" onClick={(e) => e.stopPropagation()}>
+                    <ThreeDotMenu
+                      items={[
+                        {
+                          label: 'Edit',
+                          onClick: () => handleOpenModal(ward),
+                          icon: <Edit2 className="w-4 h-4" />,
+                          className: 'text-gray-700'
+                        },
+                        {
+                          label: 'Delete',
+                          onClick: () => handleDeleteClick(ward),
+                          icon: <Trash2 className="w-4 h-4" />,
+                          className: 'text-red-600'
+                        }
+                      ]}
+                    />
                   </div>
                 </div>
 
@@ -278,7 +251,7 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
       </div>
 
       {/* Add/Edit Modal */}
-      <AddEditWardDialog
+      <AddEditWard
         isOpen={isModalOpen}
         onClose={handleCloseModal}
         editingWard={editingWard}

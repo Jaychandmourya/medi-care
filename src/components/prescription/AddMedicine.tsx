@@ -1,16 +1,13 @@
 import { useEffect } from 'react'
 import toast from 'react-hot-toast'
 
-// Import icons file
-import { X } from 'lucide-react'
-
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Medicine } from '@/types/prescription/prescriptionType'
 
 // Import UI components
 import Input from '@/components/common/Input'
-import { Button } from '@/components/common/Button'
+import FormDialog from '@/components/common/dialog/FormDialog'
 
 // Import form, validation and zod
 import { useForm } from 'react-hook-form'
@@ -29,8 +26,8 @@ import {
 } from '@/features/prescription/prescriptionSlice'
 
 // Import components
-import DrugSearch from '../DrugSearch'
-import DrugInfoPanel from '../DrugInfoPanel'
+import DrugSearch from './DrugSearch'
+import DrugInfoPanel from './DrugInfoPanel'
 
 // Schema file
 import { medicineSchema } from '@/schema/prescriptionSchema'
@@ -147,96 +144,78 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
     onClose()
   }
 
-  if (!showMedicineForm) return null
+  const handleSave = () => {
+    handleMedicineSubmit(onMedicineSubmit)()
+  }
 
   return (
-    <div className="fixed inset-0 bg-black/60 bg-opacity-50 flex items-center justify-center z-50">
-      <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="text-lg font-semibold text-gray-900">
-            {editingMedicine ? 'Edit Medicine' : 'Add Medicine'}
-          </h3>
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={handleCloseDialog}
-            className="h-8 w-8"
-          >
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
+    <FormDialog
+      isOpen={showMedicineForm}
+      onClose={handleCloseDialog}
+      title={editingMedicine ? 'Edit Medicine' : 'Add Medicine'}
+      maxWidth="max-w-2xl"
+      showDefaultButtons={true}
+      cancelButtonText="Cancel"
+      saveButtonText={editingMedicine ? 'Update Medicine' : 'Add Medicine'}
+      onCancel={handleCloseDialog}
+      onSave={handleSave}
+    >
+      <div className="mb-4">
+        <DrugSearch />
+      </div>
 
-        <div className="mb-4">
-          <DrugSearch />
-        </div>
+      <DrugInfoPanel />
 
-        <DrugInfoPanel />
+      <form className="space-y-4 mt-4">
+        <Input
+          id="name"
+          label="Medicine Name"
+          placeholder="Enter medicine name"
+          registration={registerMedicine('name')}
+          error={medicineErrors.name}
+          required
+        />
 
-        <form onSubmit={handleMedicineSubmit(onMedicineSubmit)} className="space-y-4 mt-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <Input
-            id="name"
-            label="Medicine Name"
-            placeholder="Enter medicine name"
-            registration={registerMedicine('name')}
-            error={medicineErrors.name}
+            id="dosage"
+            label="Dosage"
+            placeholder="e.g., 500mg"
+            registration={registerMedicine('dosage')}
+            error={medicineErrors.dosage}
             required
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              id="dosage"
-              label="Dosage"
-              placeholder="e.g., 500mg"
-              registration={registerMedicine('dosage')}
-              error={medicineErrors.dosage}
-              required
-            />
+          <Input
+            id="frequency"
+            label="Frequency"
+            type='tel'
+            placeholder="e.g., Twice daily"
+            registration={registerMedicine('frequency')}
+            error={medicineErrors.frequency}
+            required
+          />
+        </div>
 
-            <Input
-              id="frequency"
-              label="Frequency"
-              placeholder="e.g., Twice daily"
-              registration={registerMedicine('frequency')}
-              error={medicineErrors.frequency}
-              required
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Input
+            id="duration"
+            label="Duration"
+            placeholder="e.g., 7 days"
+            registration={registerMedicine('duration')}
+            error={medicineErrors.duration}
+            required
+          />
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <Input
-              id="duration"
-              label="Duration"
-              placeholder="e.g., 7 days"
-              registration={registerMedicine('duration')}
-              error={medicineErrors.duration}
-              required
-            />
-
-            <Input
-              id="instructions"
-              label="Instructions"
-              placeholder="e.g., Take after meals"
-              registration={registerMedicine('instructions')}
-            />
-          </div>
-
-          <div className="flex gap-3 justify-end">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleCloseDialog}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-            >
-              {editingMedicine ? 'Update Medicine' : 'Add Medicine'}
-            </Button>
-          </div>
-        </form>
-      </div>
-    </div>
+          <Input
+            id="instructions"
+            label="Instructions"
+            placeholder="e.g., Take after meals"
+            registration={registerMedicine('instructions')}
+          />
+        </div>
+      </form>
+    </FormDialog>
   )
 }
 

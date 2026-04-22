@@ -35,7 +35,7 @@ import {
 } from '@/features/prescription/prescriptionSlice'
 
 //  Lazy loading components
-const AddMedicineDialog = lazy(() => import('./dialog/AddMedicineDialog'))
+const AddMedicine = lazy(() => import('@/components/prescription/AddMedicine'))
 const ConfirmationDialog = lazy(() => import('@/components/common/dialog/ConfirmationDialog'))
 
 // Schema
@@ -435,7 +435,7 @@ const PrescriptionBuilder = () => {
 
       {/* Medicine Form Modal */}
       <Suspense fallback={<div className="flex items-center justify-center p-8">Loading medicine form...</div>}>
-        <AddMedicineDialog
+        <AddMedicine
           showMedicineForm={showMedicineForm}
           editingMedicine={editingMedicine}
           onClose={handleCloseMedicineForm}

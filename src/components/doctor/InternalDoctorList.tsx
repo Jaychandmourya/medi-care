@@ -2,10 +2,13 @@ import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react
 import toast from 'react-hot-toast'
 
 // Import icons file
-import { Search, User, Trash2, Edit, Briefcase, MoreVertical, Eye, ChevronLeft, ChevronRight, Building, Plus } from 'lucide-react'
+import { Search, User, Trash2, Edit, Briefcase, Eye, Building, Plus } from 'lucide-react'
 
 // Import UI components
 import { Button } from '@/components/common/Button'
+import Pagination from '@/components/common/Pagination'
+import ThreeDotMenu from '@/components/common/ThreeDotMenu'
+import Input from '@/components/common/Input'
 
 // Import Types files
 import { type AppDispatch, type RootState } from '@/app/store'
@@ -19,16 +22,16 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchLocalDoctors, deleteLocalDoctor, updateLocalDoctor, addLocalDoctor } from '@/features/doctor/doctorThunk'
 
 // Lazy loaded components
-const DoctorEditFormDialog = lazy(() => import('./dialog/DoctorAddEditFormDialog'))
-const DoctorViewModal = lazy(() => import('@/components/doctor/dialog/DoctorViewModal'))
+const DoctorAddEditForm = lazy(() => import('@/components/doctor/DoctorAddEditForm'))
+const DoctorViewDetails = lazy(() => import('@/components/doctor/DoctorViewDetails'))
 const ConfirmationDialog = lazy(() => import('@/components/common/dialog/ConfirmationDialog'))
 
 export default function InternalDoctorList() {
+
   const dispatch = useDispatch<AppDispatch>()
   const { localDoctors } = useSelector((state: RootState) => state.doctors)
   const [searchQuery, setSearchQuery] = useState<string>('')
   const [page, setPage] = useState<number>(1)
-  const [activeDropdown, setActiveDropdown] = useState<string | null>(null)
   const [viewingDoctor, setViewingDoctor] = useState<LocalDoctor | null>(null)
   const [editingDoctor, setEditingDoctor] = useState<LocalDoctor | null>(null)
   const [isAddingNew, setIsAddingNew] = useState(false)
@@ -37,7 +40,6 @@ export default function InternalDoctorList() {
     doctorId: string
     doctorName: string
   }>({ isOpen: false, doctorId: '', doctorName: '' })
-
   const perPage = 10
 
   const filteredDoctors = useMemo(() => {
@@ -76,7 +78,6 @@ export default function InternalDoctorList() {
       doctorId,
       doctorName
     })
-    setActiveDropdown(null)
   }, [])
 
   const handleConfirmDelete = useCallback(async () => {
@@ -100,7 +101,6 @@ export default function InternalDoctorList() {
   const handleEditDoctor = useCallback((doctor: LocalDoctor) => {
     setEditingDoctor(doctor)
     setIsAddingNew(false)
-    setActiveDropdown(null)
   }, [])
 
   const handleAddNewDoctor = useCallback(() => {
@@ -147,7 +147,6 @@ export default function InternalDoctorList() {
 
   const handleViewDoctor = useCallback((doctor: LocalDoctor) => {
     setViewingDoctor(doctor)
-    setActiveDropdown(null)
   }, [])
 
   const handleSaveEdit = useCallback(async (data: DoctorFormData, shouldCloseDialog: boolean = true): Promise<void> => {
@@ -231,16 +230,14 @@ export default function InternalDoctorList() {
 
         {/* Search */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
-          <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by name, specialty, location, email, department..."
-              className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            />
-          </div>
+          <Input
+            type="text"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by name, specialty, location, email, department..."
+            icon={Search}
+            className="pl-10!"
+          />
         </div>
 
         {/* Responsive Table */}
@@ -335,70 +332,32 @@ export default function InternalDoctorList() {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
-                        <div className="relative">
-                          <div className="el-dropdown relative ml-3">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="w-8 h-8"
-                              onClick={(e) => {
-                                e.stopPropagation()
+                        <ThreeDotMenu
+                          items={[
+                            {
+                              label: 'View Details',
+                              onClick: () => handleViewDoctor(doctor),
+                              icon: <Eye className="w-4 h-4" />,
+                              className: 'text-gray-700'
+                            },
+                            {
+                              label: 'Edit Doctor',
+                              onClick: () => handleEditDoctor(doctor),
+                              icon: <Edit className="w-4 h-4" />,
+                              className: 'text-gray-700'
+                            },
+                            {
+                              label: 'Delete Doctor',
+                              onClick: () => {
                                 if (doctor.id) {
-                                  setActiveDropdown(activeDropdown === doctor.id ? null : doctor.id)
+                                  handleRemoveDoctor(doctor.id, formatFullName(doctor))
                                 }
-                              }}
-                            >
-                              <span className="sr-only">Open actions menu</span>
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-
-                            {activeDropdown === doctor.id && (
-                              <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setActiveDropdown(null)
-                                    handleViewDoctor(doctor)
-                                  }}
-                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
-                                >
-                                  <Eye className="w-4 h-4" />
-                                  View Details
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setActiveDropdown(null)
-                                    handleEditDoctor(doctor)
-                                  }}
-                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
-                                >
-                                  <Edit className="w-4 h-4" />
-                                  Edit Doctor
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setActiveDropdown(null)
-                                    if (doctor.id) {
-                                      handleRemoveDoctor(doctor.id, formatFullName(doctor))
-                                    }
-                                  }}
-                                  className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete Doctor
-                                </Button>
-                              </div>
-                            )}
-                          </div>
-                        </div>
+                              },
+                              icon: <Trash2 className="w-4 h-4" />,
+                              className: 'text-red-600'
+                            }
+                          ]}
+                        />
                       </td>
                     </tr>
                   ))}
@@ -409,44 +368,19 @@ export default function InternalDoctorList() {
         )}
 
         {/* Pagination */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 backdrop-blur-sm bg-opacity-95">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4">
-            <div className="text-xs sm:text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1">
-              Showing <span className="font-medium">{((page - 1) * perPage) + 1}</span> to <span className="font-medium">{Math.min(page * perPage, filteredDoctors.length)}</span> of <span className="font-medium">{filteredDoctors.length}</span> doctors
-            </div>
-            <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="flex items-center gap-1 px-2 sm:px-3"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-              </Button>
-              <div className="flex items-center px-2 sm:px-3 py-1.5 sm:py-2 text-xs sm:text-sm text-gray-700 bg-gray-50 rounded-md min-w-20 sm:min-w-24 justify-center">
-                <span className="sm:hidden">{page} / {Math.ceil(filteredDoctors.length / perPage) || 1}</span>
-                <span className="hidden sm:inline">Page {page} of {Math.ceil(filteredDoctors.length / perPage) || 1}</span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.min(Math.ceil(filteredDoctors.length / perPage), page + 1))}
-                disabled={page >= Math.ceil(filteredDoctors.length / perPage)}
-                className="flex items-center gap-1 px-2 sm:px-3"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          totalItems={filteredDoctors.length}
+          perPage={perPage}
+          itemName="doctors"
+        />
 
         {/* Edit Doctor Modal */}
         {(editingDoctor || isAddingNew) && (
         <Suspense fallback={<div className="fixed inset-0 bg-black/50 flex items-center justify-center"><div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div></div>}>
-          <DoctorEditFormDialog
+          <DoctorAddEditForm
+            isOpen={!!(editingDoctor || isAddingNew)}
             doctor={editingDoctor || undefined}
             mode={isAddingNew ? 'add' : 'edit'}
             onSave={isAddingNew ? handleSaveNewDoctor : handleSaveEdit}
@@ -459,7 +393,7 @@ export default function InternalDoctorList() {
         {/* View Doctor Modal */}
         {viewingDoctor && (
           <Suspense fallback={<div>Loading...</div>}>
-            <DoctorViewModal
+            <DoctorViewDetails
               doctor={viewingDoctor}
               isOpen={!!viewingDoctor}
               onClose={handleCloseViewModal}

@@ -72,7 +72,7 @@ const BedAvailabilitySummary: React.FC<BedAvailabilitySummaryProps> = ({
             return (
               <div
                 key={item.label}
-                className={`p-2.5 sm:p-3 rounded-lg border ${item.color} transition-all duration-200 hover:shadow-md`}
+                className={`p-2.5 sm:p-3 rounded-lg border ${item.color}`}
               >
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-1.5 sm:space-x-2">

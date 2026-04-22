@@ -217,5 +217,5 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
 // Memoize component to prevent re-renders when props haven't changed
 export default memo(DoctorSearchResults, (prevProps, nextProps) => {
   return prevProps.onViewDetails === nextProps.onViewDetails &&
-         prevProps.onAddToSystem === nextProps.onAddToSystem
+        prevProps.onAddToSystem === nextProps.onAddToSystem
 })

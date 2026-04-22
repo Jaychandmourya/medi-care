@@ -25,8 +25,8 @@ import { useAppDispatch, useAppSelector } from '@/app/hooks'
 // Import Thunk file for redux
 import { getAllPatients } from '@/features/patient/patientThunk'
 
-// Lazy load AddPatientDialog
-const AddPatientDialog = React.lazy(() => import('@/components/admin/patient/dialog/AddEditPatientDialog'))
+// Lazy load AddEditPatient
+const AddEditPatient = React.lazy(() => import('@/components/admin/patient/AddEditPatient'))
 
 // Interface
 interface BedDetailModalProps {
@@ -559,7 +559,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
 
         {/* Add Patient Dialog */}
         <React.Suspense fallback={null}>
-          <AddPatientDialog
+          <AddEditPatient
             isOpen={showAddPatientDialog}
             onClose={() => setShowAddPatientDialog(false)}
           />

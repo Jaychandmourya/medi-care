@@ -7,7 +7,7 @@ import { doctorDBOperations } from "@/services/doctorServices"
 import type { LocalDoctor } from "@/types/doctors/doctorType"
 import toast from "react-hot-toast"
 import { useState, useEffect } from "react"
-import { DoctorSelectionDialog } from "@/components/auth/login/DoctorSelectionDialog"
+import { DoctorSelection } from "@/components/auth/login/DoctorSelection"
 
 interface RoleConfig {
   id: string;
@@ -236,7 +236,7 @@ const Login = () => {
         </div>
       </div>
 
-      <DoctorSelectionDialog
+      <DoctorSelection
         isOpen={showDoctorModal}
         onClose={() => setShowDoctorModal(false)}
         onSelectDoctor={handleDoctorSelect}

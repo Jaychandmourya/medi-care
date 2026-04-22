@@ -26,9 +26,8 @@ import { z } from 'zod'
 const wardSchema = z.object({
   name: z.string()
     .min(1, 'Ward name is required')
-    .max(15, 'Ward name must not exceed 15 characters'),
-  floor: z.string()
-    .min(1, 'Floor is required'),
+    .max(15, 'Ward name must not exceed 15 characters').transform((val) => val.trim()),
+  floor: z.string().max(30, 'Floor must not exceed 30 characters').min(1, 'Floor is required'),
   totalBeds: z.number()
     .min(1, 'Total beds must be at least 1')
     .max(100, 'Total beds cannot exceed 100')
@@ -42,7 +41,7 @@ interface AddEditWardDialogProps {
   editingWard: Ward | null
 }
 
-const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) => {
+const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) => {
 
   const dispatch = useDispatch<AppDispatch>()
 
@@ -160,6 +159,7 @@ const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogPr
           id="ward-beds"
           label="Total Beds Capacity"
           type="number"
+          min={0}
           required
           registration={register('totalBeds', { valueAsNumber: true })}
           error={errors.totalBeds ? { message: errors.totalBeds.message } : undefined}
@@ -169,4 +169,4 @@ const AddEditWardDialog = ({ isOpen, onClose, editingWard }: AddEditWardDialogPr
   )
 }
 
-export default AddEditWardDialog
+export default AddEditWard

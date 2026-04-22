@@ -1,14 +1,16 @@
-import { useState, useCallback, useEffect } from 'react'
-import { useSelector, useDispatch } from 'react-redux'
+import { useState, useCallback } from 'react'
 import toast from 'react-hot-toast'
 import type { RootState, AppDispatch } from '@/app/store'
 import { createBed, updateBed, deleteBed } from '@/features/bed/bedThunk'
 import type { Bed, BedStatus } from '@/types/bed/bedType'
+import { useSelector, useDispatch } from 'react-redux'
 import { Button } from '@/components/common/Button'
 import Input from '@/components/common/Input'
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
-import AddEditBedDialog from './dialog/AddEditBedDialog'
-import { Plus, Search, Edit2, Trash2, Bed as BedIcon, ChevronLeft, ChevronRight, MoreVertical } from 'lucide-react'
+import AddEditBed from '@/components/admin/bed/tab/beds/AddEditBed'
+import { Plus, Search, Edit2, Trash2, Bed as BedIcon } from 'lucide-react'
+import ThreeDotMenu from '@/components/common/ThreeDotMenu'
+import Pagination from '@/components/common/Pagination'
 
 interface BedFormData {
   ward: string
@@ -35,7 +37,6 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
   const [editingBed, setEditingBed] = useState<Bed | null>(null)
   const [bedToDelete, setBedToDelete] = useState<Bed | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
-  const [openDropdownId, setOpenDropdownId] = useState<string | null>(null)
   const ITEMS_PER_PAGE = 10
 
   // Filter beds based on search, ward, and status
@@ -140,18 +141,6 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
     }
   }
 
-  // Close dropdown when clicking outside
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as Element
-      if (!target.closest('.el-dropdown')) {
-        setOpenDropdownId(null)
-      }
-    }
-
-    document.addEventListener('mousedown', handleClickOutside)
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [])
 
   return (
     <div className="space-y-6">
@@ -261,52 +250,23 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
                         {bed.admittedAt ? new Date(bed.admittedAt).toLocaleDateString() : '-'}
                       </td>
                       <td className="px-4 lg:px-6 py-4 text-right whitespace-nowrap">
-                        <div className="relative">
-                          <div className="el-dropdown relative ml-3">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              className="w-8 h-8"
-                              onClick={(e) => {
-                                e.stopPropagation()
-                                setOpenDropdownId(openDropdownId === bed.bedId ? null : bed.bedId)
-                              }}
-                            >
-                              <span className="sr-only">Open actions menu</span>
-                              <MoreVertical className="w-4 h-4" />
-                            </Button>
-
-                            {openDropdownId === bed.bedId && (
-                              <div className="absolute right-0 z-10 mt-2 w-48 flex flex-col p-2 origin-top-right rounded-lg bg-white py-2 shadow-xl focus:outline-none">
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setOpenDropdownId(null)
-                                    handleOpenModal(bed)
-                                  }}
-                                  className="w-full justify-start text-gray-700 gap-1 rounded-md"
-                                >
-                                  <Edit2 className="w-4 h-4" />
-                                  Edit
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    setOpenDropdownId(null)
-                                    handleDeleteClick(bed)
-                                  }}
-                                  className="w-full justify-start text-red-600 cursor-pointer gap-1 rounded-md"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                  Delete
-                                </Button>
-                              </div>
-                            )}
-                          </div>
+                        <div className="relative" onClick={(e) => e.stopPropagation()}>
+                          <ThreeDotMenu
+                            items={[
+                              {
+                                label: 'Edit',
+                                onClick: () => handleOpenModal(bed),
+                                icon: <Edit2 className="w-4 h-4" />,
+                                className: 'text-gray-700'
+                              },
+                              {
+                                label: 'Delete',
+                                onClick: () => handleDeleteClick(bed),
+                                icon: <Trash2 className="w-4 h-4" />,
+                                className: 'text-red-600'
+                              }
+                            ]}
+                          />
                         </div>
                       </td>
                     </tr>
@@ -317,56 +277,14 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
 
             {/* Pagination */}
             {totalPages > 1 && (
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 px-4 lg:px-6 py-4 border-t border-gray-100">
-                <p className="text-sm text-gray-500">
-                  Showing {(currentPage - 1) * ITEMS_PER_PAGE + 1}-{Math.min(currentPage * ITEMS_PER_PAGE, filteredBeds.length)} of {filteredBeds.length} beds
-                </p>
-                <div className="flex items-center gap-1 flex-wrap justify-center">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                    className="h-8 w-8 shrink-0"
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  {(() => {
-                    const pages: (number | 'dots')[] = []
-                    const delta = 1
-                    for (let i = 1; i <= totalPages; i++) {
-                      if (i === 1 || i === totalPages || (i >= currentPage - delta && i <= currentPage + delta)) {
-                        pages.push(i)
-                      } else if (pages[pages.length - 1] !== 'dots') {
-                        pages.push('dots')
-                      }
-                    }
-                    return pages.map((page, idx) =>
-                      page === 'dots' ? (
-                        <span key={`dots-${idx}`} className="px-1 text-gray-400 select-none">…</span>
-                      ) : (
-                        <Button
-                          key={page}
-                          variant={currentPage === page ? 'default' : 'outline'}
-                          size="icon"
-                          onClick={() => setCurrentPage(page)}
-                          className="h-8 w-8 shrink-0"
-                        >
-                          {page}
-                        </Button>
-                      )
-                    )
-                  })()}
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                    className="h-8 w-8 shrink-0"
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
+              <div className="px-4 lg:px-6 py-4 border-t border-gray-100">
+                <Pagination
+                  page={currentPage}
+                  setPage={setCurrentPage}
+                  totalItems={filteredBeds.length}
+                  perPage={ITEMS_PER_PAGE}
+                  itemName="beds"
+                />
               </div>
             )}
           </>
@@ -374,7 +292,7 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
       </div>
 
       {/* Add/Edit Modal */}
-      <AddEditBedDialog
+      <AddEditBed
         key={editingBed?.bedId || 'new'}
         isOpen={isModalOpen}
         onClose={handleCloseModal}

@@ -20,6 +20,7 @@ interface FormDialogProps {
   title?: string;
   subtitle?: string;
   titleClass?: string;
+  headerClass?: string;
   showCloseButton?: boolean;
 
   // Dynamic footer
@@ -64,6 +65,7 @@ export default function FormDialog({
   title,
   subtitle,
   titleClass,
+  headerClass,
   showCloseButton = true,
 
   // Dynamic footer
@@ -92,12 +94,11 @@ export default function FormDialog({
 }: FormDialogProps) {
 
   const handleBackdropClick = (e: React.MouseEvent) => {
+    if (e.target !== e.currentTarget) return;
+
     if (customBackdropClickHandler) {
       customBackdropClickHandler(e);
-      return;
-    }
-
-    if (closeOnBackdropClick && e.target === e.currentTarget) {
+    } else if (closeOnBackdropClick) {
       onClose();
     }
   };
@@ -186,7 +187,7 @@ export default function FormDialog({
       >
         {/* Dynamic Header */}
         {showHeader && (
-          <div className="sticky top-0 bg-white border-b border-gray-200 rounded-t-3xl p-6 pb-4">
+          <div className={`sticky top-0 ${headerClass || 'bg-white'} border-b border-gray-200 rounded-t-3xl p-6 pb-4`}>
             <div className="flex justify-between items-start">
               <div className="flex-1">
                 {header || defaultHeader}

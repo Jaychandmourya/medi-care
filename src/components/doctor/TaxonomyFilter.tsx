@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
 import { ChevronDown, Briefcase } from 'lucide-react'
+import Input from '@/components/common/Input'
 
 // Common taxonomy codes for dropdown (extracted from API data)
 const COMMON_TAXONOMIES = [
@@ -101,12 +102,12 @@ function TaxonomyFilter({
         onKeyDown={handleKeyDown}
         disabled={disabled}
         className={`
-          w-full px-4 py-2 text-left bg-white border rounded-lg
+          w-full px-4 py-3 text-left bg-white border rounded-xl
           flex items-center justify-between gap-2
-          transition-colors duration-200
+          shadow-sm transition-all duration-200
           ${disabled
-            ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed'
-            : 'border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent'
+            ? 'bg-gray-50 border-gray-200 text-gray-400 cursor-not-allowed opacity-50'
+            : 'border-gray-300 hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-black focus:border-transparent'
           }
         `}
       >
@@ -120,7 +121,7 @@ function TaxonomyFilter({
           {selectedTaxonomyObj && !disabled && (
             <span
               onClick={handleClearClick}
-              className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer"
+              className="p-1 hover:bg-gray-100 rounded-full transition-colors cursor-pointer shrink-0"
               title="Clear selection"
             >
               <svg className="w-3 h-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -129,7 +130,7 @@ function TaxonomyFilter({
             </span>
           )}
           <ChevronDown
-            className={`w-4 h-4 text-gray-400 transition-transform duration-200 ${
+            className={`w-4 h-4 text-black transition-transform duration-200 ${
               isOpen ? 'transform rotate-180' : ''
             }`}
           />
@@ -138,16 +139,15 @@ function TaxonomyFilter({
 
       {/* Dropdown */}
       {isOpen && !disabled && (
-        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-lg shadow-lg max-h-80 overflow-hidden">
+        <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-hidden">
           {/* Search Input */}
           <div className="p-3 border-b border-gray-100">
-            <input
+            <Input
               type="text"
               placeholder="Search specialties..."
               value={searchTerm}
               onChange={handleSearchChange}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              autoFocus
+              className="px-3 py-2 !rounded-md !border-gray-300 [&:focus]:!border-transparent"
             />
           </div>
 
@@ -204,7 +204,7 @@ function TaxonomyFilter({
 // Memoize component to prevent unnecessary re-renders
 export default memo(TaxonomyFilter, (prevProps, nextProps) => {
   return prevProps.selectedTaxonomy === nextProps.selectedTaxonomy &&
-         prevProps.onTaxonomyChange === nextProps.onTaxonomyChange &&
-         prevProps.placeholder === nextProps.placeholder &&
-         prevProps.disabled === nextProps.disabled
+        prevProps.onTaxonomyChange === nextProps.onTaxonomyChange &&
+        prevProps.placeholder === nextProps.placeholder &&
+        prevProps.disabled === nextProps.disabled
 })

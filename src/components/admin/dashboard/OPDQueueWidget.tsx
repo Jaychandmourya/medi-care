@@ -32,8 +32,6 @@ export default function OPDQueueWidget({ queueCount }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      whileHover={{ scale: 1.02 }}
       className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${status.color} p-6 md:p-8 shadow-2xl ${status.bgGlow} backdrop-blur-sm border border-white/10 text-white`}
     >
       {/* Background pattern */}

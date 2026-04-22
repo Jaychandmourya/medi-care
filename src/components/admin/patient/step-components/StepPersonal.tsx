@@ -99,7 +99,7 @@ export default function StepPersonal() {
           }}
           placeholder="Select date of birth"
           disableFutureDates
-          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
+          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
             errors.dob ? "border-red-500" : "border-gray-300"
           }`}
         />
