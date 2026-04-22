@@ -1,14 +1,16 @@
 import { useEffect, useState, useMemo, useCallback } from 'react'
-import toast from 'react-hot-toast'
 
 // Import icons file
-import { Search, Filter, Edit, ChevronLeft, ChevronRight, Eye } from 'lucide-react'
+import { Search, Filter, Edit, Eye } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import { Label } from '@/components/common/Label'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 import ThreeDotMenu from '@/components/common/ThreeDotMenu'
+import AddEditPatient from '@/components/admin/patient/AddEditPatient'
+import PatientDetails from '@/components/admin/patient/PatientDetails'
+import Pagination from '@/components/common/Pagination'
 
 // Import utile file
 import { ROLE_THEME } from '@/utils/theme'
@@ -212,19 +214,19 @@ const DoctorPatients = () => {
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95 space-y-4">
           <div className='flex flex-wrap justify-between gap-2 '>
             {/* Search Bar */}
-            <Input
+            <FormField
               type="text"
               placeholder="Search by name, phone, patient ID, or blood group..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               icon={Search}
               iconPosition="left"
-              className='w-full sm:w-80 md:w-98'
+              className="w-full sm:w-80 xl:w-175"
             />
 
             {/* Filter Toggle */}
             <div className="flex justify-between items-center">
-              <Button
+              <FormButton
                 variant="ghost"
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
@@ -236,15 +238,15 @@ const DoctorPatients = () => {
                     Active
                   </span>
                 )}
-              </Button>
+              </FormButton>
               {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max) && (
-                <Button
+                <FormButton
                   variant="ghost"
                   onClick={clearFilters}
                   className="text-sm text-red-600 hover:text-red-800"
                 >
                   Clear All Filters
-                </Button>
+                </FormButton>
               )}
             </div>
           </div>
@@ -255,7 +257,7 @@ const DoctorPatients = () => {
               {/* Gender Filter */}
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <Input
+                <FormField
                   as="select"
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
@@ -264,13 +266,13 @@ const DoctorPatients = () => {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </Input>
+                </FormField>
               </div>
 
               {/* Blood Group Filter */}
               <div className="space-y-2">
                 <Label>Blood Group</Label>
-                <Input
+                <FormField
                   as="select"
                   value={bloodGroupFilter}
                   onChange={(e) => setBloodGroupFilter(e.target.value)}
@@ -284,26 +286,28 @@ const DoctorPatients = () => {
                   <option value="AB-">AB-</option>
                   <option value="O+">O+</option>
                   <option value="O-">O-</option>
-                </Input>
+                </FormField>
               </div>
 
               {/* Age Range Filter */}
               <div className="space-y-2">
                 <Label>Age Range</Label>
                 <div className="flex gap-2">
-                  <Input
+                  <FormField
                     type="number"
                     min={0}
                     placeholder="Min"
                     value={ageRange.min}
+                    onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, min: e.target.value }))}
                     className="flex-1"
                   />
-                  <Input
+                  <FormField
                     type="number"
                     placeholder="Max"
                     min={0}
                     value={ageRange.max}
+                    onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, max: e.target.value }))}
                     className="flex-1"
                   />
@@ -461,263 +465,29 @@ const DoctorPatients = () => {
         </div>
 
         {/* Pagination */}
-        <div className="bg-white rounded-2xl shadow-lg p-4 sm:p-6 backdrop-blur-sm bg-opacity-95">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-4">
-            <div className="text-sm text-gray-600 text-center sm:text-left order-2 sm:order-1">
-              Showing <span className="font-medium text-gray-900">{((page - 1) * perPage) + 1}</span> to <span className="font-medium text-gray-900">{Math.min(page * perPage, filtered.length)}</span> of <span className="font-medium text-gray-900">{filtered.length}</span> patients
-            </div>
-            <div className="flex items-center gap-2 order-1 sm:order-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
-              >
-                <ChevronLeft className="w-4 h-4" />
-                <span className="hidden sm:inline">Previous</span>
-              </Button>
+        <Pagination
+          page={page}
+          setPage={setPage}
+          totalItems={filtered.length}
+          perPage={perPage}
+          itemName="patients"
+        />
 
-              {/* Page Numbers - Hidden on mobile, shown on tablet+ */}
-              <div className="hidden md:flex items-center gap-1">
-                {Array.from({ length: Math.min(5, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
-                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
-                  let pageNum;
-                  if (totalPages <= 5) {
-                    pageNum = i + 1;
-                  } else if (page <= 3) {
-                    pageNum = i + 1;
-                  } else if (page >= totalPages - 2) {
-                    pageNum = totalPages - 4 + i;
-                  } else {
-                    pageNum = page - 2 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(pageNum)}
-                      className="h-10 w-10 p-0"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
+        {/* View Patient Dialog */}
+        <PatientDetails
+          isOpen={isOpenViewDialog}
+          onClose={() => setIsOpenViewDialog(false)}
+          selectedPatient={selectedPatient}
+          calculateAge={calculateAge}
+        />
 
-              {/* Compact page numbers for mobile/tablet */}
-              <div className="flex items-center gap-1 md:hidden">
-                {Array.from({ length: Math.min(3, Math.ceil(filtered.length / perPage) || 1) }, (_, i) => {
-                  const totalPages = Math.ceil(filtered.length / perPage) || 1;
-                  let pageNum;
-                  if (totalPages <= 3) {
-                    pageNum = i + 1;
-                  } else if (page === 1) {
-                    pageNum = i + 1;
-                  } else if (page === totalPages) {
-                    pageNum = totalPages - 2 + i;
-                  } else {
-                    pageNum = page - 1 + i;
-                  }
-                  return (
-                    <Button
-                      key={pageNum}
-                      variant={page === pageNum ? "default" : "outline"}
-                      size="sm"
-                      onClick={() => setPage(pageNum)}
-                      className="h-10 w-10 p-0 font-semibold"
-                    >
-                      {pageNum}
-                    </Button>
-                  );
-                })}
-              </div>
-
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setPage(Math.min(Math.ceil(filtered.length / perPage), page + 1))}
-                disabled={page >= Math.ceil(filtered.length / perPage)}
-                className="h-10 w-10 sm:w-auto sm:px-4 p-0 sm:gap-2"
-              >
-                <span className="hidden sm:inline">Next</span>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-            </div>
-          </div>
-        </div>
-
-        {/* View Patient Dialog - Simple implementation */}
-        {isOpenViewDialog && selectedPatient && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className={`text-2xl font-bold ${themeColors.text}`}>Patient Details</h2>
-                <button
-                  onClick={() => setIsOpenViewDialog(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="flex items-center space-x-4">
-                  <div className="w-20 h-20 bg-linear-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-semibold text-2xl">
-                    {(selectedPatient.name || 'P').charAt(0).toUpperCase()}
-                  </div>
-                  <div>
-                    <h3 className="text-xl font-semibold">{selectedPatient.name || 'Unknown'}</h3>
-                    <p className="text-gray-600">ID: {selectedPatient.patientId}</p>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Age</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.dob ? calculateAge(selectedPatient.dob) : '-'} years</p>
-                  </div>
-                  <div>
-                    <Label>Gender</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.gender}</p>
-                  </div>
-                  <div>
-                    <Label>Blood Group</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.bloodGroup}</p>
-                  </div>
-                  <div>
-                    <Label>Phone</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.phone}</p>
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.email || 'N/A'}</p>
-                  </div>
-                  <div>
-                    <Label>Address</Label>
-                    <p className="text-sm text-gray-900">{selectedPatient.address || 'N/A'}</p>
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Allergies</Label>
-                  <p className="text-sm text-gray-900">{selectedPatient.allergies || 'None'}</p>
-                </div>
-
-                <div>
-                  <Label>Medical Conditions</Label>
-                  <p className="text-sm text-gray-900">{selectedPatient.conditions || 'None'}</p>
-                </div>
-
-                <div>
-                  <Label>Emergency Contact</Label>
-                  <p className="text-sm text-gray-900">{selectedPatient.contactName} - {selectedPatient.emergencyPhone}</p>
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end">
-                <Button
-                  onClick={() => setIsOpenViewDialog(false)}
-                  className={`${themeColors.button}`}
-                >
-                  Close
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Edit Patient Dialog - Simple implementation */}
-        {isOpenEditDialog && selectedPatient && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className={`text-2xl font-bold ${themeColors.text}`}>Edit Patient</h2>
-                <button
-                  onClick={() => setIsOpenEditDialog(false)}
-                  className="text-gray-500 hover:text-gray-700"
-                >
-                  ✕
-                </button>
-              </div>
-
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Name</Label>
-                    <Input
-                      type="text"
-                      value={selectedPatient.name}
-                      onChange={(e) => setSelectedPatient({...selectedPatient, name: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Phone</Label>
-                    <Input
-                      type="text"
-                      value={selectedPatient.phone}
-                      onChange={(e) => setSelectedPatient({...selectedPatient, phone: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <Input
-                      type="email"
-                      value={selectedPatient.email || ''}
-                      onChange={(e) => setSelectedPatient({...selectedPatient, email: e.target.value})}
-                    />
-                  </div>
-                  <div>
-                    <Label>Address</Label>
-                    <Input
-                      type="text"
-                      value={selectedPatient.address || ''}
-                      onChange={(e) => setSelectedPatient({...selectedPatient, address: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <Label>Allergies</Label>
-                  <Input
-                    type="text"
-                    value={selectedPatient.allergies || ''}
-                    onChange={(e) => setSelectedPatient({...selectedPatient, allergies: e.target.value})}
-                  />
-                </div>
-
-                <div>
-                  <Label>Medical Conditions</Label>
-                  <Input
-                    type="text"
-                    value={selectedPatient.conditions || ''}
-                    onChange={(e) => setSelectedPatient({...selectedPatient, conditions: e.target.value})}
-                  />
-                </div>
-              </div>
-
-              <div className="mt-6 flex justify-end gap-2">
-                <Button
-                  variant="outline"
-                  onClick={() => setIsOpenEditDialog(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  onClick={() => {
-                    // Here you would typically save the changes
-                    toast.success('Patient updated successfully!')
-                    setIsOpenEditDialog(false)
-                  }}
-                  className={`${themeColors.button}`}
-                >
-                  Save Changes
-                </Button>
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Edit Patient Dialog */}
+        <AddEditPatient
+          isOpen={isOpenEditDialog}
+          onClose={() => setIsOpenEditDialog(false)}
+          editData={selectedPatient || undefined}
+          titleClass={themeColors.text}
+        />
       </div>
     </div>
   )

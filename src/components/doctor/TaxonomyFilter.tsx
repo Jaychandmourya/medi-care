@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback, memo, useMemo } from 'react'
 import { ChevronDown, Briefcase } from 'lucide-react'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 
 // Common taxonomy codes for dropdown (extracted from API data)
 const COMMON_TAXONOMIES = [
@@ -95,7 +95,7 @@ function TaxonomyFilter({
 
   return (
     <div className="relative" ref={dropdownRef}>
-      {/* Trigger Button */}
+      {/* Trigger FormButton */}
       <button
         type="button"
         onClick={() => !disabled && setIsOpen(!isOpen)}
@@ -140,9 +140,9 @@ function TaxonomyFilter({
       {/* Dropdown */}
       {isOpen && !disabled && (
         <div className="absolute z-50 w-full mt-1 bg-white border border-gray-200 rounded-xl shadow-lg max-h-80 overflow-hidden">
-          {/* Search Input */}
+          {/* Search FormField */}
           <div className="p-3 border-b border-gray-100">
-            <Input
+            <FormField
               type="text"
               placeholder="Search specialties..."
               value={searchTerm}

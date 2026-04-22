@@ -6,9 +6,9 @@ import { z } from 'zod';
 import { Calendar, Clock, AlertTriangle, AlertCircle } from 'lucide-react';
 import toast from 'react-hot-toast';
 import { Label } from '@/components/common/Label';
-import DatePicker from '@/components/common/DatePicker';
-import Input from '@/components/common/Input';
-import FormDialog from '@/components/common/dialog/FormDialog';
+import FormDatePicker from '@/components/common/FormDatePicker';
+import FormField from '@/components/common/FormField';
+import GenericDialog from '@/components/common/dialog/GenericDialog';
 import { useAppDispatch, useAppSelector } from '@/app/hooks';
 import { updateAppointment, generateTimeSlots } from '@/features/appointment/appointmentThunk';
 import { rescheduleSchema } from '@/schema/appointmentSchema'
@@ -146,7 +146,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
   if (!showRescheduleModal || !selectedAppointment) return null;
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={showRescheduleModal}
       onClose={handleClose}
       header={customHeader}
@@ -194,7 +194,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
             name="date"
             control={control}
             render={({ field }) => (
-              <DatePicker
+              <FormDatePicker
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Select new date"
@@ -221,7 +221,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
             name="slot"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormField
                 {...field}
                 as="select"
                 disabled={!availableSlots.length}
@@ -231,7 +231,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
                   {availableSlots.length ? 'Select a time slot' : 'Select a date first'}
                 </option>
                 {timeSlotOptions}
-              </Input>
+              </FormField>
             )}
           />
           {errors.slot && (
@@ -286,7 +286,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
           </div>
         )}
       </div>
-    </FormDialog>
+    </GenericDialog>
   );
 };
 

@@ -1,5 +1,5 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "./Button";
+import { FormButton } from "./FormButton";
 
 interface PaginationProps {
   page: number;
@@ -27,7 +27,7 @@ export default function Pagination({
           Showing <span className="font-medium text-gray-900">{startItem}</span> to <span className="font-medium text-gray-900">{endItem}</span> of <span className="font-medium text-gray-900">{totalItems}</span> {itemName}
         </div>
         <div className="flex items-center gap-2 order-1 sm:order-2">
-          <Button
+          <FormButton
             variant="outline"
             size="sm"
             onClick={() => setPage(Math.max(1, page - 1))}
@@ -36,7 +36,7 @@ export default function Pagination({
           >
             <ChevronLeft className="w-4 h-4" />
             <span className="hidden sm:inline">Previous</span>
-          </Button>
+          </FormButton>
 
           {/* Page Numbers - Hidden on mobile, shown on tablet+ */}
           <div className="hidden md:flex items-center gap-1">
@@ -52,7 +52,7 @@ export default function Pagination({
                 pageNum = page - 2 + i;
               }
               return (
-                <Button
+                <FormButton
                   key={pageNum}
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
@@ -60,7 +60,7 @@ export default function Pagination({
                   className="h-10 w-10 p-0"
                 >
                   {pageNum}
-                </Button>
+                </FormButton>
               );
             })}
           </div>
@@ -79,7 +79,7 @@ export default function Pagination({
                 pageNum = page - 1 + i;
               }
               return (
-                <Button
+                <FormButton
                   key={pageNum}
                   variant={page === pageNum ? "default" : "outline"}
                   size="sm"
@@ -87,12 +87,12 @@ export default function Pagination({
                   className="h-10 w-10 p-0 font-semibold"
                 >
                   {pageNum}
-                </Button>
+                </FormButton>
               );
             })}
           </div>
 
-          <Button
+          <FormButton
             variant="outline"
             size="sm"
             onClick={() => setPage(Math.min(totalPages, page + 1))}
@@ -101,7 +101,7 @@ export default function Pagination({
           >
             <span className="hidden sm:inline">Next</span>
             <ChevronRight className="w-4 h-4" />
-          </Button>
+          </FormButton>
         </div>
       </div>
     </div>

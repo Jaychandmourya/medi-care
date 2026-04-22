@@ -4,8 +4,8 @@ import { useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import FormField from '@/components/common/FormField'
 
 // Import Types files
 import type { RootState, AppDispatch } from '@/app/store'
@@ -172,7 +172,7 @@ const NurseDashboard = () => {
         <div className="lg:col-span-2 bg-white rounded-lg shadow-md p-6">
           <div className="flex flex-wrap gap-2 justify-between items-center mb-6">
             <h2 className="text-xl font-semibold text-gray-800">Ward Bed Status</h2>
-            <Input
+            <FormField
               as="select"
               value={selectedWard}
               onChange={(e: React.ChangeEvent<HTMLSelectElement | HTMLInputElement | HTMLTextAreaElement>) => dispatch(setSelectedWard(e.target.value))}
@@ -183,7 +183,7 @@ const NurseDashboard = () => {
                   {ward.name} (Floor {ward.floor})
                 </option>
               ))}
-            </Input>
+            </FormField>
           </div>
 
           {selectedWardInfo && (
@@ -278,13 +278,13 @@ const NurseDashboard = () => {
             )}
           </div>
           {pendingVitals.length > 0 && (
-            <Button
+            <FormButton
               onClick={() => navigate('/nurse/vitals')}
               customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105 focus:ring-orange-500`}
               className="w-full mt-4"
             >
               Record Vitals
-            </Button>
+            </FormButton>
           )}
         </div>
       </div>

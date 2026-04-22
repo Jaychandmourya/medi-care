@@ -238,7 +238,6 @@ export const seedAppointments = async (doctors: Doctor[], patients: Patient[]) =
 
 export const seedAllData = async () => {
   try {
-    console.log('Starting seedAllData...');
 
     // Check if data already exists first
     const existingDoctors = await db.doctors.count();
@@ -246,24 +245,16 @@ export const seedAllData = async () => {
     const existingAppointments = await db.appointments.count();
 
     if (existingDoctors > 0 || existingPatients > 0 || existingAppointments > 0) {
-      console.log('Seed data already exists, skipping...');
       return;
     }
 
-    console.log('Seeding initial data...');
     const doctors = await seedDoctors();
-    console.log('Doctors seeded:', doctors.length);
 
     const patients = await seedPatients();
-    console.log('Patients seeded:', patients.length);
 
     const schedules = await seedDoctorSchedules(doctors);
-    console.log('Schedules seeded:', schedules.length);
 
     const appointments = await seedAppointments(doctors, patients);
-    console.log('Appointments seeded:', appointments.length);
-
-    console.log('Seed data created successfully!');
 
     // Verify data was created
     const doctorCount = await db.doctors.count();

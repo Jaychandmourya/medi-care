@@ -56,7 +56,6 @@ export const doctorDBOperations = {
 
   // Update an existing doctor
   update: async (id: number, updates: Partial<LocalDoctor>): Promise<number> => {
-    console.log('updates',updates)
     const doctorId = id.toString()
     const existingDoctor = await db.doctors.get(doctorId)
     if (!existingDoctor) return 0

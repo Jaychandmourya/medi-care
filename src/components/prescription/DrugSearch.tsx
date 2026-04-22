@@ -4,7 +4,7 @@ import { Search, Pill, Loader2 } from 'lucide-react'
 import { setSelectedDrug, searchDrugs } from '@/features/prescription/prescriptionSlice'
 import type { AppDispatch, RootState } from '@/app/store'
 import type { Drug } from '@/types/prescription/prescriptionType'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 
 const DrugSearch = () => {
 
@@ -98,7 +98,7 @@ const DrugSearch = () => {
   return (
     <div className="relative">
       <div className="relative">
-        <Input
+        <FormField
           type="text"
           value={searchQuery}
           onChange={handleInputChange}

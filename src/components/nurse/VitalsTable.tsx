@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 
 // Import UI components file
-import { Button } from '@/components/common/Button';
+import { FormButton } from '@/components/common/FormButton';
 import ThreeDotMenu from '@/components/common/ThreeDotMenu';
 
 // Import utils file
@@ -81,7 +81,7 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
     <div className="bg-white rounded-xl shadow-lg overflow-hidden">
       <div className="px-6 py-4 border-b border-gray-200 flex justify-between items-center">
         <h2 className="text-lg font-semibold text-gray-900">Vitals Records</h2>
-        <Button
+        <FormButton
           onClick={onAdd}
           size="sm"
           customColor={`bg-gradient-to-r ${nurseColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
@@ -89,7 +89,7 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
         >
           <Plus className="w-4 h-4" />
           Record Vitals
-        </Button>
+        </FormButton>
       </div>
 
       <div className="overflow-x-auto">
@@ -132,7 +132,7 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
                     </div>
                     <p className="text-lg font-medium mb-2">No vitals recorded</p>
                     <p className="text-sm text-gray-400 mb-4">Start by recording patient vitals</p>
-                    <Button
+                    <FormButton
                       onClick={onAdd}
                       size="sm"
                       customColor={`bg-gradient-to-r ${nurseColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
@@ -140,7 +140,7 @@ export const VitalsTable = ({ vitals, patients, onEdit, onDelete, onAdd }: Vital
                     >
                       <Plus className="w-4 h-4" />
                       Record First Vitals
-                    </Button>
+                    </FormButton>
                   </div>
                 </td>
               </tr>

@@ -3,7 +3,7 @@ import { useAppSelector, useAppDispatch } from '@/app/hooks'
 import { getAllPatients } from '@/features/patient/patientThunk'
 import type { Patient } from '@/types/patients/patientType'
 import { Search, Plus } from 'lucide-react'
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import AddEditPatientDialog from '@/components/admin/patient/AddEditPatient'
 
 interface PatientSearchDropdownProps {
@@ -148,7 +148,7 @@ const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
               </div>
 
               <div className="p-2 border-t border-gray-200">
-                <Button
+                <FormButton
                   onClick={handleAddPatient}
                   variant="outline"
                   size="sm"
@@ -156,7 +156,7 @@ const PatientSearchDropdown: React.FC<PatientSearchDropdownProps> = ({
                 >
                   <Plus className="w-4 h-4 mr-2" />
                   Add New Patient
-                </Button>
+                </FormButton>
               </div>
             </div>
           )}

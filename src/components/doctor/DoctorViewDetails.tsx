@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import { User, MapPin, Phone, Briefcase, Calendar } from 'lucide-react'
-import { Button } from '@/components/common/Button'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import { FormButton } from '@/components/common/FormButton'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 import type { LocalDoctor } from '@/types/doctors/doctorType'
 
 interface DoctorViewModalProps {
@@ -50,18 +50,18 @@ export default function DoctorViewDetails({
 
   const footerContent = (
     <div className="flex justify-end">
-      <Button
+      <FormButton
         onClick={onClose}
         variant="outline"
         className="border-gray-300 text-gray-700 hover:bg-gray-50"
       >
         Close
-      </Button>
+      </FormButton>
     </div>
   )
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       title="Doctor Details"
@@ -173,6 +173,6 @@ export default function DoctorViewDetails({
           </div>
         </div>
       </div>
-    </FormDialog>
+    </GenericDialog>
   )
 }

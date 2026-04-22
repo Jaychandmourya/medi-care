@@ -6,10 +6,10 @@ import toast from 'react-hot-toast';
 import { Calendar, Clock, User, Stethoscope, AlertCircle } from 'lucide-react';
 
 // Import UI components
-import Input from '@/components/common/Input';
-import DatePicker from '@/components/common/DatePicker';
+import FormField from '@/components/common/FormField';
+import FormDatePicker from '@/components/common/FormDatePicker';
 import { Label } from '@/components/common/Label';
-import FormDialog from '@/components/common/dialog/FormDialog';
+import GenericDialog from '@/components/common/dialog/GenericDialog';
 
 // Import form controller, zod, and validation
 import { useForm, Controller } from 'react-hook-form';
@@ -156,7 +156,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
   );
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={showBookingModal}
       onClose={handleCloseModal}
       header={customHeader}
@@ -178,7 +178,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             name="patientId"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormField
                 as="select"
                 label="Patient"
                 required
@@ -192,7 +192,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                     {patient.name}
                   </option>
                 ))}
-              </Input>
+              </FormField>
             )}
           />
 
@@ -202,7 +202,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               name="department"
               control={control}
               render={({ field }) => (
-                <Input
+                <FormField
                   as="select"
                   label="Department"
                   required
@@ -219,7 +219,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                       {dept}
                     </option>
                   ))}
-                </Input>
+                </FormField>
               )}
             />
 
@@ -227,7 +227,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               name="doctorId"
               control={control}
               render={({ field }) => (
-                <Input
+                <FormField
                   as="select"
                   label="Doctor"
                   required
@@ -241,7 +241,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                       Dr. {doctor.firstName} {doctor.lastName} - {doctor.specialty}
                     </option>
                   ))}
-                </Input>
+                </FormField>
               )}
             />
           </div>
@@ -255,7 +255,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               render={({ field }) => (
                 <div className="space-y-2">
                   <Label required>Date</Label>
-                  <DatePicker
+                  <FormDatePicker
                     value={field.value || ''}
                     onChange={field.onChange}
                     placeholder="Select appointment date"
@@ -278,7 +278,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               control={control}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Input
+                  <FormField
                     as="select"
                     label="Time Slot"
                     required
@@ -299,7 +299,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                         {slot}
                       </option>
                     ))}
-                  </Input>
+                  </FormField>
 
                   {/* Conflict Alert */}
                   {conflict && (
@@ -345,7 +345,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             name="duration"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormField
                 as="select"
                 label="Duration (minutes)"
                 required
@@ -356,7 +356,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
                 <option value={30}>30 minutes</option>
                 <option value={45}>45 minutes</option>
                 <option value={60}>60 minutes</option>
-              </Input>
+              </FormField>
             )}
           />
 
@@ -365,7 +365,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             name="reason"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormField
                 as="textarea"
                 label="Reason for Visit"
                 required
@@ -382,7 +382,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             name="notes"
             control={control}
             render={({ field }) => (
-              <Input
+              <FormField
                 as="textarea"
                 label="Additional Notes"
                 rows={2}
@@ -392,7 +392,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             )}
           />
         </div>
-    </FormDialog>
+    </GenericDialog>
   );
 });
 

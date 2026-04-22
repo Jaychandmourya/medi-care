@@ -10,9 +10,9 @@ import type { Appointment } from '@/features/db/dexie'
 import type { Medicine } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/common/Input'
-import DatePicker from '@/components/common/DatePicker'
-import { Button } from '@/components/common/Button'
+import FormField from '@/components/common/FormField'
+import FormDatePicker from '@/components/common/FormDatePicker'
+import { FormButton } from '@/components/common/FormButton'
 import { Label } from '@/components/common/Label'
 
 // Import form control, validation and zod
@@ -126,7 +126,6 @@ const PrescriptionBuilder = () => {
       const doctorPatientIds = appointments
         .filter((apt: Appointment) => apt.doctorId === currentDoctorId)
         .map((apt: Appointment) => apt.patientId)
-      console.log('doctorPatientIds',patients.filter(p => p.isActive && doctorPatientIds.includes(p.id!)))
 
       return patients.filter(p => p.isActive && doctorPatientIds.includes(p.id!))
     }
@@ -283,7 +282,7 @@ const PrescriptionBuilder = () => {
 
             <form onSubmit={handlePrescriptionSubmit(onPrescriptionSubmit)} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Input
+                <FormField
                   id="patientId"
                   required
                   as="select"
@@ -297,7 +296,7 @@ const PrescriptionBuilder = () => {
                       {patient.name} - {patient.patientId}
                     </option>
                   ))}
-                </Input>
+                </FormField>
 
                 <div>
                   <Label required className="block text-sm font-medium text-gray-700 mb-1">
@@ -307,7 +306,7 @@ const PrescriptionBuilder = () => {
                     type="hidden"
                     {...registerPrescription('followUpDate')}
                   />
-                  <DatePicker
+                  <FormDatePicker
                     value={watchedFollowUpDate}
                     onChange={(value: string) => {
                       setValue('followUpDate', value)
@@ -325,7 +324,7 @@ const PrescriptionBuilder = () => {
                 </div>
               </div>
 
-              <Input
+              <FormField
                 id="diagnosis"
                 as="textarea"
                 label="Diagnosis"
@@ -336,7 +335,7 @@ const PrescriptionBuilder = () => {
                 error={prescriptionErrors.diagnosis}
               />
 
-              <Input
+              <FormField
                 id="generalNotes"
                 as="textarea"
                 label="General Notes"
@@ -347,13 +346,13 @@ const PrescriptionBuilder = () => {
               />
 
               <div className="flex gap-3">
-                <Button
+                <FormButton
                   type="submit"
                   className="flex items-center gap-2"
                 >
                   <Save className="h-4 w-4" />
                   Save Prescription
-                </Button>
+                </FormButton>
               </div>
             </form>
       </div>
@@ -362,27 +361,27 @@ const PrescriptionBuilder = () => {
       <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
             <div className="flex flex-wrap gap-2 justify-between items-center mb-4">
               <h3 className="text-lg font-semibold text-gray-900">Medicines</h3>
-              <Button
+              <FormButton
                 onClick={handleAddMedicine}
                 size="sm"
                 className="flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
                 Add Medicine
-              </Button>
+              </FormButton>
             </div>
 
             {medicines.length === 0 ? (
               <div className="text-center py-8">
                 <p className="text-gray-500 mb-4">No medicines added yet</p>
-                <Button
+                <FormButton
                   onClick={handleAddMedicine}
                   variant="outline"
                   className="inline-flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
                   Add Your First Medicine
-                </Button>
+                </FormButton>
               </div>
             ) : (
               <div className="space-y-3">
@@ -409,22 +408,22 @@ const PrescriptionBuilder = () => {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button
+                        <FormButton
                           onClick={() => handleEditMedicine(medicine)}
                           variant="ghost"
                           size="sm"
                           className="text-blue-600 hover:text-blue-800"
                         >
                           Edit
-                        </Button>
-                        <Button
+                        </FormButton>
+                        <FormButton
                           onClick={() => handleRemoveMedicine(medicine.id)}
                           variant="destructive"
                           size="icon"
                           className="h-8 w-8"
                         >
                           <Trash2 className="h-4 w-4" />
-                        </Button>
+                        </FormButton>
                       </div>
                     </div>
                   </div>

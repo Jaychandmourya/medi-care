@@ -3,8 +3,8 @@ import toast from 'react-hot-toast'
 import { Search } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import FormField from '@/components/common/FormField'
 import { Label } from '@/components/common/Label'
 // Lazy load heavy components
 const CountryStateCitySelector = lazy(() => import('@/components/doctor/CountryStateCitySelector'))
@@ -195,14 +195,14 @@ function NPISearchSection() {
               </h4>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <Input
+              <FormField
                 id="npiFirstName"
                 label="First Name"
                 placeholder="Enter first name"
                 value={searchFilters.firstName}
                 onChange={(e) => handleFilterChange('firstName', e.target.value)}
               />
-              <Input
+              <FormField
                 id="npiLastName"
                 label="Last Name"
                 placeholder="Enter last name"
@@ -233,7 +233,7 @@ function NPISearchSection() {
               </div>
             </div>
             <div className="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 mt-4">
-              <Button
+              <FormButton
                 onClick={handleSearch}
                 loading={loading}
                 disabled={loading || !hasActiveFilters}
@@ -241,10 +241,10 @@ function NPISearchSection() {
               >
                 <Search className="w-4 h-4 mr-2" />
                 {loading ? 'Searching...' : 'Search NPI Registry'}
-              </Button>
-              <Button variant="secondary" onClick={handleClearFilters} disabled={!hasActiveFilters} className="w-full sm:w-auto">
+              </FormButton>
+              <FormButton variant="secondary" onClick={handleClearFilters} disabled={!hasActiveFilters} className="w-full sm:w-auto">
                 Clear Filters
-              </Button>
+              </FormButton>
             </div>
           </div>
           {searchResults.length > 0 && (

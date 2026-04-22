@@ -29,7 +29,6 @@ app.get('/api/npi', async (req, res) => {
     if (limit) params.append('limit', limit.toString())
 
     const npiUrl = `https://npiregistry.cms.hhs.gov/api?${params.toString()}`
-    console.log('Proxying request to:', npiUrl)
 
     // Add timeout and better error handling
     const controller = new AbortController()

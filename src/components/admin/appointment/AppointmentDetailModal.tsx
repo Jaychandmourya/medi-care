@@ -6,8 +6,8 @@ import { User, Stethoscope, Calendar, Clock, FileText, Phone, Mail } from 'lucid
 
 // Import UI components
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog';
-import FormDialog from '@/components/common/dialog/FormDialog';
-import { Button } from '@/components/common/Button';
+import GenericDialog from '@/components/common/dialog/GenericDialog';
+import { FormButton } from '@/components/common/FormButton';
 import { Label } from '@/components/common/Label';
 
 // Import Types files
@@ -129,7 +129,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
 
   return (
     <>
-      <FormDialog
+      <GenericDialog
         isOpen={showDetailModal && !!selectedAppointment}
         onClose={handleClose}
         maxWidth="max-w-3xl"
@@ -294,7 +294,7 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
             {/* All Status Options */}
             <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
               {/* Scheduled */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('scheduled')}
                 disabled={selectedAppointment?.status === 'scheduled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -307,10 +307,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'scheduled' ? 'bg-blue-600' : 'bg-white'
                 }`}></div>
                 Scheduled
-              </Button>
+              </FormButton>
 
               {/* Confirmed */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('confirmed')}
                 disabled={selectedAppointment?.status === 'confirmed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -323,10 +323,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'confirmed' ? 'bg-green-600' : 'bg-white'
                 }`}></div>
                 Confirmed
-              </Button>
+              </FormButton>
 
               {/* In Progress */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('in_progress')}
                 disabled={selectedAppointment?.status === 'in_progress'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -339,10 +339,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'in_progress' ? 'bg-yellow-600 animate-pulse' : 'bg-white'
                 }`}></div>
                 In Progress
-              </Button>
+              </FormButton>
 
               {/* Completed */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('completed')}
                 disabled={selectedAppointment?.status === 'completed'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -355,10 +355,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'completed' ? 'bg-gray-600' : 'bg-white'
                 }`}></div>
                 Completed
-              </Button>
+              </FormButton>
 
               {/* Cancelled */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('cancelled')}
                 disabled={selectedAppointment?.status === 'cancelled'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -371,10 +371,10 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'cancelled' ? 'bg-red-600' : 'bg-white'
                 }`}></div>
                 Cancelled
-              </Button>
+              </FormButton>
 
               {/* No Show */}
-              <Button
+              <FormButton
                 onClick={() => handleStatusChange('no_show')}
                 disabled={selectedAppointment?.status === 'no_show'}
                 className={`flex items-center justify-center px-4 py-3 rounded-lg transition-all transform hover:scale-105 shadow-md ${
@@ -387,22 +387,22 @@ const AppointmentDetailModal = ({ showDetailModal, closeShowDetailModal, handleR
                   selectedAppointment?.status === 'no_show' ? 'bg-orange-600' : 'bg-white'
                 }`}></div>
                 No Show
-              </Button>
+              </FormButton>
             </div>
 
-            {/* Reschedule Button */}
+            {/* Reschedule FormButton */}
             <div className="mt-4 pt-4 border-t border-gray-200">
-              <Button
+              <FormButton
                 onClick={handleRescheduleClick}
                 className="w-full flex items-center justify-center px-4 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all transform hover:scale-105 shadow-md"
               >
                 <Calendar className="w-4 h-4 mr-2" />
                 Reschedule Appointment
-              </Button>
+              </FormButton>
             </div>
           </div>
         </div>
-      </FormDialog>
+      </GenericDialog>
 
       {/* Confirmation Dialog */}
       <ConfirmationDialog

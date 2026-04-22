@@ -5,10 +5,10 @@ import toast from 'react-hot-toast'
 import { Search, User, Trash2, Edit, Briefcase, Eye, Building, Plus } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import Pagination from '@/components/common/Pagination'
 import ThreeDotMenu from '@/components/common/ThreeDotMenu'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 
 // Import Types files
 import { type AppDispatch, type RootState } from '@/app/store'
@@ -218,19 +218,19 @@ export default function InternalDoctorList() {
               </h1>
               <p className="text-gray-600 mt-1">Manage your doctor records</p>
             </div>
-            <Button
+            <FormButton
               onClick={handleAddNewDoctor}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white"
             >
               <Plus className="w-4 h-4" />
               Add New Doctor
-            </Button>
+            </FormButton>
           </div>
         </div>
 
         {/* Search */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95">
-          <Input
+          <FormField
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

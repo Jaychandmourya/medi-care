@@ -1,7 +1,7 @@
 import React from 'react'
 import type { Ward } from '@/types/bed/bedType'
 import { Label } from '@/components/common/Label'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 
 interface WardSwitcherProps {
   wards: Ward[]
@@ -21,7 +21,7 @@ const WardSwitcher: React.FC<WardSwitcherProps> = ({
       <div className="flex items-center gap-2">
         <Label className="text-sm md:text-base font-medium text-gray-700 whitespace-nowrap">Ward:</Label>
         <div className="w-full md:w-auto md:min-w-50">
-          <Input
+          <FormField
             as="select"
             value={selectedWard}
             onChange={(e) => onWardChange(e.target.value)}
@@ -32,7 +32,7 @@ const WardSwitcher: React.FC<WardSwitcherProps> = ({
                 {ward.name} (Floor {ward.floor})
               </option>
             ))}
-          </Input>
+          </FormField>
         </div>
       </div>
 

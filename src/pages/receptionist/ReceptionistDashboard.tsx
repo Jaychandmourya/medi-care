@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom'
 import { Users, Calendar, Plus, Ticket, TrendingUp, Activity } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 
 // Import types file
 import type { RootState } from '@/app/store'
@@ -83,27 +83,27 @@ const ReceptionistDashboard = () => {
               Quick Actions
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              <Button
+              <FormButton
                 onClick={handleRegisterPatient}
                 className="flex items-center justify-center gap-2 h-14 sm:h-16 text-sm sm:text-base lg:text-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl"
               >
                 <Plus className="w-4 h-4 sm:w-5 sm:h-5" />
                 Register New Patient
-              </Button>
-              <Button
+              </FormButton>
+              <FormButton
                 onClick={handleIssueToken}
                 className="flex items-center justify-center gap-2 h-14 sm:h-16 text-sm sm:text-base lg:text-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl"
               >
                 <Ticket className="w-4 h-4 sm:w-5 sm:h-5" />
                 Issue Token
-              </Button>
-              <Button
+              </FormButton>
+              <FormButton
                 onClick={handleBookAppointment}
                 className="flex items-center justify-center gap-2 h-14 sm:h-16 text-sm sm:text-base lg:text-lg font-semibold bg-purple-600 hover:bg-purple-700 text-white shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 rounded-xl"
               >
                 <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
                 Book Appointment
-              </Button>
+              </FormButton>
             </div>
           </div>
         </div>

@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, lazy, Suspense } from 'react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import { Label } from '@/components/common/Label'
 
 // Import Types files
@@ -44,8 +44,14 @@ const NurseBeds = () => {
     simulationEnabled
   } = useSelector((state: RootState) => state.beds)
 
-  const [selectedBed, setSelectedBed] = useState<Bed | null>(null)
+  const [selectedBedId, setSelectedBedId] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
+
+  // Get fresh bed data from Redux whenever selectedBedId changes
+  const selectedBed = useMemo(() => {
+    if (!selectedBedId) return null
+    return beds.find(b => b.bedId === selectedBedId) || null
+  }, [beds, selectedBedId])
 
   // Initialize data
   useEffect(() => {
@@ -82,11 +88,11 @@ const NurseBeds = () => {
   }, [simulationEnabled, dispatch, isInitialized])
 
   const handleBedClick = useCallback((bed: Bed) => {
-    setSelectedBed(bed)
+    setSelectedBedId(bed.bedId)
   }, [])
 
   const handleCloseModal = useCallback(() => {
-    setSelectedBed(null)
+    setSelectedBedId(null)
   }, [])
 
   const handleUpdateStatus = useCallback((bedId: string, status: BedStatus, notes?: string) => {
@@ -97,23 +103,26 @@ const NurseBeds = () => {
     dispatch(admitPatient({ bedId, patientId }) as any)
   }, [dispatch])
 
+   const handleRetry = useCallback(() => {
+    dispatch(fetchBeds() as any)
+    dispatch(fetchWards() as any)
+  }, [dispatch])
+
   // Discharge Patient: Free a bed and record discharge time in IndexedDB
   const handleDischargePatient = useCallback((bedId: string) => {
     dispatch(dischargePatient(bedId) as any)
-  }, [dispatch])
+    handleRetry()
+  }, [dispatch, handleRetry])
 
   const handleWardChange = useCallback((wardId: string) => {
     dispatch(setSelectedWard(wardId))
-  }, [dispatch])
+  }, [dispatch, handleRetry])
 
   const handleToggleSimulation = useCallback(() => {
     dispatch(toggleSimulation())
   }, [dispatch])
 
-  const handleRetry = useCallback(() => {
-    dispatch(fetchBeds() as any)
-    dispatch(fetchWards() as any)
-  }, [dispatch])
+
 
   const currentWardBeds = useMemo(() =>
     beds.filter(bed => bed.ward === selectedWard),
@@ -139,12 +148,12 @@ const NurseBeds = () => {
             <p className="font-medium">Error loading bed data</p>
             <p className="text-sm">{error}</p>
           </div>
-          <Button
+          <FormButton
             onClick={handleRetry}
             variant="default"
           >
             Retry
-          </Button>
+          </FormButton>
         </div>
       </div>
     )

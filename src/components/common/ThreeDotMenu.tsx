@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { createPortal } from 'react-dom'
 import { MoreVertical } from 'lucide-react'
-import { Button } from './Button'
+import { FormButton } from './FormButton'
 
 interface DropdownItem {
   label: string
@@ -77,8 +77,8 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
   }
 
   return (
-    <div className="relative" ref={triggerRef}>
-      <Button
+    <div ref={triggerRef}>
+      <FormButton
         variant="ghost"
         size="icon"
         onClick={handleToggle}
@@ -86,7 +86,7 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
         className="p-1"
       >
         <MoreVertical className="w-4 h-4 text-gray-600" />
-      </Button>
+      </FormButton>
 
       {isOpen && createPortal(
         <div

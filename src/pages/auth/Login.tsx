@@ -222,7 +222,7 @@ const Login = () => {
                   {role.desc}
                 </p>
 
-                {/* Button */}
+                {/* FormButton */}
                 <button
                   className={`mt-6 w-full py-2 rounded-lg text-white font-medium cursor-pointer bg-gradient-to-r ${role.gradient}
                   group-hover:opacity-90 transition`}

@@ -58,7 +58,6 @@ export const searchDrugs = createAsyncThunk(
           };
         }) || [];
       } else {
-        console.log(`❌ HTTP error: ${response.status} for drug search`);
         return [];
       }
     } catch (error) {
@@ -95,7 +94,6 @@ export const checkDrugRecall = createAsyncThunk(
           };
         }
       } else {
-        console.log(`❌ Recall API error: ${recallResponse.status}`);
       }
 
       // Also get adverse events data
@@ -181,8 +179,6 @@ export const deletePrescriptionFromHistory = createAsyncThunk(
       const updatedHistory = existingHistory.filter((p: Prescription) => p.id !== prescriptionId);
 
       localStorage.setItem('prescriptionHistory', JSON.stringify(updatedHistory));
-
-      console.log('✅ Prescription deleted from history:', prescriptionId);
       return prescriptionId;
     } catch (error) {
       console.error('Error deleting prescription from history:', error);
@@ -202,8 +198,6 @@ export const getDrugAdverseEvents = createAsyncThunk(
 
       if (response.ok) {
         const data = await response.json();
-        console.log(`✅ Adverse events search successful for: ${drugName}`);
-        console.log('Adverse Events API Response:', data); // Debug log
 
         // Safe data mapping with null checks
         return data.results?.map((item: Record<string, unknown>) => {
@@ -216,8 +210,6 @@ export const getDrugAdverseEvents = createAsyncThunk(
             severity: (item as Record<string, unknown>).seriousness as string || 'Unknown',
           };
         }) || [];
-      } else {
-        console.log(`❌ HTTP error: ${response.status} for adverse events search`);
       }
     } catch (error) {
       console.error('Error getting adverse events:', error);

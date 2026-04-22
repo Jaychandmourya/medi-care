@@ -4,7 +4,7 @@ import { useEffect, useRef, useMemo, useCallback } from 'react'
 import { Play, Pause, SkipForward, RotateCcw, Clock } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -132,7 +132,7 @@ const QueueControlPanel = () => {
       <div className="mb-4 sm:mb-6">
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
           <h3 className="text-base sm:text-lg font-semibold text-gray-700">Auto Simulation</h3>
-          <Button
+          <FormButton
             onClick={toggleSimulationHandler}
             variant={simulationRunning ? 'destructive' : 'default'}
             className={`w-full sm:w-auto justify-center ${!hasTokens ? '!opacity-50 !cursor-disabled !transform-none !scale-100 !transition-none hover:!opacity-50 hover:!transform-none hover:!scale-100' : ''}`}
@@ -152,7 +152,7 @@ const QueueControlPanel = () => {
                 <span className="hidden sm:inline">Start Simulation</span>
               </>
             )}
-          </Button>
+          </FormButton>
         </div>
 
         {simulationRunning && hasTokens && (
@@ -181,7 +181,7 @@ const QueueControlPanel = () => {
       <div className="mb-4 sm:mb-6">
         <h3 className="text-sm sm:text-lg font-semibold text-gray-700 mb-2 sm:mb-3">Manual Controls</h3>
         <div className="flex flex-col xs:flex-row gap-2 sm:gap-3">
-          <Button
+          <FormButton
             onClick={handleAdvance}
             disabled={!currentToken}
             variant="default"
@@ -191,8 +191,8 @@ const QueueControlPanel = () => {
             <SkipForward className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="sm:hidden">Next</span>
             <span className="hidden sm:inline">Call Next</span>
-          </Button>
-          <Button
+          </FormButton>
+          <FormButton
             onClick={handleSkip}
             disabled={!currentToken}
             variant="destructive"
@@ -202,7 +202,7 @@ const QueueControlPanel = () => {
             <RotateCcw className="w-4 h-4 sm:w-5 sm:h-5" />
             <span className="sm:hidden">Skip</span>
             <span className="hidden sm:inline">Skip Current</span>
-          </Button>
+          </FormButton>
         </div>
       </div>
 
@@ -234,14 +234,14 @@ const QueueControlPanel = () => {
                     {token.department}
                   </div>
                 </div>
-                <Button
+                <FormButton
                   onClick={() => handleRequeue(token.tokenId)}
                   variant="destructive"
                   size="sm"
                   className="w-full xs:w-auto shrink-0 text-xs sm:text-sm"
                 >
                   Re-queue
-                </Button>
+                </FormButton>
               </div>
             ))}
           </div>

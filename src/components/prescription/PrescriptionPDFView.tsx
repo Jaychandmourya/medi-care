@@ -79,7 +79,7 @@ const PrescriptionPDFView = ({ prescription: propPrescription }: { prescription?
   return (
     <div className="min-h-screen bg-gray-50 py-8 print:hidden">
       <div className="max-w-4xl mx-auto px-4">
-        {/* Print Button */}
+        {/* Print FormButton */}
         <div className="mb-6 flex justify-end print:hidden">
           <button
             onClick={handlePrint}

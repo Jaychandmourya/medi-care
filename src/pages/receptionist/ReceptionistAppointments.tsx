@@ -4,8 +4,8 @@ import { useEffect, useState, useCallback, useMemo, lazy, Suspense } from 'react
 import { Plus, Filter, Calendar, Printer, Search } from 'lucide-react';
 
 // Import UI components
-import { Button } from '@/components/common/Button';
-import Input from '@/components/common/Input';
+import { FormButton } from '@/components/common/FormButton';
+import FormField from '@/components/common/FormField';
 
 // Import Type file
 import type { RootState } from "@/app/store";
@@ -143,21 +143,21 @@ const ReceptionistAppointments = () => {
             <p className="text-gray-600 mt-2">Manage and schedule patient appointments</p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button
+            <FormButton
               onClick={() => setShowBookingModal(true)}
               className={`flex items-center ${currentRoleColors.primary}`}
             >
               <Plus className="w-5 h-5 mr-2" />
               Book Appointment
-            </Button>
-            <Button
+            </FormButton>
+            <FormButton
               onClick={handlePrintSchedule}
               variant="secondary"
               className="flex items-center"
             >
               <Printer className="w-5 h-5 mr-2" />
               Print Schedule
-            </Button>
+            </FormButton>
           </div>
         </div>
       </div>
@@ -167,7 +167,7 @@ const ReceptionistAppointments = () => {
         <div className="flex flex-col lg:flex-row gap-6">
           {/* Doctor Filter */}
           <div className="flex-1">
-            <Input
+            <FormField
               id="doctor-filter"
               as="select"
               label="Filter by Doctor"
@@ -181,12 +181,12 @@ const ReceptionistAppointments = () => {
                   Dr. {doctor.name || `${doctor.firstName} ${doctor.lastName}`} - {doctor.department}
                 </option>
               ))}
-            </Input>
+            </FormField>
           </div>
 
           {/* Search */}
           <div className="flex-1">
-            <Input
+            <FormField
               id="doctor-search"
               type="text"
               label="Search Doctors"
@@ -209,13 +209,13 @@ const ReceptionistAppointments = () => {
                 })()}
               </strong>
             </span>
-            <Button
+            <FormButton
               onClick={() => handleDoctorFilter('all')}
               variant="link"
               size="sm"
             >
               Clear Filter
-            </Button>
+            </FormButton>
           </div>
         )}
       </div>

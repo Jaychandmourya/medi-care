@@ -4,10 +4,10 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react'
 import { X, User, Calendar, Clock, FileText, UserPlus, LogOut, Plus, ChevronDown } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import { Label } from '@/components/common/Label'
-import Input from '@/components/common/Input'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import FormField from '@/components/common/FormField'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 
 // Import Types files
 import type { RootState } from '@/app/store'
@@ -70,7 +70,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   onAdmitPatient,
   onDischargePatient
 }) => {
-
+  
   // Dispatch and selector
   const dispatch = useAppDispatch()
   const patients = useAppSelector((state: RootState) => state.patients.list)
@@ -100,10 +100,21 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
   const watchedPatientSearch = watch('patientSearch')
   const watchedStatus = watch('status')
 
-  // Effect
+  // Effect - Load patients on mount
   useEffect(() => {
     dispatch(getAllPatients())
   }, [dispatch])
+
+  // Effect - Reset form state when bed changes (modal opens/closes with different bed)
+  useEffect(() => {
+    if (bed) {
+      setValue('status', bed.status || 'available')
+      setValue('notes', bed.notes || '')
+      setValue('patientSearch', '')
+      setSelectedPatient(null)
+      setShowPatientDropdown(false)
+    }
+  }, [bed, bed?.bedId, bed?.status, bed?.patientId, setValue])
 
   // Callbacks
   // Check if patient is already admitted to another bed
@@ -248,7 +259,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
 
   return (
     <>
-      <FormDialog
+      <GenericDialog
         isOpen={true}
         onClose={onClose}
         title="Bed Details"
@@ -299,7 +310,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
 
           {/* Status Update */}
           <div className="space-y-3">
-            <Input
+            <FormField
               id="status"
               label="Update Status"
               as="select"
@@ -311,12 +322,12 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                   {option.label}
                 </option>
               ))}
-            </Input>
+            </FormField>
           </div>
 
           {/* Notes */}
           <div className="space-y-3">
-            <Input
+            <FormField
               id="notes"
               label="Notes"
               as="textarea"
@@ -328,7 +339,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
             />
           </div>
             {/* Patient Actions */}
-          {((bed?.status === 'available') && (watchedStatus === 'available' || watchedStatus === 'occupied')) && (
+          {((bed?.status === 'available') && (watchedStatus === 'occupied')) && (
               <div className="space-y-3">
               <div className='flex justify-between items-center'>
                 <Label className="block text-sm font-medium text-gray-700">
@@ -346,16 +357,16 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
                 <div className="relative">
                   <div className="flex space-x-2">
                     <div className="flex-1 relative">
-                      <Input
-                        id="patientSearch"
-                        type="text"
-                        placeholder="Search patient by name, ID, or phone..."
-                        value={selectedPatient ? `${selectedPatient.name}` : watchedPatientSearch}
-                        onChange={(e) => handlePatientSearchChange(e.target.value)}
-                        onFocus={() => setShowPatientDropdown(true)}
-                        onClick={() => setShowPatientDropdown(true)}
-                        error={errors.patientSearch}
-                        className="pr-10"
+                      <FormField
+                          id="patientSearch"
+                          type="text"
+                          placeholder="Search patient by name, ID, or phone..."
+                          value={selectedPatient ? `${selectedPatient.name}` : watchedPatientSearch}
+                          onChange={(e) => handlePatientSearchChange(e.target.value)}
+                          onFocus={() => setShowPatientDropdown(true)}
+                          onClick={() => setShowPatientDropdown(true)}
+                          error={errors.patientSearch}
+                          className="pr-10"
                       />
                       {!selectedPatient && (
                         <button
@@ -528,7 +539,7 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
           )}
 
           {bed.status === 'occupied' && (
-            <Button
+            <FormButton
               type="button"
               onClick={handleDischargePatient}
               variant="destructive"
@@ -537,12 +548,12 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
             >
               <LogOut className="w-4 h-4" />
               <span>Discharge Patient</span>
-            </Button>
+            </FormButton>
           )}
 
-          {/* Admit Patient Button - shown when patient is selected but not yet admitted */}
+          {/* Admit Patient FormButton - shown when patient is selected but not yet admitted */}
           {watchedStatus === 'occupied' && selectedPatient && bed?.status !== 'occupied' && (
-            <Button
+            <FormButton
               type="button"
               onClick={handleAdmitPatient}
               variant="default"
@@ -551,11 +562,11 @@ const BedDetailModal: React.FC<BedDetailModalProps> = ({
             >
               <UserPlus className="w-4 h-4" />
               <span>Admit Patient</span>
-            </Button>
+            </FormButton>
           )}
             </div>
           </form>
-        </FormDialog>
+        </GenericDialog>
 
         {/* Add Patient Dialog */}
         <React.Suspense fallback={null}>

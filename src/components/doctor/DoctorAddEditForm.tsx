@@ -10,11 +10,11 @@ import { useDispatch } from 'react-redux'
 import { type AppDispatch } from '@/app/store'
 import { fetchDoctorSchedules } from '@/features/doctorSchedule/doctorScheduleSlice'
 import { type DoctorSchedule as DoctorScheduleType } from '@/features/db/dexie'
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 import CountryStateCitySelector from './CountryStateCitySelector'
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 import { DoctorSchedule as DoctorScheduleComponent } from './DoctorSchedule'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 import toast from 'react-hot-toast'
 
 interface DoctorEditFormProps {
@@ -177,6 +177,17 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
     document.addEventListener('mousedown', handleClickOutside)
     return () => document.removeEventListener('mousedown', handleClickOutside)
   }, [])
+
+  // Scroll to top when switching to schedule step
+  useEffect(() => {
+    if (currentStep === 'schedule') {
+      // Find the dialog content container and scroll to top
+      const dialogContent = document.querySelector('[role="dialog"] .overflow-y-auto, [role="dialog"] .overflow-auto, [role="dialog"] > div > div')
+      if (dialogContent) {
+        dialogContent.scrollTo({ top: 0, behavior: 'smooth' })
+      }
+    }
+  }, [currentStep])
 
   const selectSpecialty = (taxonomy: typeof COMMON_TAXONOMIES[0]) => {
     setValue('specialty', taxonomy.desc)
@@ -414,14 +425,14 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
     if (currentStep === 'doctor-info') {
       return (
         <div className="flex items-center justify-between gap-3">
-          <Button
+          <FormButton
             type="button"
             variant="secondary"
             onClick={onCancel}
           >
             Cancel
-          </Button>
-          <Button
+          </FormButton>
+          <FormButton
             type="button"
             onClick={handleNextStep}
             disabled={saving}
@@ -429,7 +440,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
           >
             Next: Schedule
             <ChevronRight className="w-4 h-4" />
-          </Button>
+          </FormButton>
         </div>
       )
     }
@@ -437,7 +448,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
     // Schedule step - navigation is inside DoctorScheduleComponent, but we need a back button
     return (
       <div className="flex items-center justify-between gap-3">
-        <Button
+        <FormButton
           type="button"
           variant="secondary"
           onClick={handlePreviousStep}
@@ -445,14 +456,14 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
         >
           <ChevronLeft className="w-4 h-4" />
           Back to Doctor Info
-        </Button>
+        </FormButton>
         <div /> {/* Spacer for alignment */}
       </div>
     )
   }
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onCancel}
       title={mode === 'add' ? 'Add New Doctor' : 'Edit Doctor Information'}
@@ -466,7 +477,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
         <form onSubmit={handleSubmit(handleSave)}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* First Name */}
-            <Input
+            <FormField
               id="firstName"
               label="First Name"
               required
@@ -476,7 +487,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             />
 
             {/* Last Name */}
-            <Input
+            <FormField
               id="lastName"
               label="Last Name"
               required
@@ -488,7 +499,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             {/* Specialty */}
             <div className="relative" ref={specialtyRef}>
               <div onClick={() => setShowSpecialtyDropdown(true)}>
-                <Input
+                <FormField
                   id="specialty"
                   label="Specialty"
                   required
@@ -523,7 +534,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             </div>
 
             {/* Contact */}
-            <Input
+            <FormField
               id="contact"
               label="Phone"
               type="tel"
@@ -534,7 +545,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             />
 
             {/* Gender */}
-            <Input
+            <FormField
               id="gender"
               label="Gender"
               required
@@ -546,10 +557,10 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
               <option value="M">Male</option>
               <option value="F">Female</option>
               <option value="O">Other</option>
-            </Input>
+            </FormField>
 
             {/* Department */}
-            <Input
+            <FormField
               id="department"
               label="Department"
               as="select"
@@ -563,7 +574,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
               <option value="Orthopedics">Orthopedics</option>
               <option value="Pediatrics">Pediatrics</option>
               <option value="Dermatology">Dermatology</option>
-            </Input>
+            </FormField>
 
             {/* Country, State, City Selector */}
             <div className="md:col-span-2">
@@ -588,7 +599,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             </div>
 
             {/* Postal Code */}
-            <Input
+            <FormField
               id="postalCode"
               label="Postal Code"
               registration={register('postalCode')}
@@ -597,7 +608,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             />
 
             {/* Address */}
-            <Input
+            <FormField
               id="address"
               as="textarea"
               label="Address"
@@ -643,6 +654,6 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
           )}
         </div>
       )}
-    </FormDialog>
+    </GenericDialog>
   )
 }

@@ -1,6 +1,6 @@
 import { useMemo, useCallback } from 'react'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 
 interface SearchPaginationProps {
   currentPage: number
@@ -72,7 +72,7 @@ export default function SearchPagination({
       {/* Pagination controls */}
       <div className="flex items-center space-x-2">
         {/* Previous button */}
-        <Button
+        <FormButton
           onClick={handlePrevious}
           disabled={currentPage === 1 || loading}
           variant="outline"
@@ -81,7 +81,7 @@ export default function SearchPagination({
         >
           <ChevronLeft className="w-4 h-4" />
           Previous
-        </Button>
+        </FormButton>
 
         {/* Page numbers */}
         <div className="hidden sm:flex items-center space-x-1">
@@ -90,7 +90,7 @@ export default function SearchPagination({
               {page === '...' ? (
                 <span className="px-3 py-1 text-sm text-gray-500">...</span>
               ) : (
-                <Button
+                <FormButton
                   onClick={() => handlePageClick(page as number)}
                   disabled={loading}
                   variant={currentPage === page ? 'default' : 'outline'}
@@ -102,7 +102,7 @@ export default function SearchPagination({
                   }`}
                 >
                   {page}
-                </Button>
+                </FormButton>
               )}
             </div>
           ))}
@@ -116,7 +116,7 @@ export default function SearchPagination({
         </div>
 
         {/* Next button */}
-        <Button
+        <FormButton
           onClick={handleNext}
           disabled={currentPage === totalPages || loading}
           variant="outline"
@@ -125,7 +125,7 @@ export default function SearchPagination({
         >
           Next
           <ChevronRight className="w-4 h-4" />
-        </Button>
+        </FormButton>
       </div>
     </div>
   )

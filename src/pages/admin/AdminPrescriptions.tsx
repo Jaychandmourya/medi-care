@@ -1,7 +1,10 @@
-import { useState, Suspense, lazy } from 'react'
+import { useState, Suspense, lazy, useMemo } from 'react'
 
 // Import icons file
 import { History, Plus, Eye } from 'lucide-react'
+
+// Import components
+import Tabs from '@/components/common/Tabs'
 
 // Import Types files
 import type { RootState } from '@/app/store'
@@ -14,83 +17,53 @@ const PrescriptionBuilder = lazy(() => import('@/components/prescription/Prescri
 const PrescriptionPDFView = lazy(() => import('@/components/prescription/PrescriptionPDFView'))
 const PrescriptionHistory = lazy(() => import('@/components/prescription/PrescriptionHistory'))
 
+type TabType = 'builder' | 'history' | 'preview'
+
 const AdminPrescriptions = () => {
 
    // Redux selector
   const { currentPrescription } = useSelector((state: RootState) => state.prescriptions)
 
   // State management
-  const [activeView, setActiveView] = useState<'builder' | 'history' | 'preview'>('builder')
+  const [activeTab, setActiveTab] = useState<TabType>('builder')
 
-  // Methods
-  const handleViewChange = (view: 'builder' | 'history' | 'preview') => {
-    setActiveView(view)
-  }
+  // Tab configuration
+  const tabs = useMemo(() => [
+    { id: 'builder' as TabType, label: 'Write Prescription', icon: Plus },
+    { id: 'history' as TabType, label: 'History', icon: History },
+    ...(currentPrescription ? [{ id: 'preview' as TabType, label: 'Preview PDF', icon: Eye }] : [])
+  ], [currentPrescription])
 
   return (
-    <div>
-      <div className="">
-        {/* Header */}
-        <div className="bg-white mb-8 p-6 rounded-lg border border-gray-200 shadow-sm">
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Prescription Management</h1>
-          <p className="text-gray-600">Create and manage digital prescriptions with OpenFDA integration</p>
-        </div>
-
-        {/* Navigation Tabs */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm mb-6">
-          <div className="flex space-x-1 p-1">
-            <button
-              onClick={() => handleViewChange('builder')}
-              className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
-                activeView === 'builder'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <Plus className="h-4 w-4" />
-              Write Prescription
-            </button>
-            <button
-              onClick={() => handleViewChange('history')}
-              className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
-                activeView === 'history'
-                  ? 'bg-blue-600 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              <History className="h-4 w-4" />
-              History
-            </button>
-            {currentPrescription && (
-              <button
-                onClick={() => handleViewChange('preview')}
-                className={`flex items-center gap-2 px-4 py-2 cursor-pointer rounded-lg font-medium transition-colors ${
-                  activeView === 'preview'
-                    ? 'bg-blue-600 text-white'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                <Eye className="h-4 w-4" />
-                Preview PDF
-              </button>
-            )}
+    <div className="bg-gray-50 rounded-md">
+      {/* Header */}
+      <div className="border-b border-gray-200">
+        <div className="max-w-7xl px-4 lg:px-6">
+          <div className="py-6">
+            <h1 className="text-2xl font-bold text-gray-900">Prescription Management</h1>
+            <p className="text-gray-500 mt-1">Create and manage digital prescriptions with OpenFDA integration</p>
           </div>
-        </div>
 
-        {/* Content Area */}
-        <div className="bg-white border border-gray-200 rounded-lg shadow-sm p-6">
-          {activeView === 'builder' && (
-            <Suspense fallback={<div className="text-center py-8">Loading prescription builder...</div>}>
+          {/* Tabs */}
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={(tabId) => setActiveTab(tabId as TabType)} />
+        </div>
+      </div>
+
+      {/* Content */}
+      <div className="px-4 sm:px-6 lg:px-8 py-8">
+        <div className="bg-white rounded-2xl px-4 sm:px-6 lg:px-8 py-6 shadow-sm border border-gray-100 overflow-hidden">
+          {activeTab === 'builder' && (
+            <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
               <PrescriptionBuilder />
             </Suspense>
           )}
-          {activeView === 'history' && (
-            <Suspense fallback={<div className="text-center py-8">Loading prescription history...</div>}>
+          {activeTab === 'history' && (
+            <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
               <PrescriptionHistory />
             </Suspense>
           )}
-          {activeView === 'preview' && (
-            <Suspense fallback={<div className="text-center py-8">Loading PDF preview...</div>}>
+          {activeTab === 'preview' && (
+            <Suspense fallback={<div className="flex justify-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div></div>}>
               <PrescriptionPDFView />
             </Suspense>
           )}

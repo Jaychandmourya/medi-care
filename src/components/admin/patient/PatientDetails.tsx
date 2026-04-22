@@ -8,8 +8,8 @@ import type { PatientDetailsDialogProps } from '@/types/patients/patientType'
 import type { Appointment } from '@/types/appointment/appointmentType'
 import type { Vitals} from '@/types/vitals/vitalsType'
 import type { Prescription, Medicine } from '@/types/prescription/prescriptionType'
-import FormDialog from "@/components/common/dialog/FormDialog";
-import { Button } from "@/components/common/Button";
+import GenericDialog from "@/components/common/dialog/GenericDialog";
+import { FormButton } from "@/components/common/FormButton";
 
 interface BillingRecord {
   id: string;
@@ -50,8 +50,6 @@ const PatientDetails = ({
             dispatch(fetchVitalsByPatientId(patientId)).unwrap(),
             dispatch(loadPrescriptionHistory()).unwrap()
           ]);
-          console.log('patientId', patientId)
-          console.log('appointmentsData', appointmentsData)
           setPatientAppointments(appointmentsData);
           setPatientVitals(vitalsData);
         } catch (error) {
@@ -159,20 +157,20 @@ const PatientDetails = ({
             <p className="text-blue-500">Patient Details</p>
           </div>
         </div>
-        <Button
+        <FormButton
           variant="ghost"
           size="icon"
           onClick={onClose}
           className="w-10 h-10 rounded-full hover:bg-gray-100 transition-all duration-200 hover:scale-105 flex-shrink-0 ml-4"
         >
           <span className="text-gray-400 hover:text-gray-600 text-xl">✕</span>
-      </Button>
+      </FormButton>
       </div>
     </div>
   ) : null;
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="max-w-4xl"
@@ -366,12 +364,12 @@ const PatientDetails = ({
                             {new Date(appointment.date).toLocaleDateString()}
                           </td>
                           <td className="px-4 py-3 text-sm text-gray-900">{appointment.slot}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{appointment.doctorId || 'Not assigned'}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{appointment.department}</td>
-                          <td className="px-4 py-3 text-sm text-gray-900">{appointment.reason}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{typeof appointment.doctorId === 'string' ? appointment.doctorId : (appointment.doctorId as unknown as { name?: string })?.name || 'Not assigned'}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{typeof appointment.department === 'string' ? appointment.department : String(appointment.department || '')}</td>
+                          <td className="px-4 py-3 text-sm text-gray-900">{typeof appointment.reason === 'string' ? appointment.reason : String(appointment.reason || '')}</td>
                           <td className="px-4 py-3 text-sm">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(appointment.status)}`}>
-                              {appointment.status.replace('_', ' ')}
+                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(typeof appointment.status === 'string' ? appointment.status : String(appointment.status))}`}>
+                              {typeof appointment.status === 'string' ? appointment.status.replace('_', ' ') : String(appointment.status || '')}
                             </span>
                           </td>
                         </tr>
@@ -404,7 +402,7 @@ const PatientDetails = ({
                   <div key={prescription.id} className="bg-white rounded-lg border border-gray-200 p-6">
                     <div className="flex justify-between items-start mb-4">
                       <div>
-                        <h4 className="font-semibold text-gray-900">{prescription.doctorName || prescription.doctorId || 'Unknown Doctor'}</h4>
+                        <h4 className="font-semibold text-gray-900">{prescription.doctorName || (typeof prescription.doctorId === 'string' ? prescription.doctorId : (prescription.doctorId as unknown as { name?: string })?.name) || 'Unknown Doctor'}</h4>
                         <p className="text-sm text-gray-500">{new Date(prescription.createdAt).toLocaleDateString()}</p>
                       </div>
                       <FileText className="w-5 h-5 text-gray-400" />
@@ -526,8 +524,8 @@ const PatientDetails = ({
                           {bill.dueDate ? new Date(bill.dueDate).toLocaleDateString() : 'N/A'}
                         </td>
                         <td className="px-4 py-3 text-sm">
-                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(bill.status)}`}>
-                            {bill.status}
+                          <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(typeof bill.status === 'string' ? bill.status : String(bill.status))}`}>
+                            {typeof bill.status === 'string' ? bill.status : String(bill.status || '')}
                           </span>
                         </td>
                       </tr>
@@ -539,7 +537,7 @@ const PatientDetails = ({
           </div>
         )}
       </div>
-    </FormDialog>
+    </GenericDialog>
   );
 };
 

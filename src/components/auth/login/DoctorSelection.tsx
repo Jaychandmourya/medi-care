@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { Search, User, MapPin, Stethoscope as StethoscopeIcon } from "lucide-react";
 import type { LocalDoctor } from "@/types/doctors/doctorType";
-import FormDialog from "@/components/common/dialog/FormDialog";
-import Input from "@/components/common/Input";
+import GenericDialog from "@/components/common/dialog/GenericDialog";
+import FormField from "@/components/common/FormField";
 
 interface DoctorSelectionDialogProps {
   isOpen: boolean;
@@ -60,7 +60,7 @@ export const DoctorSelection = ({
   );
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       maxWidth="max-w-2xl"
@@ -78,7 +78,7 @@ export const DoctorSelection = ({
     >
       {/* Search Bar */}
       <div className="pb-4 border-b border-gray-200">
-        <Input
+        <FormField
           type="text"
           placeholder="Search doctors by name, specialty, or department..."
           value={searchQuery}
@@ -160,6 +160,6 @@ export const DoctorSelection = ({
           </div>
         )}
       </div>
-    </FormDialog>
+    </GenericDialog>
   );
 };

@@ -2,8 +2,8 @@ import { useMemo, useCallback, useRef, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
 // Import UI components
-import Input from '@/components/common/Input';
-import FormDialog from '@/components/common/dialog/FormDialog';
+import FormField from '@/components/common/FormField';
+import GenericDialog from '@/components/common/dialog/GenericDialog';
 
 // Import Schema file
 import { vitalsSchema } from '@/schema/vitalsSchema'
@@ -93,7 +93,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
     }
   }, [isEditing, vitals, onSubmit, reset]);
 
-  // Handle save via FormDialog's save button
+  // Handle save via GenericDialog's save button
   const handleSave = useCallback(() => {
     formRef.current?.requestSubmit();
   }, []);
@@ -105,7 +105,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
   }, [isEditing, patients, existingVitals]);
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       title={isEditing ? 'Edit Vitals' : 'Record New Vitals'}
@@ -122,7 +122,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
         onSubmit={handleSubmit(onFormSubmit)}
         className="space-y-4"
       >
-        <Input
+        <FormField
           id="patientId"
           label="Patient"
           as="select"
@@ -140,7 +140,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
               {patient.name} - Age: {patient.age} - {patient.gender} - Bed: {patient.bedNumber}
             </option>
           ))}
-        </Input>
+        </FormField>
         {!isEditing && availablePatients.length === 0 && patients.length > 0 && (
           <p className="text-sm text-amber-600 mt-1">
             <strong>Note:</strong> All patients already have vitals recorded. Edit existing records to update vitals.
@@ -153,7 +153,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
         )}
 
         <div className="grid grid-cols-2 gap-4">
-          <Input
+          <FormField
             id="bp"
             label="Blood Pressure"
             placeholder="120/80"
@@ -162,12 +162,13 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
             required
           />
 
-          <Input
+          <FormField
             id="pulse"
             label="Pulse (bpm)"
             placeholder="72"
             type="number"
             min={0}
+            onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
             registration={register('pulse')}
             error={errors.pulse}
             required
@@ -175,29 +176,33 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
         </div>
 
         <div className="grid grid-cols-2 gap-4">
-          <Input
+          <FormField
             id="temp"
             label="Temperature (°F)"
+            type='number'
             placeholder="98.6"
             step="0.1"
+            min={0}
+            onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
             registration={register('temp')}
             error={errors.temp}
             required
           />
 
-          <Input
+          <FormField
             id="spo2"
             label="SpO2 (%)"
             placeholder="98"
             type="number"
             min={0}
             max="100"
+            onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
             registration={register('spo2')}
             error={errors.spo2}
             required
           />
         </div>
       </form>
-    </FormDialog>
+    </GenericDialog>
   );
 };

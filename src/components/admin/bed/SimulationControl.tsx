@@ -1,6 +1,6 @@
 import React from 'react'
 import { Play, Pause, Zap } from 'lucide-react'
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 
 interface SimulationControlProps {
   isEnabled: boolean
@@ -13,7 +13,7 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
 }) => {
   return (
     <div className="fixed bottom-6 right-6 z-40">
-      <Button
+      <FormButton
         onClick={onToggle}
         variant={isEnabled ? 'default' : 'secondary'}
         size="default"
@@ -35,7 +35,7 @@ const SimulationControl: React.FC<SimulationControlProps> = ({
           </>
         )}
         <Zap className={`w-4 h-4 ${isEnabled ? 'animate-pulse' : ''}`} />
-      </Button>
+      </FormButton>
 
       {isEnabled && (
         <div className="absolute bottom-full mb-2 right-0 bg-gray-800 text-white text-sm px-3 py-2 rounded-lg whitespace-nowrap">

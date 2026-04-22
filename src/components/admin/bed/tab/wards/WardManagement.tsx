@@ -4,8 +4,8 @@ import { useState, useCallback } from 'react'
 import { Plus, Search, Edit2, Trash2, Building2, Users, BedSingle } from 'lucide-react'
 
 // Import components
-import { Button } from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import FormField from '@/components/common/FormField'
 
 // Import types
 import type { RootState, AppDispatch } from '@/app/store'
@@ -104,18 +104,18 @@ const WardManagement = ({ onWardClick }: WardManagementProps) => {
             <h2 className="text-lg sm:text-xl font-bold text-gray-800 truncate">Ward Management</h2>
             <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage hospital wards and their bed capacity</p>
           </div>
-          <Button
+          <FormButton
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 w-full sm:w-auto justify-center shrink-0"
           >
             <Plus className="w-4 h-4" />
             Add Ward
-          </Button>
+          </FormButton>
         </div>
 
         {/* Search */}
         <div className="mt-4 sm:mt-6">
-          <Input
+          <FormField
             type="text"
             placeholder="Search wards..."
             value={searchQuery}

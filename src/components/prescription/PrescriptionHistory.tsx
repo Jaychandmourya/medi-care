@@ -10,7 +10,7 @@ import type { Appointment } from '@/features/db/dexie'
 import type { Prescription } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/common/Input'
+import FormField from '@/components/common/FormField'
 import Pagination from '@/components/common/Pagination'
 import ThreeDotMenu from '@/components/common/ThreeDotMenu'
 
@@ -328,7 +328,7 @@ const PrescriptionHistory = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Search */}
           <div className="md:col-span-2">
-            <Input
+            <FormField
               type="text"
               value={searchTerm}
               onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSearchTerm(e.target.value); setCurrentPage(1) }}
@@ -341,7 +341,7 @@ const PrescriptionHistory = () => {
 
           {/* Patient Filter */}
           <div>
-            <Input
+            <FormField
               as="select"
               value={selectedPatient}
               onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSelectedPatient(e.target.value); setCurrentPage(1) }}
@@ -353,12 +353,12 @@ const PrescriptionHistory = () => {
                   {patient.name}
                 </option>
               ))}
-            </Input>
+            </FormField>
           </div>
 
           {/* Status Filter */}
           <div>
-            <Input
+            <FormField
               as="select"
               value={selectedStatus}
               onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => { setSelectedStatus(e.target.value); setCurrentPage(1) }}
@@ -368,7 +368,7 @@ const PrescriptionHistory = () => {
               <option value="active">Active</option>
               <option value="completed">Completed</option>
               <option value="cancelled">Cancelled</option>
-            </Input>
+            </FormField>
           </div>
         </div>
       </div>

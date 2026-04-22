@@ -1,6 +1,6 @@
 import React from 'react';
 import { AlertTriangle, X } from 'lucide-react';
-import { Button } from '../Button';
+import { FormButton } from '../FormButton';
 
 interface ConfirmationDialogProps {
   isOpen: boolean;
@@ -62,13 +62,13 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
               <Icon className={`w-6 h-6 ${currentStyle.iconColor}`} />
               <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
             </div>
-            <Button
+            <FormButton
               variant="ghost"
               size="icon"
               onClick={onCancel}
             >
               <X className="w-5 h-5" />
-            </Button>
+            </FormButton>
           </div>
         </div>
 
@@ -80,19 +80,19 @@ const ConfirmationDialog: React.FC<ConfirmationDialogProps> = ({
         {/* Actions */}
         <div className="bg-gray-50 px-6 py-4 flex justify-end space-x-3">
           {cancelText && (
-            <Button
+            <FormButton
               variant="outline"
               onClick={onCancel}
             >
               {cancelText}
-            </Button>
+            </FormButton>
           )}
-          <Button
+          <FormButton
             variant={type === 'danger' ? 'destructive' : type === 'info' ? 'default' : 'default'}
             onClick={onConfirm}
           >
             {confirmText}
-          </Button>
+          </FormButton>
         </div>
       </div>
     </div>

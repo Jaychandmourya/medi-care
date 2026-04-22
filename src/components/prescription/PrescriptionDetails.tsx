@@ -1,6 +1,6 @@
 import { Download } from 'lucide-react'
-import { Button } from '@/components/common/Button'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import { FormButton } from '@/components/common/FormButton'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 import type { Prescription } from '@/types/prescription/prescriptionType'
 
 interface PrescriptionDetailsDialogProps {
@@ -22,24 +22,24 @@ const PrescriptionDetails = ({
 
   const customFooter = (
     <div className="flex gap-3 justify-end">
-      <Button
+      <FormButton
         onClick={() => onDownload(prescription)}
         className="flex items-center gap-2"
       >
         <Download className="h-4 w-4" />
         Download PDF
-      </Button>
-      <Button
+      </FormButton>
+      <FormButton
         variant="outline"
         onClick={onClose}
       >
         Close
-      </Button>
+      </FormButton>
     </div>
   )
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       title="Prescription Details"
@@ -161,7 +161,7 @@ const PrescriptionDetails = ({
           )}
         </div>
       </div>
-    </FormDialog>
+    </GenericDialog>
   )
 }
 

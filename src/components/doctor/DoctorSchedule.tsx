@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useRef } from 'react'
 import toast from 'react-hot-toast'
 
-import { Button } from '@/components/common/Button'
-import  Input  from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import  FormField  from '@/components/common/FormField'
 import { Label } from '@/components/common/Label'
 
 import { type AppDispatch } from '@/app/store'
@@ -216,7 +216,7 @@ export function DoctorSchedule({
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div>
               <Label className="font-semibold">Doctor Name</Label>
-              <Input
+              <FormField
                 type="text"
                 value={lastAddedDoctor ? `Dr. ${lastAddedDoctor.firstName} ${lastAddedDoctor.lastName}` :
                       doctors.length > 0 ? `Dr. ${doctors[0].firstName} ${doctors[0].lastName}` : 'No doctor available'}
@@ -238,7 +238,7 @@ export function DoctorSchedule({
             </div>
             <div>
               <Label className="font-semibold">Specialization</Label>
-              <Input
+              <FormField
                 type="text"
                 value={lastAddedDoctor ? lastAddedDoctor.specialty || lastAddedDoctor.department || 'General Practice' :
                       doctors.length > 0 ? doctors[0].specialty || doctors[0].department || 'General Practice' : 'No specialization'}
@@ -249,7 +249,7 @@ export function DoctorSchedule({
             </div>
             <div>
               <Label className="font-semibold">Contact Information</Label>
-              <Input
+              <FormField
                 type="text"
                 value={lastAddedDoctor ? lastAddedDoctor.contact || lastAddedDoctor.email || 'No contact info' :
                       doctors.length > 0 ? doctors[0].contact || doctors[0].email || 'No contact info' : 'No contact info'}
@@ -282,7 +282,7 @@ export function DoctorSchedule({
             {/* Start Time */}
             <div className="space-y-2">
               <Label htmlFor="startTime" required>Start Time</Label>
-              <Input
+              <FormField
                 id="startTime"
                 as="select"
                 registration={registerSchedule('startTime')}
@@ -293,7 +293,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </Input>
+              </FormField>
               {scheduleErrors.startTime && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -307,7 +307,7 @@ export function DoctorSchedule({
             {/* End Time */}
             <div className="space-y-2">
               <Label htmlFor="endTime" required>End Time</Label>
-              <Input
+              <FormField
                 id="endTime"
                 as="select"
                 registration={registerSchedule('endTime')}
@@ -318,7 +318,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </Input>
+              </FormField>
               {scheduleErrors.endTime && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -332,7 +332,7 @@ export function DoctorSchedule({
             {/* Slot Duration */}
             <div className="space-y-2">
               <Label htmlFor="slotDuration" required>Slot Duration</Label>
-              <Input
+              <FormField
                 id="slotDuration"
                 as="select"
                 registration={registerSchedule('slotDuration')}
@@ -342,7 +342,7 @@ export function DoctorSchedule({
                     {duration.label}
                   </option>
                 ))}
-              </Input>
+              </FormField>
               {scheduleErrors.slotDuration && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -367,7 +367,7 @@ export function DoctorSchedule({
             {/* Lunch Break Start */}
             <div className="space-y-2">
               <Label htmlFor="lunchBreakStart">Lunch Start</Label>
-              <Input
+              <FormField
                 id="lunchBreakStart"
                 as="select"
                 registration={registerSchedule('lunchBreakStart')}
@@ -378,7 +378,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </Input>
+              </FormField>
               {scheduleErrors.lunchBreakStart && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -392,7 +392,7 @@ export function DoctorSchedule({
             {/* Lunch Break End */}
             <div className="space-y-2">
               <Label htmlFor="lunchBreakEnd">Lunch End</Label>
-              <Input
+              <FormField
                 id="lunchBreakEnd"
                 as="select"
                 registration={registerSchedule('lunchBreakEnd')}
@@ -403,7 +403,7 @@ export function DoctorSchedule({
                     {slot.label}
                   </option>
                 ))}
-              </Input>
+              </FormField>
               {scheduleErrors.lunchBreakEnd && (
                 <p className="text-sm text-red-600 flex items-center mt-1">
                   <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
@@ -474,7 +474,7 @@ export function DoctorSchedule({
       </div>
 
       <div className="flex flex-wrap w-full justify-end gap-3 pt-8">
-        <Button
+        <FormButton
           type="submit"
           variant="outline"
           loading={addingSchedule}
@@ -482,15 +482,15 @@ export function DoctorSchedule({
           className="px-8 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white border-0 hover:from-green-700 hover:to-emerald-700 shadow-lg"
         >
           {addingSchedule ? (existingSchedule ? 'Updating...' : 'Adding Schedule...') : (existingSchedule ? 'Update' : 'Complete Setup')}
-        </Button>
-        <Button
+        </FormButton>
+        <FormButton
           type="button"
           variant="ghost"
           onClick={() => resetSchedule()}
           className="px-8 py-3 border border-gray-300 text-gray-700 hover:bg-gray-50"
         >
           Clear Schedule
-        </Button>
+        </FormButton>
       </div>
     </form>
   )

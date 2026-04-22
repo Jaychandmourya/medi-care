@@ -28,7 +28,7 @@ export interface InputProps {
   max?: string | number;
 }
 
-const Input: React.FC<InputProps> = ({
+const FormField: React.FC<InputProps> = ({
   id,
   type = 'text',
   placeholder,
@@ -135,4 +135,4 @@ const Input: React.FC<InputProps> = ({
   );
 };
 
-export default Input;
+export default FormField;

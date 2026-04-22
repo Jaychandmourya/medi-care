@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { User, Phone, Link } from "lucide-react";
-import Input from "@/components/common/Input";
+import FormField from "@/components/common/FormField";
 
 export default function StepEmergency() {
   const { register, formState: { errors } } = useFormContext();
@@ -9,7 +9,7 @@ export default function StepEmergency() {
     <div className="space-y-5">
 
       {/* Contact Name */}
-      <Input
+      <FormField
         id="contactName"
         label="Emergency Contact Name"
         placeholder="Enter emergency contact's full name"
@@ -20,7 +20,7 @@ export default function StepEmergency() {
       />
 
       {/* Emergency Phone */}
-      <Input
+      <FormField
         id="emergencyPhone"
         label="Emergency Phone Number"
         type="tel"
@@ -33,7 +33,7 @@ export default function StepEmergency() {
       <p className="text-xs text-gray-500">This contact will be notified in case of emergency.</p>
 
       {/* Relationship */}
-      <Input
+      <FormField
         id="relationship"
         label="Relationship to Patient"
         as="select"
@@ -49,7 +49,7 @@ export default function StepEmergency() {
         <option value="Sibling">Sibling</option>
         <option value="Friend">Friend</option>
         <option value="Other">Other</option>
-      </Input>
+      </FormField>
 
     </div>
   );

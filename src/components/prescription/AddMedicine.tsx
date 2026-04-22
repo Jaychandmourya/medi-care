@@ -6,8 +6,8 @@ import type { AppDispatch, RootState } from '@/app/store'
 import type { Medicine } from '@/types/prescription/prescriptionType'
 
 // Import UI components
-import Input from '@/components/common/Input'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import FormField from '@/components/common/FormField'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 
 // Import form, validation and zod
 import { useForm } from 'react-hook-form'
@@ -149,7 +149,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
   }
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={showMedicineForm}
       onClose={handleCloseDialog}
       title={editingMedicine ? 'Edit Medicine' : 'Add Medicine'}
@@ -167,7 +167,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
       <DrugInfoPanel />
 
       <form className="space-y-4 mt-4">
-        <Input
+        <FormField
           id="name"
           label="Medicine Name"
           placeholder="Enter medicine name"
@@ -177,7 +177,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
         />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
+          <FormField
             id="dosage"
             label="Dosage"
             placeholder="e.g., 500mg"
@@ -186,7 +186,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
             required
           />
 
-          <Input
+          <FormField
             id="frequency"
             label="Frequency"
             type='tel'
@@ -198,7 +198,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Input
+          <FormField
             id="duration"
             label="Duration"
             placeholder="e.g., 7 days"
@@ -207,7 +207,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
             required
           />
 
-          <Input
+          <FormField
             id="instructions"
             label="Instructions"
             placeholder="e.g., Take after meals"
@@ -215,7 +215,7 @@ const AddMedicineDialog = ({ showMedicineForm, editingMedicine, onClose, current
           />
         </div>
       </form>
-    </FormDialog>
+    </GenericDialog>
   )
 }
 

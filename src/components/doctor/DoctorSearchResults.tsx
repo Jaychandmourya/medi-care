@@ -3,7 +3,7 @@ import toast from 'react-hot-toast'
 
 import { User, Briefcase, Eye, Plus, Loader2 } from 'lucide-react'
 
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
 
 import { type RootState } from '@/app/store'
 import type { NPIResult } from '@/types/doctors/NpiType'
@@ -194,7 +194,7 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
 
                   {/* Action Buttons */}
                   <div className="flex flex-col gap-2 shrink-0">
-                    <Button
+                    <FormButton
                       onClick={() => handleViewDetails(doctor)}
                       size="sm"
                       variant="outline"
@@ -202,8 +202,8 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
                     >
                       <Eye className="w-3 h-3 mr-1" />
                       View Details
-                    </Button>
-                    <Button
+                    </FormButton>
+                    <FormButton
                       onClick={() => handleAddToSystem(doctor)}
                       size="sm"
                       loading={isAdding}
@@ -212,7 +212,7 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
                     >
                       <Plus className="w-3 h-3 mr-1" />
                       {isAdding ? 'Adding...' : 'Add to doctor'}
-                    </Button>
+                    </FormButton>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,6 @@
 import { useFormContext } from "react-hook-form";
 import { AlertTriangle, Hospital, Activity, Pill } from "lucide-react";
-import Input from "@/components/common/Input";
+import FormField from "@/components/common/FormField";
 
 export default function StepMedical() {
   const { register, formState: { errors } } = useFormContext();
@@ -10,7 +10,7 @@ export default function StepMedical() {
 
       {/* Allergies */}
       <div className="space-y-2">
-        <Input
+        <FormField
           id="allergies"
           label="Known Allergies"
           required
@@ -26,7 +26,7 @@ export default function StepMedical() {
 
       {/* Chronic Conditions */}
       <div className="space-y-2">
-        <Input
+        <FormField
           id="conditions"
           label="Chronic Conditions"
           required
@@ -42,7 +42,7 @@ export default function StepMedical() {
 
       {/* Past Surgeries */}
       <div className="space-y-2">
-        <Input
+        <FormField
           id="surgeries"
           label="Past Surgeries"
           as="textarea"
@@ -57,7 +57,7 @@ export default function StepMedical() {
 
       {/* Current Medications */}
       <div className="space-y-2">
-        <Input
+        <FormField
           id="medications"
           label="Current Medications"
           as="textarea"

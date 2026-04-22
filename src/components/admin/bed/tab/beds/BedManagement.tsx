@@ -4,8 +4,8 @@ import type { RootState, AppDispatch } from '@/app/store'
 import { createBed, updateBed, deleteBed } from '@/features/bed/bedThunk'
 import type { Bed, BedStatus } from '@/types/bed/bedType'
 import { useSelector, useDispatch } from 'react-redux'
-import { Button } from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import FormField from '@/components/common/FormField'
 import ConfirmationDialog from '@/components/common/dialog/ConfirmationDialog'
 import AddEditBed from '@/components/admin/bed/tab/beds/AddEditBed'
 import { Plus, Search, Edit2, Trash2, Bed as BedIcon } from 'lucide-react'
@@ -151,18 +151,18 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
             <h2 className="text-lg sm:text-xl font-bold text-gray-800">Bed Management</h2>
             <p className="text-gray-500 text-xs sm:text-sm mt-1">Manage hospital beds and their assignments</p>
           </div>
-          <Button
+          <FormButton
             onClick={() => handleOpenModal()}
             className="flex items-center gap-2 w-full sm:w-auto justify-center"
           >
             <Plus className="w-4 h-4" />
             Add Bed
-          </Button>
+          </FormButton>
         </div>
 
         {/* Filters */}
         <div className="mt-4 sm:mt-6 flex flex-col gap-3 sm:gap-4">
-          <Input
+          <FormField
             type="text"
             placeholder="Search beds..."
             value={searchQuery}
@@ -171,7 +171,7 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
             className="flex-1"
           />
           <div className="flex flex-col sm:flex-row gap-3">
-            <Input
+            <FormField
               as="select"
               value={filterWard}
               onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => handleFilterWardChange(e.target.value)}
@@ -181,8 +181,8 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
               {wards.map(ward => (
                 <option key={ward.wardId} value={ward.wardId}>{ward.name}</option>
               ))}
-            </Input>
-            <Input
+            </FormField>
+            <FormField
               as="select"
               value={filterStatus}
               onChange={(e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => handleFilterStatusChange(e.target.value)}
@@ -193,7 +193,7 @@ const BedManagement = ({ onBedClick }: BedManagementProps) => {
               <option value="occupied">Occupied</option>
               <option value="reserved">Reserved</option>
               <option value="maintenance">Maintenance</option>
-            </Input>
+            </FormField>
           </div>
         </div>
       </div>

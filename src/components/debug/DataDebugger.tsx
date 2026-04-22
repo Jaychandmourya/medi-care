@@ -29,11 +29,9 @@ const DataDebugger = () => {
       };
 
       setDataInfo(info);
-      console.log('Data check:', info);
 
       // If no schedules exist, try to seed data
       if (doctorCount > 0 && scheduleCount === 0) {
-        console.log('Doctors exist but no schedules found - reseeding data...');
         await seedAllData();
         // Check again after seeding
         const newScheduleCount = await db.doctorSchedules.count();

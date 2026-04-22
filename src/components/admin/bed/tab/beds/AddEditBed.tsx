@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { z } from 'zod'
 import type { Bed, BedStatus, BedFormData } from '@/types/bed/bedType'
-import Input from '@/components/common/Input'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import FormField from '@/components/common/FormField'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 
 // Interface
 interface AddEditBedDialogProps {
@@ -90,7 +90,7 @@ const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBed
   }
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={onClose}
       title={editingBed ? 'Edit Bed' : 'Add New Bed'}
@@ -103,7 +103,7 @@ const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBed
     >
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <Input
+          <FormField
             id="ward"
             label="Ward"
             as="select"
@@ -121,13 +121,13 @@ const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBed
             {wards.map(ward => (
               <option key={ward.wardId} value={ward.wardId}>{ward.name}</option>
             ))}
-          </Input>
+          </FormField>
           {editingBed && (
             <p className="text-xs text-gray-500 mt-1">Ward cannot be changed after creation</p>
           )}
         </div>
         <div>
-          <Input
+          <FormField
             id="status"
             label="Status"
             as="select"
@@ -144,10 +144,10 @@ const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBed
             <option value="occupied">Occupied</option>
             <option value="reserved">Reserved</option>
             <option value="maintenance">Maintenance</option>
-          </Input>
+          </FormField>
         </div>
         <div>
-          <Input
+          <FormField
             id="notes"
             label="Notes"
             as="textarea"
@@ -163,7 +163,7 @@ const AddEditBed = ({ isOpen, onClose, onSubmit, editingBed, wards }: AddEditBed
           />
         </div>
       </form>
-    </FormDialog>
+    </GenericDialog>
   )
 }
 

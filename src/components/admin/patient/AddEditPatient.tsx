@@ -1,10 +1,10 @@
-import { useState, useCallback, useRef } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 // Import UI components
-import { Button } from "@/components/common/Button";
+import { FormButton } from "@/components/common/FormButton";
 import ConfirmationDialog from "@/components/common/dialog/ConfirmationDialog";
-import FormDialog from "@/components/common/dialog/FormDialog";
+import GenericDialog from "@/components/common/dialog/GenericDialog";
 
 // Import Types files
 import type { AddPatientDialogProps } from '@/types/patients/patientType'
@@ -37,6 +37,7 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
   step: number;
   isSubmitting: boolean;
 } | null>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
 
 
   // Methods
@@ -79,6 +80,13 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Scroll to top when step changes
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.scrollTop = 0;
+    }
+  }, [currentStep]);
+
   // Handle next/submit based on current step
   const handleNextOrSubmit = useCallback(() => {
     if (currentStep < 4) {
@@ -115,7 +123,7 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
   // Custom footer with Back and Next/Save buttons
   const customFooter = (
     <div className="flex justify-between items-center">
-      <Button
+      <FormButton
         type="button"
         onClick={handleBack}
         variant="secondary"
@@ -124,10 +132,10 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
       >
         <ChevronLeft className="w-4 h-4 mr-1" />
         Back
-      </Button>
+      </FormButton>
 
       <div className="flex space-x-3">
-        <Button
+        <FormButton
           type="button"
           onClick={handleNextOrSubmit}
           variant="default"
@@ -136,14 +144,14 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
           customColor={`bg-gradient-to-r ${roleColors.primary} text-white hover:shadow-lg transform hover:scale-105`}
         >
           {currentStep < 4 ? (<>Next <ChevronRight className="w-4 h-4 ml-1" /></>) : (isSubmitting ? "Saving..." : "Save Patient")}
-        </Button>
+        </FormButton>
       </div>
     </div>
   );
 
   return (
     <>
-      <FormDialog
+      <GenericDialog
         isOpen={isOpen}
         onClose={handleDialogClose}
         header={customHeader}
@@ -151,6 +159,7 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
         showDefaultButtons={false}
         closeOnBackdropClick={false}
         customBackdropClickHandler={handleDialogClose}
+        contentRef={contentRef}
       >
         <PatientFormWizard
           ref={wizardRef}
@@ -161,7 +170,7 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
           onStepChange={setCurrentStep}
           onSubmittingChange={setIsSubmitting}
         />
-      </FormDialog>
+      </GenericDialog>
 
       {/* Close Confirmation Dialog */}
       <ConfirmationDialog

@@ -126,7 +126,6 @@ export const patientService = {
     try {
       await db.delete();
       await db.open();
-      console.log('Database cleared and reset with proper schema');
     } catch (error) {
       console.error('Error clearing database:', error);
       throw error;

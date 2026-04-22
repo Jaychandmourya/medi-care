@@ -1,7 +1,7 @@
 import { useMemo, useCallback } from 'react'
 import { User, MapPin, Phone, Briefcase, Calendar, Clock, CheckCircle, AlertCircle, Hash, Plus } from 'lucide-react'
-import { Button } from '@/components/common/Button'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import { FormButton } from '@/components/common/FormButton'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 import type { NPIResult } from '@/types/doctors/NpiType'
 
 // Interface
@@ -64,20 +64,20 @@ export default function DoctorSearchDetails({
   // Custom footer with Close and Add to System buttons
   const footer = (
     <div className="flex gap-3 justify-end">
-      <Button
+      <FormButton
         onClick={onCloseModal}
         variant="secondary"
       >
         Close
-      </Button>
-      <Button
+      </FormButton>
+      <FormButton
         onClick={handleAddToSystem}
         loading={adding}
         customColor="bg-green-600 hover:bg-green-700 text-white"
       >
         <Plus className="w-4 h-4 mr-2" />
         Add to System
-      </Button>
+      </FormButton>
     </div>
   )
 
@@ -86,7 +86,7 @@ export default function DoctorSearchDetails({
   }
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={showDetailsModal}
       onClose={onCloseModal}
       title="Doctor Details"
@@ -234,6 +234,6 @@ export default function DoctorSearchDetails({
           </div>
         </div>
       </div>
-    </FormDialog>
+    </GenericDialog>
   )
 }

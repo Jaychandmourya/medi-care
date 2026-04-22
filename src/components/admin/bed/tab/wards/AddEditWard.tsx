@@ -4,8 +4,8 @@ import { useCallback, useMemo, useRef } from 'react'
 import toast from 'react-hot-toast'
 
 // Import components
-import Input from '@/components/common/Input'
-import FormDialog from '@/components/common/dialog/FormDialog'
+import FormField from '@/components/common/FormField'
+import GenericDialog from '@/components/common/dialog/GenericDialog'
 
 // Import types
 import type { AppDispatch } from '@/app/store'
@@ -112,7 +112,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
     onClose()
   }, [onClose])
 
-  // Use hidden form submission to connect FormDialog's save button with react-hook-form
+  // Use hidden form submission to connect GenericDialog's save button with react-hook-form
   const formRef = useRef<HTMLFormElement>(null)
 
   const handleSave = useCallback(() => {
@@ -120,7 +120,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
   }, [])
 
   return (
-    <FormDialog
+    <GenericDialog
       isOpen={isOpen}
       onClose={handleCloseModal}
       title={editingWard ? 'Edit Ward' : 'Add New Ward'}
@@ -137,7 +137,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
         onSubmit={handleFormSubmit(onSubmit)}
         className="space-y-4"
       >
-        <Input
+        <FormField
           id="ward-name"
           label="Ward Name"
           type="text"
@@ -146,7 +146,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
           registration={register('name')}
           error={errors.name ? { message: errors.name.message } : undefined}
         />
-        <Input
+        <FormField
           id="ward-floor"
           label="Floor"
           type="text"
@@ -155,7 +155,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
           registration={register('floor')}
           error={errors.floor ? { message: errors.floor.message } : undefined}
         />
-        <Input
+        <FormField
           id="ward-beds"
           label="Total Beds Capacity"
           type="number"
@@ -165,7 +165,7 @@ const AddEditWard = ({ isOpen, onClose, editingWard }: AddEditWardDialogProps) =
           error={errors.totalBeds ? { message: errors.totalBeds.message } : undefined}
         />
       </form>
-    </FormDialog>
+    </GenericDialog>
   )
 }
 

@@ -3,6 +3,9 @@ import { useEffect, lazy, Suspense, memo } from 'react'
 // Import icons file
 import { Search, Database } from 'lucide-react'
 
+// Import components
+import Tabs from '@/components/common/Tabs'
+
 // Import Types files
 import { type AppDispatch, type RootState } from '@/app/store'
 
@@ -40,49 +43,29 @@ const AdminDoctorsComponent = () => {
         </div>
 
         {/* Tab Navigation */}
-        <div className="border-b border-gray-200 mb-6">
-          <nav className="flex space-x-8">
-            <button
-              onClick={() => dispatch(setActiveTab('search'))}
-              className={`py-2 px-1 border-b-2 font-medium cursor-pointer text-sm transition-colors ${
-                activeTab === 'search'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Search className="w-4 h-4" />
-                Search NPI Registry
-              </div>
-            </button>
-            <button
-              onClick={() => dispatch(setActiveTab('internal'))}
-              className={`py-2 px-1 border-b-2 font-medium cursor-pointer text-sm transition-colors ${
-                activeTab === 'internal'
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4" />
-                Internal Doctors ({localDoctors.length})
-              </div>
-            </button>
-          </nav>
-        </div>
+        <Tabs
+          tabs={[
+            { id: 'search', label: 'Search NPI Registry', icon: Search },
+            { id: 'internal', label: `Internal Doctors (${localDoctors.length})`, icon: Database }
+          ]}
+          activeTab={activeTab}
+          onChange={(tabId) => dispatch(setActiveTab(tabId as 'search' | 'internal'))}
+        />
 
         {/* Quick Autocomplete Search */}
 
-         {/* Content */}
-        {activeTab === 'search' ? (
-          <Suspense fallback={<div className="flex justify-center items-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>}>
-            <DoctorSearch />
-          </Suspense>
-        ) : (
-          <Suspense fallback={<div className="flex justify-center items-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>}>
-            <InternalDoctorList />
-          </Suspense>
-        )}
+        {/* Content */}
+        <div className='mt-8'>
+          {activeTab === 'search' ? (
+            <Suspense fallback={<div className="flex justify-center items-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>}>
+              <DoctorSearch />
+            </Suspense>
+          ) : (
+            <Suspense fallback={<div className="flex justify-center items-center py-8"><div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-500"></div></div>}>
+              <InternalDoctorList />
+            </Suspense>
+          )}
+        </div>
 
 
       </div>

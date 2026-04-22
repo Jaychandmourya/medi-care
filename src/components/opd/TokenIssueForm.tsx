@@ -10,8 +10,8 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
-import Input from '@/components/common/Input'
+import { FormButton } from '@/components/common/FormButton'
+import FormField from '@/components/common/FormField'
 
 // Import Types files
 import type { AppDispatch, RootState } from '@/app/store'
@@ -118,7 +118,7 @@ const TokenIssueForm = () => {
       </h2>
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-        <Input
+        <FormField
           id="patientName"
           label="Patient Name"
           icon={User}
@@ -128,7 +128,7 @@ const TokenIssueForm = () => {
           required
         />
 
-        <Input
+        <FormField
           id="department"
           as="select"
           label="Department"
@@ -142,9 +142,9 @@ const TokenIssueForm = () => {
           {departments.map(dept => (
             <option key={dept} value={dept}>{dept}</option>
           ))}
-        </Input>
+        </FormField>
 
-        <Input
+        <FormField
           id="doctorId"
           as="select"
           label="Doctor"
@@ -162,16 +162,16 @@ const TokenIssueForm = () => {
               </option>
             )
           })}
-        </Input>
+        </FormField>
 
-        <Button
+        <FormButton
           type="submit"
           className="w-full flex items-center justify-center gap-2"
           customColor={user?.role === 'receptionist' ? 'bg-purple-600 hover:bg-purple-700 text-white hover:shadow-lg transform hover:scale-105 focus:ring-purple-500' : undefined}
         >
           <Plus className="w-4 h-4" />
           Issue Token
-        </Button>
+        </FormButton>
       </form>
 
     </div>

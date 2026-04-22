@@ -1,10 +1,11 @@
-import { useEffect, useState, useCallback, Suspense, lazy } from 'react'
+import { useEffect, useState, useCallback, useMemo, Suspense, lazy } from 'react'
 
 // Import icons file
 import { LayoutGrid, Building2, BedDouble } from 'lucide-react'
 
 // Import UI components
-import { Button } from '@/components/common/Button'
+import { FormButton } from '@/components/common/FormButton'
+import Tabs from '@/components/common/Tabs'
 
 // Import Types files
 import type { RootState, AppDispatch } from '@/app/store'
@@ -41,9 +42,15 @@ const AdminBeds = () => {
 
   // State management
   const [activeTab, setActiveTab] = useState<TabType>('overview')
-  const [selectedBed, setSelectedBed] = useState<Bed | null>(null)
+  const [selectedBedId, setSelectedBedId] = useState<string | null>(null)
   const [isInitialized, setIsInitialized] = useState(false)
   const [overviewWard, setOverviewWard] = useState('general')
+
+  // Get fresh bed data from Redux whenever selectedBedId changes
+  const selectedBed = useMemo(() => {
+    if (!selectedBedId) return null
+    return beds.find(b => b.bedId === selectedBedId) || null
+  }, [beds, selectedBedId])
 
   // Tab configuration static data
   const tabs = [
@@ -72,11 +79,11 @@ const AdminBeds = () => {
 
   // Methods
   const handleBedClick = useCallback((bed: Bed) => {
-    setSelectedBed(bed)
+    setSelectedBedId(bed.bedId)
   }, [])
 
   const handleCloseModal = useCallback(() => {
-    setSelectedBed(null)
+    setSelectedBedId(null)
   }, [])
 
   const handleWardChange = useCallback((wardId: string) => {
@@ -93,7 +100,7 @@ const AdminBeds = () => {
     dispatch(admitPatient({ bedId, patientId }))
       .unwrap()
       .then(() => {
-        setSelectedBed(null)
+        setSelectedBedId(null)
       })
       .catch((error) => {
         console.error('Failed to admit patient:', error)
@@ -105,19 +112,20 @@ const AdminBeds = () => {
     dispatch(dischargePatient(bedId))
       .unwrap()
       .then(() => {
-        setSelectedBed(null)
+        setSelectedBedId(null)
+        handleRetry()
       })
       .catch((error) => {
         console.error('Failed to discharge patient:', error)
       })
-  }, [dispatch])
+  }, [dispatch, handleRetry])
 
   // Update bed status
   const handleUpdateStatus = useCallback((bedId: string, status: BedStatus, notes?: string) => {
     dispatch(updateBedStatus({ bedId, status, notes }))
       .unwrap()
       .then(() => {
-        setSelectedBed(null)
+        setSelectedBedId(null)
       })
       .catch((error) => {
         console.error('Failed to update bed status:', error)
@@ -143,9 +151,9 @@ const AdminBeds = () => {
             <p className="font-medium">Error loading bed data</p>
             <p className="text-sm">{error}</p>
           </div>
-          <Button onClick={handleRetry} variant="default">
+          <FormButton onClick={handleRetry} variant="default">
             Retry
-          </Button>
+          </FormButton>
         </div>
       </div>
     )
@@ -162,26 +170,7 @@ const AdminBeds = () => {
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1 border-b border-gray-200 -mb-px overflow-x-auto">
-            {tabs.map(tab => {
-              const Icon = tab.icon
-              const isActive = activeTab === tab.id
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`flex items-center cursor-pointer gap-2 px-6 py-4 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
-                    isActive
-                      ? 'border-blue-600 text-blue-600'
-                      : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                  }`}
-                >
-                  <Icon className="w-5 h-5" />
-                  {tab.label}
-                </button>
-              )
-            })}
-          </div>
+          <Tabs tabs={tabs} activeTab={activeTab} onChange={(tabId) => setActiveTab(tabId as TabType)} />
         </div>
       </div>
 

@@ -1,12 +1,13 @@
 import { type ReactNode, useEffect } from "react";
 
 // Import UI components
-import { Button } from "@/components/common/Button";
+import { FormButton } from "@/components/common/FormButton";
 
 interface FormDialogProps {
   isOpen: boolean;
   onClose: () => void;
   children: ReactNode;
+  contentRef?: React.RefObject<HTMLDivElement | null>;
 
   // Dynamic sizing
   maxWidth?: string;
@@ -48,7 +49,7 @@ interface FormDialogProps {
   customBackdropClickHandler?: (e: React.MouseEvent) => void;
 }
 
-export default function FormDialog({
+export default function GenericDialog({
   isOpen,
   onClose,
   children,
@@ -91,6 +92,9 @@ export default function FormDialog({
   closeOnEscapeKey = true,
   preventInnerClickClose = false,
   customBackdropClickHandler,
+
+  // Content ref
+  contentRef,
 }: FormDialogProps) {
 
   const handleBackdropClick = (e: React.MouseEvent) => {
@@ -151,17 +155,17 @@ export default function FormDialog({
   // Default footer content with Cancel and Save buttons
   const defaultFooter = (
     <div className="flex justify-between items-center">
-      <Button
+      <FormButton
         type="button"
         onClick={onCancel || onClose}
         variant="secondary"
         size="default"
       >
         {cancelButtonText}
-      </Button>
+      </FormButton>
 
       <div className="flex space-x-3">
-        <Button
+        <FormButton
           type="button"
           onClick={onSave}
           variant="default"
@@ -171,7 +175,7 @@ export default function FormDialog({
           customColor="bg-gradient-to-r from-blue-600 to-blue-700 text-white hover:shadow-lg transform hover:scale-105"
         >
           {saveButtonLoading ? "Saving..." : saveButtonText}
-        </Button>
+        </FormButton>
       </div>
     </div>
   );
@@ -193,21 +197,21 @@ export default function FormDialog({
                 {header || defaultHeader}
               </div>
               {showCloseButton && (
-                <Button
+                <FormButton
                   variant="ghost"
                   size="icon"
                   onClick={handleCloseClick}
                   className="w-10 h-10 rounded-full hover:bg-gray-100 transition-all duration-200 hover:scale-105 flex-shrink-0 ml-4"
                 >
                   <span className="text-gray-400 hover:text-gray-600 text-xl">✕</span>
-                </Button>
+                </FormButton>
               )}
             </div>
           </div>
         )}
 
         {/* Dynamic Content */}
-        <div className="flex-1 overflow-y-auto p-6 pt-4">
+        <div ref={contentRef} className="flex-1 overflow-y-auto p-6 pt-4">
           {children}
         </div>
 

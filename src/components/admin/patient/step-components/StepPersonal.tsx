@@ -4,8 +4,8 @@ import { useFormContext } from "react-hook-form";
 import {Phone, Mail} from 'lucide-react'
 // Import UI components
 import { Label } from "@/components/common/Label";
-import DatePicker from "@/components/common/DatePicker";
-import Input from "@/components/common/Input";
+import FormDatePicker from "@/components/common/FormDatePicker";
+import FormField from "@/components/common/FormField";
 
 // Import utils file
 import { getRoleColors } from "@/utils/roleColors";
@@ -73,7 +73,7 @@ export default function StepPersonal() {
       </div>
 
       {/* Full Name */}
-      <Input
+      <FormField
         id="name"
         label="Full Name"
         required
@@ -87,7 +87,7 @@ export default function StepPersonal() {
         <Label required>
           Date of Birth
         </Label>
-        <DatePicker
+        <FormDatePicker
           value={watch("dob") || ''}
           onChange={(value) => {
             setValue("dob", value);
@@ -113,7 +113,7 @@ export default function StepPersonal() {
       {/* Gender and Blood Group */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Input
+          <FormField
             id="gender"
             label="Gender"
             required
@@ -125,11 +125,11 @@ export default function StepPersonal() {
             <option value="Male">Male</option>
             <option value="Female">Female</option>
             <option value="Other">Other</option>
-          </Input>
+          </FormField>
         </div>
 
         <div className="space-y-2">
-          <Input
+          <FormField
             id="bloodGroup"
             label="Blood Group"
             required
@@ -146,14 +146,14 @@ export default function StepPersonal() {
             <option value="AB-">AB-</option>
             <option value="O+">O+</option>
             <option value="O-">O-</option>
-          </Input>
+          </FormField>
         </div>
       </div>
 
       {/* Phone and Email */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Input
+          <FormField
             id="phone"
             label="Phone Number"
             required
@@ -167,7 +167,7 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <Input
+          <FormField
             id="email"
             label="Email Address"
             type="email"
@@ -181,7 +181,7 @@ export default function StepPersonal() {
       </div>
 
       {/* Address */}
-      <Input
+      <FormField
         id="address"
         label="Address"
         placeholder="Enter street address"
@@ -194,7 +194,7 @@ export default function StepPersonal() {
       {/* City, State, PIN */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Input
+          <FormField
             id="city"
             label="City"
             placeholder="Enter city"
@@ -204,7 +204,7 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <Input
+          <FormField
             id="state"
             label="State"
             placeholder="Enter state"
@@ -214,7 +214,7 @@ export default function StepPersonal() {
         </div>
 
         <div className="space-y-2">
-          <Input
+          <FormField
             id="pin"
             label="PIN Code"
             placeholder="Enter PIN code"

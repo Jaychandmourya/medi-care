@@ -1,7 +1,7 @@
 import React from 'react';
 import { format, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight, Calendar, Printer } from 'lucide-react';
-import { Button } from '@/components/common/Button';
+import { FormButton } from '@/components/common/FormButton';
 import type { RoleColors } from '@/types/appointment/appointmentType';
 
 interface CalendarHeaderProps {
@@ -47,7 +47,7 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
         </div>
         <div className="flex items-center space-x-2">
           {onPrint && (
-            <Button
+            <FormButton
               onClick={onPrint}
               variant="secondary"
               size="sm"
@@ -55,31 +55,31 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
             >
               <Printer className="w-4 h-4 mr-1" />
               Print
-            </Button>
+            </FormButton>
           )}
-          <Button
+          <FormButton
             onClick={onGoToToday}
             variant="secondary"
             size="sm"
           >
             Today
-          </Button>
-          <Button
+          </FormButton>
+          <FormButton
             onClick={() => onNavigateWeek('prev')}
             variant="ghost"
             size="icon"
             className='hover:text-black text-white'
           >
             <ChevronLeft className="w-5 h-5 " />
-          </Button>
-          <Button
+          </FormButton>
+          <FormButton
             onClick={() => onNavigateWeek('next')}
             variant="ghost"
             size="icon"
             className='hover:text-black text-white'
           >
             <ChevronRight className="w-5 h-5" />
-          </Button>
+          </FormButton>
         </div>
       </div>
     </div>

@@ -13,7 +13,7 @@ interface DatePickerProps {
   onBlur?: () => void;
 }
 
-const DatePicker: React.FC<DatePickerProps> = ({
+const FormDatePicker: React.FC<DatePickerProps> = ({
   value,
   onChange,
   placeholder = 'Select date',
@@ -38,6 +38,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
       return null;
     }
   });
+  const [calendarPosition, setCalendarPosition] = useState<'left' | 'right'>('left');
   const datePickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -84,6 +85,27 @@ const DatePicker: React.FC<DatePickerProps> = ({
     setIsOpen(false);
   };
 
+  const calculatePosition = () => {
+    if (datePickerRef.current) {
+      const rect = datePickerRef.current.getBoundingClientRect();
+      const calendarWidth = 280; // min-w-70 = 280px
+      const spaceRight = window.innerWidth - rect.right;
+      const spaceLeft = rect.left;
+
+      // If not enough space on right, but space on left, flip to right alignment
+      if (spaceRight < calendarWidth && spaceLeft >= calendarWidth) {
+        setCalendarPosition('right');
+      } else {
+        setCalendarPosition('left');
+      }
+    }
+  };
+
+  const handleOpen = () => {
+    calculatePosition();
+    setIsOpen(true);
+  };
+
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newValue = e.target.value;
     onChange(newValue);
@@ -113,7 +135,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-      <div className="absolute top-full left-0 mt-1 z-9999 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-70">
+      <div className={`absolute top-full ${calendarPosition === 'right' ? 'right-0' : 'left-0'} mt-1 z-9999 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-70`}>
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -240,7 +262,7 @@ const DatePicker: React.FC<DatePickerProps> = ({
           value={value || ''}
           readOnly
           onChange={handleInputChange}
-          onFocus={() => setIsOpen(true)}
+          onFocus={handleOpen}
           onBlur={onBlur}
           placeholder={placeholder}
           className={`${className} w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300 cursor-pointer`}
@@ -252,4 +274,4 @@ const DatePicker: React.FC<DatePickerProps> = ({
   );
 };
 
-export default DatePicker;
+export default FormDatePicker;

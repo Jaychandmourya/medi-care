@@ -91,7 +91,6 @@ export const appointmentServices = {
   // Generate time slots
   async generateTimeSlots({ doctorId, date }: { doctorId: string; date: Date }) {
     const dateStr = format(date, 'yyyy-MM-dd');
-    console.log('Generating time slots for date:', dateStr);
 
     try {
       // Ensure database is open
@@ -103,18 +102,14 @@ export const appointmentServices = {
       const doctorSchedule = await db.doctorSchedules.where('doctorId').equals(doctorId).first();
 
       if (!doctorSchedule) {
-        console.log('No schedule found for doctor:', doctorId);
         return [];
       }
-
-      console.log('Found doctor schedule:', doctorSchedule);
 
       // Check if the selected date is a working day
       const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
       const workingDays = doctorSchedule.workingDays; // Array of day numbers (1-5 for Mon-Fri)
 
       if (!workingDays.includes(dayOfWeek)) {
-        console.log('Date is not a working day for doctor');
         return [];
       }
 
@@ -124,20 +119,15 @@ export const appointmentServices = {
         .equals(dateStr)
         .toArray();
 
-      console.log('All appointments on this date:', appointments);
-
       // Get booked slots for the specific doctor
       const bookedSlots = appointments
         .filter((apt: Appointment) => apt.doctorId === doctorId)
         .map((apt: Appointment) => apt.slot);
 
-      console.log('Booked slots for doctor:', doctorId, bookedSlots);
-
       // Check if the selected date is today
       const today = new Date();
       const isToday = format(date, 'yyyy-MM-dd') === format(today, 'yyyy-MM-dd');
       const currentTimeStr = format(today, 'HH:mm');
-      console.log('Is today:', isToday, 'Current time:', currentTimeStr);
 
       // Generate time slots based on doctor's schedule
       const allSlots: string[] = [];
@@ -175,7 +165,6 @@ export const appointmentServices = {
 
       // Sort the slots
       const slots = allSlots.sort();
-      console.log('Generated time slots based on doctor schedule:', slots);
       return slots;
     } catch (error) {
       console.error('Error in generateTimeSlots:', error);

@@ -6,10 +6,10 @@ import { Plus, Search, Filter, Edit, Trash2, Eye } from "lucide-react";
 
 // Import UI components
 import ConfirmationDialog from "@/components/common/dialog/ConfirmationDialog";
-import { Button } from "@/components/common/Button";
+import { FormButton } from "@/components/common/FormButton";
 import { Label } from "@/components/common/Label";
-import Input from "@/components/common/Input";
-import DatePicker from "@/components/common/DatePicker";
+import FormField from "@/components/common/FormField";
+import FormDatePicker from "@/components/common/FormDatePicker";
 import ThreeDotMenu from "@/components/common/ThreeDotMenu";
 import Pagination from "@/components/common/Pagination";
 
@@ -184,13 +184,13 @@ export default function PatientList() {
               </h1>
               <p className="text-gray-600 mt-1">Manage your patient records</p>
             </div>
-            <Button
+            <FormButton
               onClick={() => setIsOpenDialog(true)}
               className={`flex items-center gap-2 ${themeColors.button}`}
             >
               <Plus className="w-5 h-5" />
               Add Patient
-            </Button>
+            </FormButton>
           </div>
         </div>
 
@@ -198,19 +198,19 @@ export default function PatientList() {
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95 space-y-4">
           {/* Search Bar */}
           <div className="flex flex-wrap justify-between gap-2 ">
-            <Input
+            <FormField
               type="text"
               placeholder="Search by name, phone, patient ID, or blood group..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               icon={Search}
               iconPosition="left"
-              className="w-full sm:w-80 md:w-96"
+              className="w-full sm:w-80 xl:w-175"
             />
 
             {/* Filter Toggle */}
             <div className="flex justify-between items-center">
-              <Button
+              <FormButton
                 variant="ghost"
                 onClick={() => setShowFilters(!showFilters)}
                 className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
@@ -222,15 +222,15 @@ export default function PatientList() {
                     Active
                   </span>
                 )}
-              </Button>
+              </FormButton>
               {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
-                <Button
+                <FormButton
                   variant="ghost"
                   onClick={clearFilters}
                   className="text-sm text-red-600 hover:text-red-800"
                 >
                   Clear All Filters
-                </Button>
+                </FormButton>
               )}
             </div>
           </div>
@@ -241,7 +241,7 @@ export default function PatientList() {
               {/* Gender Filter */}
               <div className="space-y-2">
                 <Label>Gender</Label>
-                <Input
+                <FormField
                   as="select"
                   value={genderFilter}
                   onChange={(e) => setGenderFilter(e.target.value)}
@@ -250,13 +250,13 @@ export default function PatientList() {
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
-                </Input>
+                </FormField>
               </div>
 
               {/* Blood Group Filter */}
               <div className="space-y-2">
                 <Label>Blood Group</Label>
-                <Input
+                <FormField
                   as="select"
                   value={bloodGroupFilter}
                   onChange={(e) => setBloodGroupFilter(e.target.value)}
@@ -270,27 +270,39 @@ export default function PatientList() {
                   <option value="AB-">AB-</option>
                   <option value="O+">O+</option>
                   <option value="O-">O-</option>
-                </Input>
+                </FormField>
               </div>
 
               {/* Age Range Filter */}
               <div>
                 <Label className="mb-1.5">Age Range</Label>
                 <div className="flex gap-2">
-                  <Input
+                  <FormField
                     type="number"
                     placeholder="Min"
                     value={ageRange.min}
                     min={0}
-                    onChange={(e) => setAgeRange(prev => ({ ...prev, min: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || parseInt(value) >= 0) {
+                        setAgeRange(prev => ({ ...prev, min: value }));
+                      }
+                    }}
                     className="flex-1"
                   />
-                  <Input
+                  <FormField
                     type="number"
                     placeholder="Max"
                     value={ageRange.max}
                     min={0}
-                    onChange={(e) => setAgeRange(prev => ({ ...prev, max: e.target.value }))}
+                    onKeyDown={(e) => { if (e.key === '-') e.preventDefault(); }}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (value === '' || parseInt(value) >= 0) {
+                        setAgeRange(prev => ({ ...prev, max: value }));
+                      }
+                    }}
                     className="flex-1"
                   />
                 </div>
@@ -300,14 +312,14 @@ export default function PatientList() {
               <div>
                 <Label className="mb-1.5">Registration Date</Label>
                 <div className="flex gap-2">
-                  <DatePicker
+                  <FormDatePicker
                     value={registrationDateRange.start}
                     onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, start: value }))}
                     placeholder="Start date"
                     className="flex-1"
                     disableFutureDates
                   />
-                  <DatePicker
+                  <FormDatePicker
                     value={registrationDateRange.end}
                     onChange={(value) => setRegistrationDateRange(prev => ({ ...prev, end: value }))}
                     placeholder="End date"
