@@ -61,6 +61,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
   const [pendingDoctorData, setPendingDoctorData] = useState<DoctorFormData | null>(null)
   const pendingDoctorDataRef = useRef<DoctorFormData | null>(null)
   const specialtyRef = useRef<HTMLDivElement>(null)
+  const dialogContentRef = useRef<HTMLDivElement>(null)
 
 
   // State for country/state codes (selector uses codes, form stores names)
@@ -180,12 +181,8 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
 
   // Scroll to top when switching to schedule step
   useEffect(() => {
-    if (currentStep === 'schedule') {
-      // Find the dialog content container and scroll to top
-      const dialogContent = document.querySelector('[role="dialog"] .overflow-y-auto, [role="dialog"] .overflow-auto, [role="dialog"] > div > div')
-      if (dialogContent) {
-        dialogContent.scrollTo({ top: 0, behavior: 'smooth' })
-      }
+    if (currentStep === 'schedule' && dialogContentRef.current) {
+      dialogContentRef.current.scrollTo({ top: 0, behavior: 'smooth' })
     }
   }, [currentStep])
 
@@ -470,6 +467,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
       maxWidth="max-w-4xl"
       showDefaultButtons={false}
       footer={renderFooter()}
+      contentRef={dialogContentRef}
     >
       {renderStepIndicator()}
 
