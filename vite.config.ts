@@ -18,10 +18,10 @@ export default defineConfig({
         changeOrigin: true,
         secure: false,
         configure: (proxy, _options) => {
-          proxy.on('error', (err, _req, _res) => {
+          proxy.on('error', (err) => {
             console.log('proxy error', err)
           })
-          proxy.on('proxyReq', (proxyReq, req, _res) => {
+          proxy.on('proxyReq', (_proxyReq, req, _res) => {
             console.log('Sending Request to local server:', req.method, req.url)
           })
           proxy.on('proxyRes', (proxyRes, req, _res) => {

@@ -1,4 +1,4 @@
-import { X, Calendar, Mail, MapPin, User, Activity, Phone, FileText, Heart, CreditCard, Pill, AlertCircle } from "lucide-react";
+import { Calendar, Mail, MapPin, User, Activity, Phone, FileText, Heart, CreditCard, Pill, AlertCircle } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAppDispatch, useAppSelector } from "@/app/hooks";
 import { fetchAppointmentsByPatientId } from "@/features/appointment/appointmentThunk";

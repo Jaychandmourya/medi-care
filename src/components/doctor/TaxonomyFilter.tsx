@@ -89,8 +89,8 @@ function TaxonomyFilter({
     handleClear()
   }, [handleClear])
 
-  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value)
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    setSearchTerm((e.target as HTMLInputElement).value)
   }, [])
 
   return (
