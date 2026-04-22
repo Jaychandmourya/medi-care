@@ -167,6 +167,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
             label="Pulse (bpm)"
             placeholder="72"
             type="number"
+            min={0}
             registration={register('pulse')}
             error={errors.pulse}
             required
@@ -189,7 +190,7 @@ export const VitalsForm = ({ isOpen, vitals, patients, existingVitals = [], onSu
             label="SpO2 (%)"
             placeholder="98"
             type="number"
-            min="1"
+            min={0}
             max="100"
             registration={register('spo2')}
             error={errors.spo2}

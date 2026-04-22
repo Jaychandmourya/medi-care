@@ -302,7 +302,7 @@ const DoctorPatients = () => {
                   <Input
                     type="number"
                     placeholder="Max"
-                     min={0}
+                    min={0}
                     value={ageRange.max}
                     onChange={(e) => setAgeRange(prev => ({ ...prev, max: e.target.value }))}
                     className="flex-1"
