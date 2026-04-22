@@ -1,4 +1,4 @@
-import { useState, useCallback, memo } from 'react'
+import { useState, useCallback, memo, useEffect } from 'react'
 import toast from 'react-hot-toast'
 
 import { User, Briefcase, Eye, Plus, Loader2 } from 'lucide-react'
@@ -19,8 +19,15 @@ interface DoctorSearchResultsProps {
 }
 
 function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: DoctorSearchResultsProps) {
-  const { searchResults, searchLoading: loading, resultCount, currentPage, totalPages } = useSelector((state: RootState) => state.doctors)
+  const { searchResults, searchLoading: loading, resultCount, currentPage, totalPages, error } = useSelector((state: RootState) => state.doctors)
   const [addingDoctor, setAddingDoctor] = useState<string | null>(null)
+
+  // Show toast when API error occurs
+  useEffect(() => {
+    if (error && searchPerformed) {
+      toast.error(`Search failed: ${error}`)
+    }
+  }, [error, searchPerformed])
 
   const handleViewDetails = useCallback((doctor: NPIResult) => {
     onViewDetails(doctor)
@@ -94,7 +101,9 @@ function DoctorSearchResults({ onViewDetails, onAddToSystem, searchPerformed }: 
         <User className="w-12 h-12 sm:w-16 sm:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
         <h4 className="text-base sm:text-lg font-medium text-gray-900 mb-2">No doctors found</h4>
         <p className="text-sm text-gray-500 max-w-md mx-auto">
-          Try adjusting your search criteria. You can search by name, location, or specialty.
+          {error
+            ? `Search failed: ${error}. Please try again later.`
+            : "Try adjusting your search criteria. You can search by name, location, or specialty."}
         </p>
       </div>
     )

@@ -197,39 +197,42 @@ export default function PatientList() {
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95 space-y-4">
           {/* Search Bar */}
-          <Input
-            type="text"
-            placeholder="Search by name, phone, patient ID, or blood group..."
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            icon={Search}
-            iconPosition="left"
-          />
+          <div className="flex flex-wrap justify-between gap-2 ">
+            <Input
+              type="text"
+              placeholder="Search by name, phone, patient ID, or blood group..."
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              icon={Search}
+              iconPosition="left"
+              className="w-full sm:w-80 md:w-96"
+            />
 
-          {/* Filter Toggle */}
-          <div className="flex justify-between items-center">
-            <Button
-              variant="ghost"
-              onClick={() => setShowFilters(!showFilters)}
-              className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
-            >
-              <Filter className="w-4 h-4" />
-              {showFilters ? 'Hide Filters' : 'Show Filters'}
-              {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
-                <span className={`ml-2 px-2 py-1 ${themeColors.bg} ${themeColors.text} text-xs rounded-full`}>
-                  Active
-                </span>
-              )}
-            </Button>
-            {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
+            {/* Filter Toggle */}
+            <div className="flex justify-between items-center">
               <Button
                 variant="ghost"
-                onClick={clearFilters}
-                className="text-sm text-red-600 hover:text-red-800"
+                onClick={() => setShowFilters(!showFilters)}
+                className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
               >
-                Clear All Filters
+                <Filter className="w-4 h-4" />
+                {showFilters ? 'Hide Filters' : 'Show Filters'}
+                {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
+                  <span className={`ml-2 px-2 py-1 ${themeColors.bg} ${themeColors.text} text-xs rounded-full`}>
+                    Active
+                  </span>
+                )}
               </Button>
-            )}
+              {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
+                <Button
+                  variant="ghost"
+                  onClick={clearFilters}
+                  className="text-sm text-red-600 hover:text-red-800"
+                >
+                  Clear All Filters
+                </Button>
+              )}
+            </div>
           </div>
 
           {/* Filters */}

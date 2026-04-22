@@ -1,6 +1,6 @@
-import { useState, useCallback, useMemo, Suspense, lazy } from 'react'
+import { useState, useCallback, useMemo, Suspense, lazy, useEffect } from 'react'
 import toast from 'react-hot-toast'
-import { Search, X } from 'lucide-react'
+import { Search } from 'lucide-react'
 
 // Import UI components
 import { Button } from '@/components/common/Button'
@@ -31,7 +31,7 @@ const DoctorSearchDetails = lazy(() => import('@/components/doctor/DoctorSearchD
 // NPI Search Section Component
 function NPISearchSection() {
   const dispatch = useDispatch<AppDispatch>()
-  const { searchResults, localDoctors, searchLoading: loading, resultCount, currentPage, totalPages } = useSelector((state: RootState) => state.doctors)
+  const { searchResults, localDoctors, searchLoading: loading, resultCount, currentPage, totalPages, error } = useSelector((state: RootState) => state.doctors)
 
   const [searchFilters, setSearchFilters] = useState({
     firstName: '',
@@ -45,6 +45,13 @@ function NPISearchSection() {
   const [viewingDoctor, setViewingDoctor] = useState<NPIResult | null>(null)
   const [addedDoctorNpis, setAddedDoctorNpis] = useState<Set<string>>(new Set())
   const [searchPerformed, setSearchPerformed] = useState(false)
+
+  // Show toast when search fails
+  useEffect(() => {
+    if (error && searchPerformed) {
+      toast.error(`Search failed: ${error}`)
+    }
+  }, [error, searchPerformed])
 
   const hasActiveFilters = useMemo(() =>
     searchFilters.firstName ||

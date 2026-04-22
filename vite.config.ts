@@ -13,21 +13,19 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      '/api/npi': {
-        target: 'https://npiregistry.cms.hhs.gov',
+      '/api': {
+        target: 'http://localhost:3001',
         changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api\/npi/, '/api'),
-        secure: true,
+        secure: false,
         configure: (proxy, _options) => {
           proxy.on('error', (err, _req, _res) => {
             console.log('proxy error', err)
           })
           proxy.on('proxyReq', (proxyReq, req, _res) => {
-            console.log('Sending Request:', req.method, req.url)
-            proxyReq.setHeader('User-Agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.0.36')
+            console.log('Sending Request to local server:', req.method, req.url)
           })
           proxy.on('proxyRes', (proxyRes, req, _res) => {
-            console.log('Received Response:', proxyRes.statusCode, req.url)
+            console.log('Received Response from local server:', proxyRes.statusCode, req.url)
           })
         }
       }

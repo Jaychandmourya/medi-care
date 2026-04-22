@@ -35,28 +35,40 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
   }, [])
 
   useEffect(() => {
-    if (isOpen && triggerRef.current) {
-      const rect = triggerRef.current.getBoundingClientRect()
-      const menuWidth = 192
-      const viewportWidth = window.innerWidth
+    const updatePosition = () => {
+      if (isOpen && triggerRef.current) {
+        const rect = triggerRef.current.getBoundingClientRect()
+        const menuWidth = 192
+        const viewportWidth = window.innerWidth
 
-      let left = rect.left
-      if (position === 'right') {
-        left = rect.right - menuWidth
-      }
+        let left = rect.left
+        if (position === 'right') {
+          left = rect.right - menuWidth
+        }
 
-      if (left + menuWidth > viewportWidth) {
-        left = rect.right - menuWidth
-      }
-      if (left < 0) {
-        left = rect.left
-      }
+        if (left + menuWidth > viewportWidth) {
+          left = rect.right - menuWidth
+        }
+        if (left < 0) {
+          left = rect.left
+        }
 
-      setMenuPosition({
-        top: rect.bottom + window.scrollY + 4,
-        left: left + window.scrollX,
-        right: rect.right + window.scrollX
-      })
+        setMenuPosition({
+          top: rect.bottom + window.scrollY + 4,
+          left: left + window.scrollX,
+          right: rect.right + window.scrollX
+        })
+      }
+    }
+
+    updatePosition()
+
+    window.addEventListener('scroll', updatePosition, true)
+    window.addEventListener('resize', updatePosition)
+
+    return () => {
+      window.removeEventListener('scroll', updatePosition, true)
+      window.removeEventListener('resize', updatePosition)
     }
   }, [isOpen, position])
 
@@ -79,7 +91,7 @@ export default function ThreeDotMenu({ items, position = 'right' }: ThreeDotMenu
       {isOpen && createPortal(
         <div
           ref={menuRef}
-          className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[9999]"
+          className="fixed w-48 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-[99999]"
           style={{
             top: `${menuPosition.top}px`,
             left: `${menuPosition.left}px`

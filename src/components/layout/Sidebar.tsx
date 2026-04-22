@@ -54,6 +54,7 @@ const Sidebar = ({ isOpen, setIsOpen }: any) => {
             <NavLink
               key={item.name}
               to={item.path}
+              onClick={() => setIsOpen(false)}
               className={() => {
                 const currentPath = window.location.pathname;
                 let shouldActive = false;

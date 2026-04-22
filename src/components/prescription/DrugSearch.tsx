@@ -110,7 +110,7 @@ const DrugSearch = () => {
         {searchQuery && (
           <button
             onClick={handleClearSearch}
-            className="absolute inset-y-0 right-0 pr-3 flex items-center top-7"
+            className="absolute inset-y-0 right-0 pr-3 flex items-center"
           >
             {searchLoading ? (
               <Loader2 className="h-4 w-4 text-gray-400 animate-spin" />

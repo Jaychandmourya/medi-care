@@ -338,13 +338,13 @@ export default function InternalDoctorList() {
                               label: 'View Details',
                               onClick: () => handleViewDoctor(doctor),
                               icon: <Eye className="w-4 h-4" />,
-                              className: 'text-gray-700'
+                              className: 'text-blue-700'
                             },
                             {
                               label: 'Edit Doctor',
                               onClick: () => handleEditDoctor(doctor),
                               icon: <Edit className="w-4 h-4" />,
-                              className: 'text-gray-700'
+                              className: 'text-green-700'
                             },
                             {
                               label: 'Delete Doctor',

@@ -99,69 +99,8 @@ export const searchDoctors = createAsyncThunk(
 
       return data
     } catch (error) {
-      console.warn('NPI API failed, using mock data:', error)
-
-      // Return mock data when API fails
-      return {
-        result_count: 2,
-        results: [
-          {
-            basic: {
-              npi: '1234567890',
-              first_name: firstName || 'John',
-              last_name: lastName || 'Smith',
-              credential: 'MD',
-              gender: 'M',
-              status: 'A',
-            },
-            addresses: [
-              {
-                address_1: '123 Medical Center Dr',
-                city: city || 'New York',
-                state: state || 'NY',
-                postal_code: '10001',
-                telephone_number: '212-555-0123',
-              },
-            ],
-            taxonomies: [
-              {
-                code: taxonomy || '207R00000X',
-                desc: 'Internal Medicine',
-                primary: true,
-              },
-            ],
-            country: 'US',
-          },
-          {
-            basic: {
-              npi: '9876543210',
-              first_name: firstName || 'Jane',
-              last_name: lastName || 'Doe',
-              credential: 'DO',
-              gender: 'F',
-              status: 'A',
-            },
-            addresses: [
-              {
-                address_1: '456 Health Plaza',
-                city: city || 'Albany',
-                state: state || 'NY',
-                postal_code: '12203',
-                telephone_number: '518-555-0456',
-              },
-            ],
-            taxonomies: [
-              {
-                code: taxonomy || '207Q00000X',
-                desc: 'Family Medicine',
-                primary: true,
-              },
-            ],
-            country: 'US',
-          },
-        ],
-        Errors: [],
-      }
+      console.error('NPI API request failed:', error)
+      throw error instanceof Error ? error : new Error('Failed to search doctors')
     }
   }
 )
