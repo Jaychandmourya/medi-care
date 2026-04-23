@@ -54,11 +54,12 @@ const CountryStateCitySelector = ({
     <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
       {/* Country Dropdown */}
       <div className="space-y-2">
-        <Label className="mb-1.5">Country</Label>
+        <Label htmlFor='Country' className="mb-1.5">Country</Label>
         <select
+          id="Country"
           value={selectedCountry}
           onChange={handleCountryChange}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 appearance-none bg-position-[right_12px_center] bg-size-[16px_16px] bg-no-repeat bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
         >
           <option value="">Select Country</option>
           {countries.map((country) => (
@@ -71,12 +72,13 @@ const CountryStateCitySelector = ({
 
       {/* State Dropdown */}
       <div className="space-y-2">
-        <Label className="mb-1.5">State</Label>
+        <Label htmlFor='State' className="mb-1.5">State</Label>
         <select
+          id="State"
           value={selectedState}
           onChange={handleStateChange}
           disabled={!selectedCountry}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-position-[right_12px_center] bg-size-[16px_16px] bg-no-repeat bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
         >
           <option value="">{selectedCountry ? 'Select State' : 'Select Country First'}</option>
           {states.map((state) => (
@@ -89,12 +91,13 @@ const CountryStateCitySelector = ({
 
       {/* City Dropdown */}
       <div className="space-y-2">
-        <Label className="mb-1.5">City</Label>
+        <Label htmlFor='City' className="mb-1.5">City</Label>
         <select
+          id="City"
           value={selectedCity}
           onChange={handleCityChange}
           disabled={!selectedState}
-          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="w-full px-4 py-3 border border-gray-300 rounded-xl bg-white text-sm text-gray-900 focus:outline-none focus:ring-2 focus:border-transparent shadow-sm transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed appearance-none bg-position-[right_12px_center] bg-size-[16px_16px] bg-no-repeat bg-[url('data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%2224%22%20height%3D%2224%22%20viewBox%3D%220%200%2024%2024%22%20fill%3D%22none%22%20stroke%3D%22%236B7280%22%20stroke-width%3D%222%22%20stroke-linecap%3D%22round%22%20stroke-linejoin%3D%22round%22%3E%3Cpolyline%20points%3D%226%209%2012%2015%2018%209%22%3E%3C%2Fpolyline%3E%3C%2Fsvg%3E')]"
         >
           <option value="">{selectedState ? 'Select City' : 'Select State First'}</option>
           {cities.map((city) => (

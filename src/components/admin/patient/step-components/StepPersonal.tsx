@@ -84,10 +84,11 @@ export default function StepPersonal() {
 
       {/* Date of Birth */}
       <div className="space-y-2">
-        <Label required>
+        <Label htmlFor="dob" required>
           Date of Birth
         </Label>
         <FormDatePicker
+          id="dob"
           value={watch("dob") || ''}
           onChange={(value) => {
             setValue("dob", value);
@@ -99,7 +100,7 @@ export default function StepPersonal() {
           }}
           placeholder="Select date of birth"
           disableFutureDates
-          className={`w-full px-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white shadow-sm ${
+          className={`border ${
             errors.dob ? "border-red-500" : "border-gray-300"
           }`}
         />

@@ -197,7 +197,7 @@ export default function PatientList() {
         {/* Search and Filters */}
         <div className="bg-white rounded-2xl shadow-lg p-6 backdrop-blur-sm bg-opacity-95 space-y-4">
           {/* Search Bar */}
-          <div className="flex flex-wrap justify-between gap-2 ">
+          <div className="flex flex-wrap justify-between gap-y-2 ">
             <FormField
               type="text"
               placeholder="Search by name, phone, patient ID, or blood group..."
@@ -205,29 +205,24 @@ export default function PatientList() {
               onChange={(e) => setSearch(e.target.value)}
               icon={Search}
               iconPosition="left"
-              className="w-full sm:w-80 xl:w-175"
+              className="w-full sm:w-100 xl:w-175"
             />
 
             {/* Filter Toggle */}
-            <div className="flex justify-between items-center">
+            <div className="flex w-full md:w-fit flex-wrap gap-2 justify-between items-center">
               <FormButton
-                variant="ghost"
+                variant="outline"
                 onClick={() => setShowFilters(!showFilters)}
-                className={`flex items-center gap-2 ${themeColors.text} hover:${themeColors.text.replace('text-', 'text-').replace('600', '800')}`}
+                className={`flex items-center w-full md:w-fit gap-2 ${themeColors.text}`}
               >
-                <Filter className="w-4 h-4" />
+                <Filter className="w-3 h-3" />
                 {showFilters ? 'Hide Filters' : 'Show Filters'}
-                {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
-                  <span className={`ml-2 px-2 py-1 ${themeColors.bg} ${themeColors.text} text-xs rounded-full`}>
-                    Active
-                  </span>
-                )}
               </FormButton>
               {(genderFilter || bloodGroupFilter || ageRange.min || ageRange.max || registrationDateRange.start || registrationDateRange.end) && (
                 <FormButton
-                  variant="ghost"
+                  variant="outline"
                   onClick={clearFilters}
-                  className="text-sm text-red-600 hover:text-red-800"
+                  className="text-red-600 w-full md:w-fit hover:text-red-800 text-base"
                 >
                   Clear All Filters
                 </FormButton>
@@ -237,7 +232,7 @@ export default function PatientList() {
 
           {/* Filters */}
           {showFilters && (
-            <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
+            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-4 gap-4 pt-4 border-t border-gray-200">
               {/* Gender Filter */}
               <div className="space-y-2">
                 <Label>Gender</Label>
@@ -325,6 +320,7 @@ export default function PatientList() {
                     placeholder="End date"
                     className="flex-1"
                     disableFutureDates
+                    position="right"
                     minDate={registrationDateRange.start}
                   />
                 </div>

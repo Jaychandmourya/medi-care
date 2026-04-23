@@ -130,7 +130,7 @@ function TaxonomyFilter({
             </span>
           )}
           <ChevronDown
-            className={`w-4 h-4 text-black transition-transform duration-200 ${
+            className={`w-4 h-4 text-gray-500 transition-transform duration-200 ${
               isOpen ? 'transform rotate-180' : ''
             }`}
           />

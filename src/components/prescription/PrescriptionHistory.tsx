@@ -387,7 +387,7 @@ const PrescriptionHistory = () => {
               <div key={date} className="bg-white border border-gray-200 rounded-lg shadow-sm overflow-hidden">
                 {/* Date Header */}
                 <div className="bg-gray-50 px-6 py-3 border-b border-gray-200">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <Calendar className="h-5 w-5 text-gray-500" />
                     <h3 className="font-semibold text-gray-900">{date}</h3>
                     <span className="text-sm text-gray-500">
@@ -400,7 +400,7 @@ const PrescriptionHistory = () => {
                 <div className="divide-y divide-gray-200">
                   {datePrescriptions.map((prescription) => (
                     <div key={prescription.id} className="p-6 hover:bg-gray-50 transition-colors">
-                      <div className="flex flex-col sm:flex-row justify-between items-start">
+                      <div className="flex flex-row justify-between items-start">
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-2">
                             <h4 className="font-semibold text-gray-900">{prescription.patientName}</h4>

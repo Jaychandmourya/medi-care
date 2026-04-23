@@ -138,8 +138,8 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
   // Custom header with orange accent
   const customHeader = (
     <div className="flex items-center space-x-3">
-      <Calendar className="w-6 h-6 text-orange-600" />
-      <h2 className="text-xl font-semibold text-orange-600">Reschedule Appointment</h2>
+      <Calendar className="hidden md:block w-6 h-6 text-orange-600" />
+      <h2 className="text-lg md:text-xl font-semibold text-orange-600">Reschedule Appointment</h2>
     </div>
   );
 
@@ -186,7 +186,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
 
         {/* Date */}
         <div>
-          <Label required>
+          <Label htmlFor='date' required>
             <Calendar className="w-4 h-4 inline mr-2" />
             New Date
           </Label>
@@ -195,6 +195,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
             control={control}
             render={({ field }) => (
               <FormDatePicker
+                id="date"
                 value={field.value}
                 onChange={field.onChange}
                 placeholder="Select new date"
@@ -213,7 +214,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
 
         {/* Time Slot */}
         <div>
-          <Label required>
+          <Label htmlFor='slot' required>
             <Clock className="w-4 h-4 inline mr-2" />
             New Time Slot
           </Label>
@@ -222,6 +223,7 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
             control={control}
             render={({ field }) => (
               <FormField
+                id="slot"
                 {...field}
                 as="select"
                 disabled={!availableSlots.length}
@@ -244,18 +246,20 @@ const RescheduleModal = ({ showRescheduleModal, closeRescheduleModal }: { showRe
 
         {/* Reason for reschedule */}
         <div>
-          <Label>
+          <Label htmlFor='reason'>
             Reason for Reschedule (Optional)
           </Label>
           <Controller
             name="reason"
             control={control}
             render={({ field }) => (
-              <textarea
+              <FormField
+                id="reason"
                 {...field}
+                as="textarea"
                 rows={3}
                 placeholder="Please provide a reason for rescheduling..."
-                className="w-full p-3 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-none"
+                className="resize-none mt-1"
               />
             )}
           />

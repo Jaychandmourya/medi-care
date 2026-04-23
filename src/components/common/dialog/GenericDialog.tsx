@@ -192,7 +192,7 @@ export default function GenericDialog({
         {/* Dynamic Header */}
         {showHeader && (
           <div className={`sticky top-0 ${headerClass || 'bg-white'} border-b border-gray-200 rounded-t-3xl p-6 pb-4`}>
-            <div className="flex justify-between items-start">
+            <div className="flex justify-between items-center">
               <div className="flex-1">
                 {header || defaultHeader}
               </div>

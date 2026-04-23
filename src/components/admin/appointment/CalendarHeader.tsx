@@ -38,9 +38,9 @@ const CalendarHeader: React.FC<CalendarHeaderProps> = React.memo(({
 
   return (
     <div className={getHeaderClass()}>
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap gap-2 items-center justify-between">
         <div className="flex items-center space-x-4">
-          <Calendar className="w-6 h-6" />
+          <Calendar className="hidden md:block w-6 h-6" />
           <h2 className="text-xl font-semibold">
             {format(currentWeek, 'MMMM d, yyyy')} - {format(addDays(currentWeek, 6), 'MMMM d, yyyy')}
           </h2>

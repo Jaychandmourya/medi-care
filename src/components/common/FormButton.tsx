@@ -12,12 +12,12 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
 
 const FormButton = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant = 'default', size = 'default', loading = false, disabled, children, customColor, ...props }, ref) => {
-    const baseClasses = 'inline-flex cursor-pointer items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
+    const baseClasses = 'inline-flex cursor-pointer items-center justify-center rounded-xl font-semibold transition-all duration-200 focus:outline-none focus:ring-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
     const variants = {
-      default: customColor || 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:scale-105 focus:ring-blue-500',
+      default: customColor || 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:shadow-lg transform hover:scale-105',
       destructive: 'bg-gradient-to-r from-red-600 to-pink-600 text-white hover:shadow-lg transform hover:scale-105 focus:ring-red-500',
-      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 focus:ring-blue-500',
+      outline: 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50',
       secondary: 'bg-gray-100 text-gray-700 hover:bg-gray-200 focus:ring-gray-500',
       ghost: 'text-gray-700 hover:bg-gray-100 focus:ring-gray-500',
       link: 'text-blue-600 hover:text-blue-800 underline-offset-4 hover:underline focus:ring-blue-500'
