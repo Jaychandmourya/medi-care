@@ -320,7 +320,7 @@ const Header = ({ setIsOpen }: HeaderProps) => {
         <div ref={dropdownRef} className="relative">
           <button
             onClick={() => setOpen(!open)}
-            className="flex items-center gap-2 cursor-pointer p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            className="flex items-center gap-2 cursor-pointer px-3 py-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
             aria-label="User menu"
           >
             <div className="w-9 h-9 rounded-full bg-linear-to-br from-blue-500 to-blue-600 text-white flex items-center justify-center font-semibold shadow-md text-sm">
