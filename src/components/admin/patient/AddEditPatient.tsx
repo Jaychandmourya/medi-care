@@ -103,7 +103,7 @@ export default function AddEditPatient({ isOpen, onClose, editData, titleClass }
   // Custom header with user icon and role-based colors
   const customHeader = (
     <div className="flex items-center space-x-3">
-      <div className={`w-12 h-12 bg-gradient-to-br ${roleColors.primary} rounded-xl flex items-center justify-center shadow-lg`}>
+      <div className={`hidden w-12 h-12 bg-gradient-to-br ${roleColors.primary} rounded-xl md:flex items-center justify-center shadow-lg`}>
         <span className="text-white text-xl">👤</span>
       </div>
       <div>

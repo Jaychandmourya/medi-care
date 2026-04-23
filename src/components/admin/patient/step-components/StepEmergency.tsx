@@ -39,7 +39,7 @@ export default function StepEmergency() {
         as="select"
         required
         icon={Link}
-        registration={register("relationship", { required: "Relationship is required" })}
+        registration={register("relationship")}
         error={errors.relationship}
       >
         <option value="">Select relationship</option>

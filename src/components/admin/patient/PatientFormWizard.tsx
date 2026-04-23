@@ -238,7 +238,7 @@ const PatientFormWizard = forwardRef<any, {
               <div
                 key={index}
                 onClick={() => isClickable && handleStepClick(stepNumber)}
-                className={`text-xs font-medium transition-all duration-200 ${
+                className={`hidden md:block text-xs font-medium transition-all duration-200 ${
                   isCompleted
                     ? roleColors.text.replace('700', '600')
                     : "text-gray-400"

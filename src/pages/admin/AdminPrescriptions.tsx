@@ -40,7 +40,7 @@ const AdminPrescriptions = () => {
       <div className="border-b border-gray-200">
         <div className="max-w-7xl px-4 lg:px-6">
           <div className="py-6">
-            <h1 className="text-2xl font-bold text-gray-900">Prescription Management</h1>
+            <h1 className="text-xl md:text-2xl font-bold text-gray-900">Prescription Management</h1>
             <p className="text-gray-500 mt-1">Create and manage digital prescriptions with OpenFDA integration</p>
           </div>
 

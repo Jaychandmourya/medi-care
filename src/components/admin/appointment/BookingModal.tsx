@@ -139,12 +139,12 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
   const customHeader = (
     <div className="flex justify-between items-center">
       <div className="flex items-center space-x-3">
-        <Calendar className={`w-6 h-6 ${roleColors?.header === 'bg-purple-600' ? 'text-purple-600' :
+        <Calendar className={`w-6 h-6 hidden md:block ${roleColors?.header === 'bg-purple-600' ? 'text-purple-600' :
           roleColors?.header === 'bg-blue-600' ? 'text-blue-600' :
           roleColors?.header === 'bg-green-600' ? 'text-green-600' :
           roleColors?.header === 'bg-pink-600' ? 'text-pink-600' :
           'text-blue-600'}`} />
-        <h2 className={`text-2xl font-bold ${roleColors?.header === 'bg-purple-600' ? 'bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent' :
+        <h2 className={`text-xl md:text-2xl font-bold ${roleColors?.header === 'bg-purple-600' ? 'bg-gradient-to-r from-purple-600 to-purple-700 bg-clip-text text-transparent' :
           roleColors?.header === 'bg-blue-600' ? 'bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent' :
           roleColors?.header === 'bg-green-600' ? 'bg-gradient-to-r from-green-600 to-green-700 bg-clip-text text-transparent' :
           roleColors?.header === 'bg-pink-600' ? 'bg-gradient-to-r from-pink-600 to-pink-700 bg-clip-text text-transparent' :
@@ -179,6 +179,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             control={control}
             render={({ field }) => (
               <FormField
+                id="Patient"
                 as="select"
                 label="Patient"
                 required
@@ -203,6 +204,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               control={control}
               render={({ field }) => (
                 <FormField
+                  id="Department"
                   as="select"
                   label="Department"
                   required
@@ -228,6 +230,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               control={control}
               render={({ field }) => (
                 <FormField
+                  id="Doctor"
                   as="select"
                   label="Doctor"
                   required
@@ -254,8 +257,9 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               control={control}
               render={({ field }) => (
                 <div className="space-y-2">
-                  <Label required>Date</Label>
+                  <Label htmlFor='date' required>Date</Label>
                   <FormDatePicker
+                    id="date"
                     value={field.value || ''}
                     onChange={field.onChange}
                     placeholder="Select appointment date"
@@ -279,6 +283,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
               render={({ field }) => (
                 <div className="space-y-2">
                   <FormField
+                    id="timeSlot"
                     as="select"
                     label="Time Slot"
                     required
@@ -346,6 +351,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             control={control}
             render={({ field }) => (
               <FormField
+                id="Duration"
                 as="select"
                 label="Duration (minutes)"
                 required
@@ -366,6 +372,7 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
             control={control}
             render={({ field }) => (
               <FormField
+                id="reason"
                 as="textarea"
                 label="Reason for Visit"
                 required
@@ -378,11 +385,12 @@ const BookingModal = React.memo(({ showBookingModal, closeBookingModel, roleColo
           />
 
           {/* Notes */}
-          <Controller
+        <Controller
             name="notes"
             control={control}
             render={({ field }) => (
               <FormField
+                id="textarea"
                 as="textarea"
                 label="Additional Notes"
                 rows={2}

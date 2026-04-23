@@ -299,7 +299,7 @@ const PrescriptionBuilder = () => {
                 </FormField>
 
                 <div>
-                  <Label required className="block text-sm font-medium text-gray-700 mb-1">
+                  <Label htmlFor='followUpDate' required className="block text-sm font-medium text-gray-700 mb-1">
                     Follow-up Date
                   </Label>
                   <input
@@ -307,6 +307,7 @@ const PrescriptionBuilder = () => {
                     {...registerPrescription('followUpDate')}
                   />
                   <FormDatePicker
+                    id="followUpDate"
                     value={watchedFollowUpDate}
                     onChange={(value: string) => {
                       setValue('followUpDate', value)

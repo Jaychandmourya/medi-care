@@ -26,7 +26,7 @@ export const patientSchema = z.object({
   emergencyPhone: z.string()
     .min(1, "Emergency phone number is required")
     .regex(/^\+?\d{10,}$/, "Please enter a valid emergency phone number (at least 10 digits)"),
-  relationship: z.string().optional(),
+  relationship: z.string().min(1, "Relationship is required"),
   photo: z.string().optional(),
   isActive: z.boolean(),
   createdAt: z.string().optional(),

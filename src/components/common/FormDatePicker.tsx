@@ -3,6 +3,7 @@ import { format, startOfMonth, endOfMonth, eachDayOfInterval, getDay, addMonths,
 import { Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
 
 interface DatePickerProps {
+  id?: string;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
@@ -11,9 +12,11 @@ interface DatePickerProps {
   disableFutureDates?: boolean;
   minDate?: string;
   onBlur?: () => void;
+  position?: 'left' | 'right' | 'center' | 'auto';
 }
 
 const FormDatePicker: React.FC<DatePickerProps> = ({
+  id,
   value,
   onChange,
   placeholder = 'Select date',
@@ -21,7 +24,8 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
   disablePastDates = false,
   disableFutureDates = false,
   minDate,
-  onBlur
+  onBlur,
+  position = 'left'
 }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [currentMonth, setCurrentMonth] = useState(() => {
@@ -38,7 +42,7 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
       return null;
     }
   });
-  const [calendarPosition, setCalendarPosition] = useState<'left' | 'right'>('left');
+  const [calendarPosition, setCalendarPosition] = useState<'left' | 'right' | 'center'>('left');
   const datePickerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -86,14 +90,22 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
   };
 
   const calculatePosition = () => {
+    if (position !== 'auto') {
+      setCalendarPosition(position);
+      return;
+    }
+
     if (datePickerRef.current) {
       const rect = datePickerRef.current.getBoundingClientRect();
       const calendarWidth = 280; // min-w-70 = 280px
       const spaceRight = window.innerWidth - rect.right;
       const spaceLeft = rect.left;
 
-      // If not enough space on right, but space on left, flip to right alignment
-      if (spaceRight < calendarWidth && spaceLeft >= calendarWidth) {
+      // On mobile/small screens, center the calendar
+      if (spaceRight < calendarWidth && spaceLeft < calendarWidth) {
+        setCalendarPosition('center');
+      } else if (spaceRight < calendarWidth && spaceLeft >= calendarWidth) {
+        // If not enough space on right, but space on left, flip to right alignment
         setCalendarPosition('right');
       } else {
         setCalendarPosition('left');
@@ -135,7 +147,11 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
     const weekDays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
     return (
-      <div className={`absolute top-full ${calendarPosition === 'right' ? 'right-0' : 'left-0'} mt-1 z-9999 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-70`}>
+      <div
+        className={`absolute top-full mt-1 z-50 bg-white border border-gray-200 rounded-lg shadow-lg p-4 min-w-70 w-70 max-w-[calc(100vw-32px)]
+          ${calendarPosition === 'right' ? 'right-0' : calendarPosition === 'center' ? 'left-1/2 -translate-x-1/2' : 'left-0'}
+        `}
+      >
         {/* Calendar Header */}
         <div className="flex items-center justify-between mb-4">
           <button
@@ -258,6 +274,7 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
     <div ref={datePickerRef} className="relative">
       <div className="relative">
         <input
+          id={id}
           type="text"
           value={value || ''}
           readOnly
@@ -265,9 +282,9 @@ const FormDatePicker: React.FC<DatePickerProps> = ({
           onFocus={handleOpen}
           onBlur={onBlur}
           placeholder={placeholder}
-          className={`${className} w-full px-4 py-3 pr-12 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300 cursor-pointer`}
+          className={`${className} w-full pl-12 pr-4 py-3 border rounded-xl focus:ring-2 focus:border-transparent transition-all duration-200 bg-white text-gray-900 placeholder-gray-500 shadow-sm border-gray-300 cursor-pointer`}
         />
-        <Calendar className="absolute right-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
+        <Calendar className="absolute left-4 top-3.5 h-5 w-5 text-gray-400 pointer-events-none" />
       </div>
       {isOpen && renderCalendar()}
     </div>
