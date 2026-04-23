@@ -57,7 +57,6 @@ export const doctorFormSchema = z.object({
 
   postalCode: z.string()
     .max(10, 'Postal code cannot exceed 10 characters')
-    .regex(/^[a-zA-Z0-9]{1,10}$/, 'Postal code must be 1-10 alphanumeric characters')
     .optional(),
 
   phone: z.string()

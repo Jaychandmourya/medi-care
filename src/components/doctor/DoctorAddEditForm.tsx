@@ -600,6 +600,7 @@ export default function DoctorEditForm({ isOpen, doctor, mode = 'edit', onSave, 
             <FormField
               id="postalCode"
               label="Postal Code"
+              type="tel"
               registration={register('postalCode')}
               error={errors.postalCode}
               placeholder="Enter postal code"

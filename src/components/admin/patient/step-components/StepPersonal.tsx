@@ -217,6 +217,7 @@ export default function StepPersonal() {
           <FormField
             id="pin"
             label="PIN Code"
+            type="tel"
             placeholder="Enter PIN code"
             registration={register("pin")}
             error={errors.pin}

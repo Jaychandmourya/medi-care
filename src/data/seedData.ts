@@ -252,9 +252,9 @@ export const seedAllData = async () => {
 
     const patients = await seedPatients();
 
-    const schedules = await seedDoctorSchedules(doctors);
+    await seedDoctorSchedules(doctors);
 
-    const appointments = await seedAppointments(doctors, patients);
+    await seedAppointments(doctors, patients);
 
     // Verify data was created
     const doctorCount = await db.doctors.count();
